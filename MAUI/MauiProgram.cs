@@ -2,6 +2,7 @@
 using CommunityToolkit.Maui.Core;
 using Dots.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.LifecycleEvents;
 
 namespace Dots;
 
@@ -13,10 +14,22 @@ public static class MauiProgram
 		builder
 			.UseMauiApp<App>()
 			.UseMauiCommunityToolkit()
-			.ConfigureFonts(fonts =>
+			.ConfigureLifecycleEvents(lifecycle => {
+			#if WINDOWS
+				lifecycle
+					.AddWindows (windows => {
+						_ = windows.OnWindowCreated (async (window) =>
+							{
+								window.ExtendsContentIntoTitleBar = true;
+								await Task.Delay(100);
+							});
+					});
+			#endif
+			}).ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+				fonts.AddFont("lucide.ttf", "Lucide");
 			});
 		
 #if DEBUG

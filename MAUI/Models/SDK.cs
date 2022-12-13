@@ -4,14 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dots.Models
+namespace Dots.Models;
+
+public class SDK : ObservableObject
 {
-    public record SDK
-    {
-        public Version Version { get; init; }
-        public string Path { get; init; }
-        public bool Installed => !string.IsNullOrEmpty(Path);
-        public string Link { get; init; }
-        public string VersionText => Version.ToString();
-    }
+    //data
+    public Version Version { get; set; }
+    public string Appendix { get; set; }
+    public string Path { get; set; }
+    public string Link { get; set; }
+
+    //UI
+    public Color Color { get; set; }
+    public bool IsSelected { get; set; }
+    public bool Installed => !string.IsNullOrEmpty(Path);
+    public string VersionText => Version.ToString() + Appendix;
 }

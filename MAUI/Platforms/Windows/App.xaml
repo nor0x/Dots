@@ -4,5 +4,18 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:maui="using:Microsoft.Maui"
     xmlns:local="using:Dots.WinUI">
-
+    <maui:MauiWinUIApplication.Resources>
+        <DataTemplate x:Key="MauiAppTitleBarContainerTemplate">
+            <Grid HorizontalAlignment="Stretch">
+                <ContentControl
+                    Grid.Column="4"
+                    IsTabStop="False"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    x:Name="AppTitleBarContentControl">
+                </ContentControl>
+            </Grid>
+        </DataTemplate>
+        <SolidColorBrush x:Key="WindowCaptionBackground">Transparent</SolidColorBrush>
+    </maui:MauiWinUIApplication.Resources>
 </maui:MauiWinUIApplication>

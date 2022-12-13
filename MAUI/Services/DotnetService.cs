@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using CliWrap;
 using CliWrap.Buffered;
+using Dots.Helpers;
 using Dots.Models;
 
 namespace Dots.Services;
@@ -27,32 +28,35 @@ public class DotnetService
                 {
                     if (!string.IsNullOrEmpty(s))
                     {
-                        //5.0.408 [C:\Program Files\dotnet\sdk]
-                        //6.0.403 [C:\Program Files\dotnet\sdk]
-                        //7.0.100 - rc.1.22431.12[C:\Program Files\dotnet\sdk]
-                        //7.0.100 [C:\Program Files\dotnet\sdk]
-                        //parse and build SDKs
-                        var sdk = new SDK();
-                        var parts = s.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length > 0)
+                        var lineSplit = s.Split("[", StringSplitOptions.RemoveEmptyEntries);
+                        var versionString = lineSplit[0].Trim();
+                        var path = lineSplit[1].TrimEnd(']');
+                        Version version = new Version();
+                        string appendix = string.Empty;
+                        if (versionString.Contains("-"))
                         {
-                            if (Version.TryParse(parts[0], out var version))
+                            var parts = versionString.Split("-", StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length == 2)
                             {
-                                sdk.Version = version;
+                                version = new Version(parts[0]);
+                                appendix = "-" + parts[1];
                             }
                         }
-                       
-
-
-                        var version = s.Split(" [", StringSplitOptions.RemoveEmptyEntries)[0];
-                        var path = s.Split(" [", StringSplitOptions.RemoveEmptyEntries)[1].Replace("]", "");
-                        Debug.WriteLine(version);
-                        Debug.WriteLine(version);
-                        result.Add(new SDK() { Version = new(s.Split(" [")[0]), Path = s.Split(" [")[1] });
+                        else
+                        {
+                            version = new Version(versionString);
+                        }
+                        result.Add(new SDK
+                        {
+                            Version = version,
+                            Appendix = appendix,
+                            Path = path,
+                            Color = Color.FromRgba(ColorHelper.GenerateHexColor(version + appendix))
+                        });
                     }
                 }
             }
         }
-        return result;
+        return result.OrderByDescending(x => x.Version).ToList();
     }
 }

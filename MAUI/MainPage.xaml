@@ -1,24 +1,185 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:models="clr-namespace:Dots.Models"
-             xmlns:vm="clr-namespace:Dots.ViewModels"
-             x:DataType="vm:MainViewModel"
-             x:Class="Dots.MainPage">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:Dots.Models"
+    xmlns:vm="clr-namespace:Dots.ViewModels"
+    xmlns:helpers="clr-namespace:Dots.Helpers"
+    xmlns:local="clr-namespace:Dots"
+    Shell.NavBarIsVisible="false"
+    x:DataType="vm:MainViewModel"
+    x:Class="Dots.MainPage">
 
-    <Grid RowDefinitions="64,*" ColumnDefinitions="*,Auto">
-        <Button Grid.Row="0" HorizontalOptions="Start" Text="click me" Command="{Binding DownloadScriptCommand}" BackgroundColor="Orange" />
-        <Button Grid.Row="0" HorizontalOptions="End" Text="click me" Command="{Binding ListRuntimesCommand}" WidthRequest="30" HeightRequest="30"/>
-        <CollectionView Grid.Row="1" ItemsSource="{Binding Sdks}" BackgroundColor="Grey">
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:SDK">
-                    <VerticalStackLayout BackgroundColor="Green">
-                        <Label Text="{Binding VersionText}" TextColor="Red" BackgroundColor="Blue" />
-                        <Label Text="{Binding Path}" TextColor="Red" BackgroundColor="Blue" />
-                    </VerticalStackLayout>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+    <Grid
+        RowDefinitions="60,*"
+        ColumnDefinitions="*,Auto"
+        BackgroundColor="{StaticResource Background}">
+        <Grid Grid.Row="0">
+            <HorizontalStackLayout
+                Margin="12,4,0,0"
+                Spacing="12">
+                <Image
+                    Source="logo.png"
+                    WidthRequest="40"
+                    HeightRequest="40" />
+                <VerticalStackLayout>
+
+                    <Label
+                        Text="{x:Static local:Constants.AppName}"
+                        FontSize="22" />
+                    <Label FontSize="13">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Updated at" />
+                                <Span x:Name="UpdateDateSpan" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+            </HorizontalStackLayout>
+            <SearchBar
+                    WidthRequest="280"
+                    HeightRequest="32"
+                    Margin="0,8,0,0"
+                    VerticalTextAlignment="Center"
+                    VerticalOptions="Center"
+                    Placeholder="Search..." />
+            <HorizontalStackLayout HorizontalOptions="End" Margin="0,18,0,0"
+>
+                <Button
+                    BackgroundColor="Transparent"
+                    TextColor="White"
+                    Padding="0"
+                    Text="{x:Static helpers:LucideIcons.RefreshCw}"
+                    FontFamily="Lucide"
+                    BorderWidth="0"
+                    FontSize="14"
+                    Command="{Binding ListRuntimesCommand}"
+                    WidthRequest="30"
+                    HeightRequest="30" />
+            </HorizontalStackLayout>
+        </Grid>
+        <Grid
+            Grid.Row="1"
+            BackgroundColor="{StaticResource BackgroundSubtle}"
+            Padding="12">
+            <CollectionView
+                x:Name="SdkCollection"
+                ItemsSource="{Binding Sdks}"
+                SelectionChanged="SdkCollection_SelectionChanged"
+                SelectionMode="Single">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:SDK">
+                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4">
+                            <Border
+                                WidthRequest="40"
+                                HeightRequest="40"
+                                BackgroundColor="{Binding Color}"
+                                StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10" />
+                                </Border.StrokeShape>
+                                <Label
+                                    Text="{Binding Version.Major}"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center" />
+                            </Border>
+                            <VerticalStackLayout
+                                Grid.Column="1"
+                                Margin="8,0,0,0">
+                                <Label Text="{Binding VersionText}" />
+                                <Label
+                                    Text="{Binding Path}"
+                                    FontSize="11" />
+
+                            </VerticalStackLayout>
+                            <HorizontalStackLayout
+                                Grid.Column="2"
+                                VerticalOptions="Center">
+                                <Button
+                                    Text="Open"
+                                    HeightRequest="24"
+                                    WidthRequest="70"
+                                    Padding="4,0"
+                                    FontSize="12"
+                                    Margin="0,0,12,0">
+                                    <Button.Triggers>
+                                        <DataTrigger
+                                            TargetType="Button"
+                                            Binding="{Binding Installed}"
+                                            Value="True">
+                                            <Setter
+                                                Property="Text"
+                                                Value="Open" />
+                                            <Setter
+                                                Property="Command"
+                                                Value="{Binding OpenCommand}" />
+                                        </DataTrigger>
+                                        <DataTrigger
+                                            TargetType="Button"
+                                            Binding="{Binding Installed}"
+                                            Value="False">
+                                            <Setter
+                                                Property="Text"
+                                                Value="Install" />
+                                            <Setter
+                                                Property="Command"
+                                                Value="{Binding InstallCommand}" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <Button
+                                    Text="Uninstall"
+                                    HeightRequest="24"
+                                    WidthRequest="70"
+                                    FontSize="12"
+                                    Margin="0,0,12,0"
+                                    FontFamily="Default"
+                                    VerticalOptions="Center"
+                                    Grid.Column="2">
+                                    <Button.Triggers>
+                                        <DataTrigger
+                                            TargetType="Button"
+                                            Binding="{Binding Installed}"
+                                            Value="True">
+                                            <Setter
+                                                Property="Text"
+                                                Value="Uninstall" />
+                                            <Setter
+                                                Property="BackgroundColor"
+                                                Value="{StaticResource Danger}" />
+                                            <Setter
+                                                Property="Command"
+                                                Value="{Binding UninstallCommand}" />
+                                        </DataTrigger>
+                                        <DataTrigger
+                                            TargetType="Button"
+                                            Binding="{Binding Installed}"
+                                            Value="False">
+                                            <Setter
+                                                Property="Text"
+                                                Value="Download" />
+                                            <Setter
+                                                Property="BackgroundColor"
+                                                Value="{StaticResource Accent}" />
+                                            <Setter
+                                                Property="Command"
+                                                Value="{Binding DownloadCommand}" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </Grid>
+        <Grid
+            x:Name="DetailsPanel"
+            Grid.Column="1"
+            Grid.Row="1"
+            BackgroundColor="{StaticResource BackgroundSubtle}" />
     </Grid>
 
 </ContentPage>
