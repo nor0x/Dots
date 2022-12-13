@@ -1,12 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:Dots.Models"
              xmlns:vm="clr-namespace:Dots.ViewModels"
              x:DataType="vm:MainViewModel"
              x:Class="Dots.MainPage">
 
     <Grid RowDefinitions="64,*" ColumnDefinitions="*,Auto">
-        <Button Text="click me" Command="{Binding DownloadScriptCommand}" />
+        <Button Grid.Row="0" HorizontalOptions="Start" Text="click me" Command="{Binding DownloadScriptCommand}" BackgroundColor="Orange" />
+        <Button Grid.Row="0" HorizontalOptions="End" Text="click me" Command="{Binding ListRuntimesCommand}" WidthRequest="30" HeightRequest="30"/>
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Sdks}" BackgroundColor="Grey">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:SDK">
+                    <VerticalStackLayout BackgroundColor="Green">
+                        <Label Text="{Binding VersionText}" TextColor="Red" BackgroundColor="Blue" />
+                        <Label Text="{Binding Path}" TextColor="Red" BackgroundColor="Blue" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
     </Grid>
 
 </ContentPage>
