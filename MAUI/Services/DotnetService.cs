@@ -59,4 +59,22 @@ public class DotnetService
         }
         return result.OrderByDescending(x => x.Version).ToList();
     }
+
+    public async Task OpenFolder(SDK sdk)
+    {
+        try
+        {
+            string path = Path.Combine(sdk.Path, sdk.VersionText);
+            await Cli.Wrap("explorer").WithArguments(path).WithValidation(CommandResultValidation.None).ExecuteAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+        }
+    }
+
+    public async Task Uninstall(SDK sdk)
+    {
+
+    }
 }

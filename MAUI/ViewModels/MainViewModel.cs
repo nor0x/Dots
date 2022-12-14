@@ -5,6 +5,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.Input;
 using Dots.Models;
 using Dots.Services;
+using System.Reactive;
 
 namespace Dots.ViewModels
 {
@@ -15,9 +16,13 @@ namespace Dots.ViewModels
             _dotnet = dotnet;
         }
         DotnetService _dotnet;
+        List<SDK> _baseSdks;
 
         [ObservableProperty]
-        ObservableCollection<SDK> _sdks;
+        bool _selectionEnabled;
+
+        [ObservableProperty]
+        List<SDK> _sdks;
 
         [RelayCommand]
         async Task DownloadScript()
@@ -49,10 +54,46 @@ namespace Dots.ViewModels
         [RelayCommand]
         async Task ListRuntimes()
         {
-            var sdks = await _dotnet.CheckInstalledSdks();
-            Sdks = new ObservableCollection<SDK>(sdks);
+            _baseSdks = await _dotnet.CheckInstalledSdks();
+            Sdks = _baseSdks;
+        }
+
+        [RelayCommand]
+        void FilterSdks(string query)
+        {
+            Sdks = _baseSdks.Where(s => s.VersionText.ToLower().Contains(query.ToLower())).ToList();
+        }
+        
+        [RelayCommand]
+        void ToggleSelection()
+        {
+            SelectionEnabled = !SelectionEnabled;
+        }
+
+        [RelayCommand]
+        async Task Download(SDK sdk)
+        {
+
+        }
+
+        [RelayCommand]
+        async Task Install(SDK sdk)
+        {
+
+        }
+
+        [RelayCommand]
+        async Task Uninstall(SDK sdk)
+        {
+
         }
 
 
+
+        [RelayCommand]
+        async Task OpenPath(SDK sdk)
+        {
+            await _dotnet.OpenFolder(sdk);
+        }
     }
 }

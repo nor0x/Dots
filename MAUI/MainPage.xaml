@@ -5,8 +5,10 @@
     xmlns:models="clr-namespace:Dots.Models"
     xmlns:vm="clr-namespace:Dots.ViewModels"
     xmlns:helpers="clr-namespace:Dots.Helpers"
+    xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:local="clr-namespace:Dots"
     Shell.NavBarIsVisible="false"
+    x:Name="PageSelf"
     x:DataType="vm:MainViewModel"
     x:Class="Dots.MainPage">
 
@@ -38,14 +40,33 @@
                 </VerticalStackLayout>
             </HorizontalStackLayout>
             <SearchBar
+            x:Name="MainSearchBar"
                     WidthRequest="280"
                     HeightRequest="32"
                     Margin="0,8,0,0"
                     VerticalTextAlignment="Center"
                     VerticalOptions="Center"
-                    Placeholder="Search..." />
+                    Placeholder="Search...">
+                <SearchBar.Behaviors>
+                    <mct:EventToCommandBehavior EventName="TextChanged" Command="{Binding FilterSdksCommand}" 
+                    CommandParameter="{Binding Source={x:Reference MainSearchBar}, Path=Text}" />
+                </SearchBar.Behaviors>
+            </SearchBar>
+
             <HorizontalStackLayout HorizontalOptions="End" Margin="0,18,0,0"
 >
+            
+                <Button
+                    BackgroundColor="Transparent"
+                    TextColor="White"
+                    Padding="0"
+                    Text="{x:Static helpers:LucideIcons.Square}"
+                    FontFamily="Lucide"
+                    BorderWidth="0"
+                    FontSize="14"                    
+                    Command="{Binding ToggleSelectionCommand}"
+                    WidthRequest="30"
+                    HeightRequest="30" />
                 <Button
                     BackgroundColor="Transparent"
                     TextColor="White"
@@ -100,9 +121,12 @@
                                     Text="Open"
                                     HeightRequest="24"
                                     WidthRequest="70"
-                                    Padding="4,0"
                                     FontSize="12"
-                                    Margin="0,0,12,0">
+                                    Margin="0,0,12,0"
+                                    FontFamily="Default"
+                                    VerticalOptions="Center"
+                                    CommandParameter="{Binding .}"
+                                    Grid.Column="2">
                                     <Button.Triggers>
                                         <DataTrigger
                                             TargetType="Button"
@@ -113,7 +137,7 @@
                                                 Value="Open" />
                                             <Setter
                                                 Property="Command"
-                                                Value="{Binding OpenCommand}" />
+                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.OpenPathCommand}" />
                                         </DataTrigger>
                                         <DataTrigger
                                             TargetType="Button"
@@ -124,7 +148,7 @@
                                                 Value="Install" />
                                             <Setter
                                                 Property="Command"
-                                                Value="{Binding InstallCommand}" />
+                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.InstallCommand}" />
                                         </DataTrigger>
                                     </Button.Triggers>
                                 </Button>
@@ -136,6 +160,7 @@
                                     Margin="0,0,12,0"
                                     FontFamily="Default"
                                     VerticalOptions="Center"
+                                    CommandParameter="{Binding .}"
                                     Grid.Column="2">
                                     <Button.Triggers>
                                         <DataTrigger
@@ -150,7 +175,7 @@
                                                 Value="{StaticResource Danger}" />
                                             <Setter
                                                 Property="Command"
-                                                Value="{Binding UninstallCommand}" />
+                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.UninstallCommand}" />
                                         </DataTrigger>
                                         <DataTrigger
                                             TargetType="Button"
@@ -164,7 +189,7 @@
                                                 Value="{StaticResource Accent}" />
                                             <Setter
                                                 Property="Command"
-                                                Value="{Binding DownloadCommand}" />
+                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.DownloadCommand}" />
                                         </DataTrigger>
                                     </Button.Triggers>
                                 </Button>
