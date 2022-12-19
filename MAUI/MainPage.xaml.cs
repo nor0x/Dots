@@ -6,13 +6,22 @@ namespace Dots;
 
 public partial class MainPage : ContentPage
 {
-	public MainPage(MainViewModel vm)
+    MainViewModel _vm => BindingContext as MainViewModel;
+    public MainPage(MainViewModel vm)
 	{
 		BindingContext = vm;
 		InitializeComponent();
 		UpdateDateSpan.Text = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
 	}
 
+    protected async override void OnAppearing()
+    {
+        base.OnAppearing();
+        await Task.Delay(1000);
+        await _vm.CheckSdks();
+    }
+    
+    
     private void Button_Clicked(object sender, EventArgs e)
     {
         Debug.WriteLine("hello world!");

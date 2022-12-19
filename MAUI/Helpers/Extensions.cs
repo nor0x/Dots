@@ -28,4 +28,9 @@ public static class Extensions
         return await tcs.Task;
     }
 
+    public static bool IsNullOrEmpty<T>(this IEnumerable<T> collection)
+    {
+        return collection is null || !collection.Any();
+    }
+
 }

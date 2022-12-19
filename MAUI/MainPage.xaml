@@ -14,7 +14,6 @@
 
     <Grid
         RowDefinitions="60,*"
-        ColumnDefinitions="*,Auto"
         BackgroundColor="{StaticResource Background}">
         <Grid Grid.Row="0">
             <HorizontalStackLayout
@@ -82,6 +81,7 @@
         </Grid>
         <Grid
             Grid.Row="1"
+            ColumnDefinitions="*,Auto"
             BackgroundColor="{StaticResource BackgroundSubtle}"
             Padding="12">
             <CollectionView
@@ -198,13 +198,13 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-
-        </Grid>
-        <Grid
+            <Grid
             x:Name="DetailsPanel"
             Grid.Column="1"
             Grid.Row="1"
             BackgroundColor="{StaticResource BackgroundSubtle}" />
+        </Grid>
+
     </Grid>
 
 </ContentPage>

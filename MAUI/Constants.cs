@@ -9,6 +9,7 @@ namespace Dots;
 public class Constants
 {
     public const string AppName = "Dots";
+    public const string InstalledSDKSKey = "Installed-SDKS";
 #if MACCATALYST
     public const string InstallerScript = "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh";
 #else 

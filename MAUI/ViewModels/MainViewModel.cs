@@ -54,7 +54,7 @@ namespace Dots.ViewModels
         [RelayCommand]
         async Task ListRuntimes()
         {
-            _baseSdks = await _dotnet.CheckInstalledSdks();
+            _baseSdks = await _dotnet.CheckInstalledSdks(true);
             Sdks = _baseSdks;
         }
 
@@ -94,6 +94,11 @@ namespace Dots.ViewModels
         async Task OpenPath(SDK sdk)
         {
             await _dotnet.OpenFolder(sdk);
+        }
+
+        public async Task CheckSdks()
+        {
+            Sdks = await _dotnet.CheckInstalledSdks();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.Json;
 using CliWrap;
 using CliWrap.Buffered;
 using Dots.Helpers;
@@ -9,13 +10,23 @@ using Dots.Models;
 namespace Dots.Services;
 
 public class DotnetService
-{
-    public async Task<List<SDK>> CheckInstalledSdks()
+{   
+    List<SDK> _sdks;
+
+    public async ValueTask<List<SDK>> CheckInstalledSdks(bool force = false)
     {
+        if (!_sdks.IsNullOrEmpty() && !force)
+        {
+            return _sdks;
+        }
+        if (Preferences.ContainsKey(Constants.InstalledSDKSKey) && !force)
+        {
+            var sdks = Preferences.Get(Constants.InstalledSDKSKey, "");
+            _sdks = JsonSerializer.Deserialize<List<SDK>>(sdks);
+            return _sdks;
+        }
 
         List<SDK> result = new();
-        // Calling `ExecuteBufferedAsync()` instead of `ExecuteAsync()`
-        // implicitly configures pipes that write to in-memory buffers.
         var cmdresult = await Cli.Wrap("dotnet")
             .WithArguments("--list-sdks")
             .ExecuteBufferedAsync();
@@ -51,13 +62,16 @@ public class DotnetService
                             Version = version,
                             Appendix = appendix,
                             Path = path,
-                            Color = Color.FromRgba(ColorHelper.GenerateHexColor(version + appendix))
+                            ColorHex = ColorHelper.GenerateHexColor(version + appendix),
                         });
                     }
                 }
             }
         }
-        return result.OrderByDescending(x => x.Version).ToList();
+        _sdks = result.OrderByDescending(x => x.Version).ToList();
+        Preferences.Set(Constants.InstalledSDKSKey, JsonSerializer.Serialize(_sdks));
+        
+        return _sdks;
     }
 
     public async Task OpenFolder(SDK sdk)
