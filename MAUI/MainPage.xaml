@@ -32,7 +32,7 @@
                         <Label.FormattedText>
                             <FormattedString>
                                 <Span Text="Updated at" />
-                                <Span x:Name="UpdateDateSpan" />
+                                <Span Text="{Binding LastUpdated}" />
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
@@ -120,7 +120,7 @@
                                 <Button
                                     Text="Open"
                                     HeightRequest="24"
-                                    WidthRequest="70"
+                                    WidthRequest="100"
                                     FontSize="12"
                                     Margin="0,0,12,0"
                                     FontFamily="Default"
@@ -145,17 +145,17 @@
                                             Value="False">
                                             <Setter
                                                 Property="Text"
-                                                Value="Install" />
+                                                Value="Download" />
                                             <Setter
                                                 Property="Command"
-                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.InstallCommand}" />
+                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.DownloadCommand}" />
                                         </DataTrigger>
                                     </Button.Triggers>
                                 </Button>
                                 <Button
                                     Text="Uninstall"
                                     HeightRequest="24"
-                                    WidthRequest="70"
+                                    WidthRequest="100"
                                     FontSize="12"
                                     Margin="0,0,12,0"
                                     FontFamily="Default"
@@ -183,13 +183,13 @@
                                             Value="False">
                                             <Setter
                                                 Property="Text"
-                                                Value="Download" />
+                                                Value="Install" />
                                             <Setter
                                                 Property="BackgroundColor"
                                                 Value="{StaticResource Accent}" />
                                             <Setter
                                                 Property="Command"
-                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.DownloadCommand}" />
+                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.InstallCommand}" />
                                         </DataTrigger>
                                     </Button.Triggers>
                                 </Button>

@@ -7,13 +7,18 @@ using System.Threading.Tasks;
 
 namespace Dots.Models;
 
-public class SDK : ObservableObject
+public partial class SDK : ObservableObject
 {
     //data
-    public Version Version { get; set; }
-    public string Appendix { get; set; }
-    public string Path { get; set; }
-    public string Link { get; set; }
+    [ObservableProperty]
+    Version _version;
+    [ObservableProperty]
+    string _appendix;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Installed))]
+    string _path;
+    [ObservableProperty]
+    string _link;
 
     //UI
     public string ColorHex { get; set; }

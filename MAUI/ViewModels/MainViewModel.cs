@@ -24,6 +24,9 @@ namespace Dots.ViewModels
         [ObservableProperty]
         List<SDK> _sdks;
 
+        [ObservableProperty]
+        string _lastUpdated;
+
         [RelayCommand]
         async Task DownloadScript()
         {
@@ -56,6 +59,7 @@ namespace Dots.ViewModels
         {
             _baseSdks = await _dotnet.CheckInstalledSdks(true);
             Sdks = _baseSdks;
+            LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
         }
 
         [RelayCommand]
@@ -85,7 +89,11 @@ namespace Dots.ViewModels
         [RelayCommand]
         async Task Uninstall(SDK sdk)
         {
-
+            var result = await _dotnet.Uninstall(sdk);
+            if (result)
+            {
+                sdk.Path = string.Empty;
+            }
         }
 
 
@@ -99,6 +107,8 @@ namespace Dots.ViewModels
         public async Task CheckSdks()
         {
             Sdks = await _dotnet.CheckInstalledSdks();
+            _baseSdks = Sdks;
+            LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
         }
     }
 }

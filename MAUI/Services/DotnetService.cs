@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using CliWrap;
 using CliWrap.Buffered;
@@ -87,8 +88,56 @@ public class DotnetService
         }
     }
 
-    public async Task Uninstall(SDK sdk)
+    public async Task<bool> Uninstall(SDK sdk)
     {
+        try
+        {
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), Constants.UninstallerPath);
+            var filename = GetSetupName(sdk);
 
+            Debug.WriteLine(path);
+
+            string[] files = Directory.GetFiles(path, filename, SearchOption.AllDirectories);
+
+            if(!files.IsNullOrEmpty())
+            {
+                var result = await Cli.Wrap(files.First()).WithArguments(" /uninstall /quiet").WithValidation(CommandResultValidation.None).ExecuteAsync();
+                return result.ExitCode == 0;
+            }
+            return false;
+        }
+        catch(Exception ex)
+        {
+            Debug.WriteLine(ex);
+            return false;
+        }
+    }
+
+    string GetSetupName(SDK sdk)
+    {
+        try
+        {
+            var env = Environment.Is64BitOperatingSystem ? "64" : "32";
+            var arch = "x";
+            if (RuntimeInformation.OSArchitecture == Architecture.Arm ||
+               RuntimeInformation.OSArchitecture == Architecture.Arm64 ||
+               RuntimeInformation.OSArchitecture == Architecture.Armv6)
+            {
+                arch = "arm";
+            }
+            var os = "win";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                os = "macos";
+            }
+
+            return $"dotnet-sdk-{sdk.VersionText}-{os}-{arch}{env}.exe";
+
+        }
+        catch(Exception ex)
+        {
+            Debug.WriteLine(ex);
+            return null;
+        }
     }
 }

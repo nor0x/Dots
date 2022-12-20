@@ -11,13 +11,11 @@ public partial class MainPage : ContentPage
 	{
 		BindingContext = vm;
 		InitializeComponent();
-		UpdateDateSpan.Text = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
 	}
 
     protected async override void OnAppearing()
     {
         base.OnAppearing();
-        await Task.Delay(1000);
         await _vm.CheckSdks();
     }
     
