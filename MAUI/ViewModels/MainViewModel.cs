@@ -67,7 +67,7 @@ namespace Dots.ViewModels
         {
 
             var filteredCollection = _baseSdks.Where(s => 
-            s.Data.Version.ToLowerInvariant().Contains(query.ToLowerInvariant()) || 
+            s.Data.Sdk.Version.ToLowerInvariant().Contains(query.ToLowerInvariant()) || 
             s.Path.ToLowerInvariant().Contains(query.ToLowerInvariant())).ToList();
 
             foreach(var s in _baseSdks)
@@ -126,7 +126,7 @@ namespace Dots.ViewModels
         [RelayCommand]
         void ToggleOnline()
         {
-            if (_showOnline)
+            if (!_showOnline)
             {
                 Sdks.RemoveRange(_baseSdks.Where(s => !s.Installed).ToList());
             }

@@ -34,7 +34,7 @@ public class DotnetService
         {
             var sdk = new Sdk()
             {
-                Data = release.Sdk,
+                Data = release,
                 ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version),
                 Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty
             };
@@ -136,7 +136,7 @@ public class DotnetService
     {
         try
         {
-            string path = Path.Combine(sdk.Path, sdk.Data.Version);
+            string path = Path.Combine(sdk.Path, sdk.Data.Sdk.Version);
             await Cli.Wrap("explorer").WithArguments(path).WithValidation(CommandResultValidation.None).ExecuteAsync();
         }
         catch (Exception ex)
@@ -189,7 +189,7 @@ public class DotnetService
                 os = "macos";
             }
 
-            return $"dotnet-sdk-{sdk.Data.Version}-{os}-{arch}{env}.exe";
+            return $"dotnet-sdk-{sdk.Data.Sdk.Version}-{os}-{arch}{env}.exe";
 
         }
         catch(Exception ex)

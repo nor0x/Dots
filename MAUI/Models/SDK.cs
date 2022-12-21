@@ -11,7 +11,7 @@ namespace Dots.Models;
 public partial class Sdk : ObservableObject
 {
     [ObservableProperty]
-    SdkInfo _data;
+    Release _data;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Installed))]
@@ -19,14 +19,14 @@ public partial class Sdk : ObservableObject
 
     //UI
     public string ColorHex { get; set; }
-    public string Group => Data.Version.First().ToString();
+    public string Group => Data.Sdk.Version.First().ToString();
 
     [JsonIgnore]
     public Color Color => Color.FromRgba(ColorHex);
     [JsonIgnore]
     public bool IsSelected { get; set; }
     [JsonIgnore]
-    public bool Installed => !string.IsNullOrEmpty(_path);
+    public bool Installed => !string.IsNullOrEmpty(Path);
 }
 
 

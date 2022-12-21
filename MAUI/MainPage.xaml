@@ -103,15 +103,18 @@
             Grid.Row="1"
             ColumnDefinitions="*,Auto"
             BackgroundColor="{StaticResource BackgroundSubtle}"
-            Padding="12">
+            Padding="12,12,12,0">
             <CollectionView
                 x:Name="SdkCollection"
                 ItemsSource="{Binding Sdks}"
                 SelectionChanged="SdkCollection_SelectionChanged"
                 SelectionMode="Single">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout ItemSpacing="4" Orientation="Vertical" />
+                </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Sdk">
-                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4">
+                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,4,0">
                             <Border
                                 WidthRequest="40"
                                 HeightRequest="40"
@@ -125,15 +128,18 @@
                                     HorizontalOptions="Center"
                                     VerticalOptions="Center" />
                             </Border>
-                            <VerticalStackLayout
-                                Grid.Column="1"
+                            <HorizontalStackLayout Grid.Column="1"
                                 Margin="8,0,0,0">
-                                <Label Text="{Binding Data.Version}" />
+                            <VerticalStackLayout>
+                                <Label Text="{Binding Data.Sdk.Version}" />
                                 <Label
                                     Text="{Binding Path}"
                                     FontSize="11" />
 
                             </VerticalStackLayout>
+                                <Label Text="Security Patch" Margin="12,0,6,0" Padding="1" BackgroundColor="{StaticResource Danger}" VerticalOptions="Center" FontSize="11" IsVisible="{Binding Data.Security}" />
+                                <Label Text="Preview" Margin="12,0,6,0" Padding="1" BackgroundColor="{StaticResource Attention}" VerticalOptions="Center" FontSize="11" IsVisible="{Binding Data.Preview}" />
+                            </HorizontalStackLayout>
                             <HorizontalStackLayout
                                 Grid.Column="2"
                                 VerticalOptions="Center">

@@ -68,6 +68,9 @@ public partial class Release
 
     [JsonPropertyName("windowsdesktop")]
     public Windowsdesktop Windowsdesktop { get; set; }
+
+    [JsonIgnore]
+    public bool Preview => Sdk.Version.Contains("-");
 }
 
 public partial class AspnetcoreRuntime
