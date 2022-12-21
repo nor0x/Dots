@@ -52,9 +52,29 @@
                 </SearchBar.Behaviors>
             </SearchBar>
 
-            <HorizontalStackLayout HorizontalOptions="End" Margin="0,18,0,0"
->
-            
+            <HorizontalStackLayout HorizontalOptions="End" Margin="0,18,0,0">
+                <Button
+                    BackgroundColor="Transparent"
+                    TextColor="White"
+                    Padding="0"
+                    Text="{x:Static helpers:LucideIcons.Cloud}"
+                    FontFamily="Lucide"
+                    BorderWidth="0"
+                    FontSize="15"                    
+                    Command="{Binding ToggleSelectionCommand}"
+                    WidthRequest="30"
+                    HeightRequest="30" />
+                <Button
+                    BackgroundColor="Transparent"
+                    TextColor="White"
+                    Padding="0"
+                    Text="{x:Static helpers:LucideIcons.HardDrive}"
+                    FontFamily="Lucide"
+                    BorderWidth="0"
+                    FontSize="15"                    
+                    Command="{Binding ToggleSelectionCommand}"
+                    WidthRequest="30"
+                    HeightRequest="30" />
                 <Button
                     BackgroundColor="Transparent"
                     TextColor="White"
@@ -62,7 +82,7 @@
                     Text="{x:Static helpers:LucideIcons.Square}"
                     FontFamily="Lucide"
                     BorderWidth="0"
-                    FontSize="14"                    
+                    FontSize="15"                    
                     Command="{Binding ToggleSelectionCommand}"
                     WidthRequest="30"
                     HeightRequest="30" />
@@ -73,7 +93,7 @@
                     Text="{x:Static helpers:LucideIcons.RefreshCw}"
                     FontFamily="Lucide"
                     BorderWidth="0"
-                    FontSize="14"
+                    FontSize="15"
                     Command="{Binding ListRuntimesCommand}"
                     WidthRequest="30"
                     HeightRequest="30" />
@@ -90,7 +110,7 @@
                 SelectionChanged="SdkCollection_SelectionChanged"
                 SelectionMode="Single">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:SDK">
+                    <DataTemplate x:DataType="models:Sdk">
                         <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4">
                             <Border
                                 WidthRequest="40"
@@ -101,14 +121,14 @@
                                     <RoundRectangle CornerRadius="10" />
                                 </Border.StrokeShape>
                                 <Label
-                                    Text="{Binding Version.Major}"
+                                    Text="{Binding Group}"
                                     HorizontalOptions="Center"
                                     VerticalOptions="Center" />
                             </Border>
                             <VerticalStackLayout
                                 Grid.Column="1"
                                 Margin="8,0,0,0">
-                                <Label Text="{Binding VersionText}" />
+                                <Label Text="{Binding Data.VersionDisplay}" />
                                 <Label
                                     Text="{Binding Path}"
                                     FontSize="11" />

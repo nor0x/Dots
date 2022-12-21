@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dots.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,28 +8,30 @@ using System.Threading.Tasks;
 
 namespace Dots.Models;
 
-public partial class SDK : ObservableObject
+public partial class Sdk : ObservableObject
 {
-    //data
     [ObservableProperty]
-    Version _version;
-    [ObservableProperty]
-    string _appendix;
+    SdkInfo _data;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Installed))]
     string _path;
-    [ObservableProperty]
-    string _link;
 
     //UI
     public string ColorHex { get; set; }
+    public string Group => Data.Version.First().ToString();
 
     [JsonIgnore]
     public Color Color => Color.FromRgba(ColorHex);
     [JsonIgnore]
     public bool IsSelected { get; set; }
     [JsonIgnore]
-    public bool Installed => !string.IsNullOrEmpty(Path);
-    [JsonIgnore]
-    public string VersionText => Version.ToString() + Appendix;
+    public bool Installed => !string.IsNullOrEmpty(_path);
+}
+
+
+public class InstalledSdk
+{
+    public string Version { get; set; }
+    public string Path { get; set; }
 }

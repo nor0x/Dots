@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Dots.Models;
 using Dots.Services;
 using System.Reactive;
+using Dots.Data;
 
 namespace Dots.ViewModels
 {
@@ -16,13 +17,13 @@ namespace Dots.ViewModels
             _dotnet = dotnet;
         }
         DotnetService _dotnet;
-        List<SDK> _baseSdks;
+        List<Sdk> _baseSdks;
 
         [ObservableProperty]
         bool _selectionEnabled;
 
         [ObservableProperty]
-        List<SDK> _sdks;
+        List<Sdk> _sdks;
 
         [ObservableProperty]
         string _lastUpdated;
@@ -57,37 +58,36 @@ namespace Dots.ViewModels
         [RelayCommand]
         async Task ListRuntimes()
         {
-            _baseSdks = await _dotnet.CheckInstalledSdks(true);
-            Sdks = _baseSdks;
             LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
         }
 
         [RelayCommand]
         void FilterSdks(string query)
         {
-            Sdks = _baseSdks.Where(s => s.VersionText.ToLower().Contains(query.ToLower())).ToList();
+            Sdks = _baseSdks.Where(s => s.Data.VersionDisplay.ToLower().Contains(query.ToLower())).ToList();
         }
         
         [RelayCommand]
-        void ToggleSelection()
+        async Task ToggleSelection()
         {
             SelectionEnabled = !SelectionEnabled;
+            await _dotnet.GetSdks();
         }
 
         [RelayCommand]
-        async Task Download(SDK sdk)
+        async Task Download(Sdk sdk)
         {
 
         }
 
         [RelayCommand]
-        async Task Install(SDK sdk)
+        async Task Install(Sdk sdk)
         {
 
         }
 
         [RelayCommand]
-        async Task Uninstall(SDK sdk)
+        async Task Uninstall(Sdk sdk)
         {
             var result = await _dotnet.Uninstall(sdk);
             if (result)
@@ -99,14 +99,14 @@ namespace Dots.ViewModels
 
 
         [RelayCommand]
-        async Task OpenPath(SDK sdk)
+        async Task OpenPath(Sdk sdk)
         {
             await _dotnet.OpenFolder(sdk);
         }
 
         public async Task CheckSdks()
         {
-            Sdks = await _dotnet.CheckInstalledSdks();
+            Sdks = await _dotnet.GetSdks();
             _baseSdks = Sdks;
             LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
         }

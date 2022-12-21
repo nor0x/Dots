@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using CliWrap;
 using CliWrap.Buffered;
+using Dots.Data;
 using Dots.Helpers;
 using Dots.Models;
 
@@ -12,22 +13,65 @@ namespace Dots.Services;
 
 public class DotnetService
 {   
-    List<SDK> _sdks;
+    List<Sdk> _sdks;
+    List<InstalledSdk> _installedSdks = new();
 
-    public async ValueTask<List<SDK>> CheckInstalledSdks(bool force = false)
+    public async Task<List<Sdk>> GetSdks()
     {
-        if (!_sdks.IsNullOrEmpty() && !force)
+        var result = new List<Sdk>();
+        var index = await GetReleaseIndex();
+        var releaseInfos = new List<Release>();
+        var installed = GetInstalledSdks();
+        foreach(var item in index)
         {
-            return _sdks;
+            var infos = await GetReleaseInfos(item.ChannelVersion);
+            releaseInfos.AddRange(infos);
         }
-        if (Preferences.ContainsKey(Constants.InstalledSDKSKey) && !force)
+        foreach(var release in releaseInfos)
         {
-            var sdks = Preferences.Get(Constants.InstalledSDKSKey, "");
-            _sdks = JsonSerializer.Deserialize<List<SDK>>(sdks);
-            return _sdks;
+            var sdk = new Sdk()
+            {
+                Data = release.Sdk,
+                ColorHex = ColorHelper.GenerateHexColor(release.Sdk.VersionDisplay ?? release.Sdk.Version),
+                Path = _installedSdks.FirstOrDefault(x => x.Version == release?.Sdk?.VersionDisplay)?.Path ?? string.Empty
+            };
+            result.Add(sdk);
+        }
+        return result;
+    }
+
+    async Task<List<ReleaseIndex>> GetReleaseIndex()
+    {
+        using var client = new HttpClient();
+        var response = await client.GetStringAsync(Constants.ReleaseIndexUrl);
+        var releaseIndex = JsonSerializer.Deserialize<ReleaseIndexInfo>(response, ReleaseSerializerOptions.Options);
+        return releaseIndex.ReleasesIndex.ToList();
+    }
+
+    async Task<List<Release>> GetReleaseInfos(string channel)
+    {
+        using var client = new HttpClient();
+        var url = Constants.ReleaseInfoUrl + channel + Constants.ReleaseInfoUrlEnd;
+        var response = await client.GetStringAsync(url);
+        var releases = JsonSerializer.Deserialize<ReleaseInfo>(response, ReleaseSerializerOptions.Options);
+        return releases.Releases.ToList();
+    }
+
+
+    public async ValueTask<List<InstalledSdk>> GetInstalledSdks(bool force = false)
+    {
+        if (!_installedSdks.IsNullOrEmpty() && !force)
+        {
+            return _installedSdks;
+        }
+        if (Preferences.ContainsKey(Constants.InstalledSdkSKey) && !force)
+        {
+            var sdks = Preferences.Get(Constants.InstalledSdkSKey, "");
+            _installedSdks = JsonSerializer.Deserialize<List<InstalledSdk>>(sdks);
+            return _installedSdks;
         }
 
-        List<SDK> result = new();
+        List<InstalledSdk> result = new();
         var cmdresult = await Cli.Wrap("dotnet")
             .WithArguments("--list-sdks")
             .ExecuteBufferedAsync();
@@ -43,43 +87,21 @@ public class DotnetService
                         var lineSplit = s.Split("[", StringSplitOptions.RemoveEmptyEntries);
                         var versionString = lineSplit[0].Trim();
                         var path = lineSplit[1].TrimEnd(']');
-                        Version version = new Version();
-                        string appendix = string.Empty;
-                        if (versionString.Contains("-"))
-                        {
-                            var parts = versionString.Split("-", StringSplitOptions.RemoveEmptyEntries);
-                            if (parts.Length == 2)
-                            {
-                                version = new Version(parts[0]);
-                                appendix = "-" + parts[1];
-                            }
-                        }
-                        else
-                        {
-                            version = new Version(versionString);
-                        }
-                        result.Add(new SDK
-                        {
-                            Version = version,
-                            Appendix = appendix,
-                            Path = path,
-                            ColorHex = ColorHelper.GenerateHexColor(version + appendix),
-                        });
+                        result.Add(new InstalledSdk() { Version = versionString, Path = path });
                     }
                 }
             }
         }
-        _sdks = result.OrderByDescending(x => x.Version).ToList();
-        Preferences.Set(Constants.InstalledSDKSKey, JsonSerializer.Serialize(_sdks));
-        
-        return _sdks;
+        _installedSdks = result;
+        Preferences.Set(Constants.InstalledSdkSKey, JsonSerializer.Serialize(_installedSdks));
+        return _installedSdks;
     }
 
-    public async Task OpenFolder(SDK sdk)
+    public async Task OpenFolder(Sdk sdk)
     {
         try
         {
-            string path = Path.Combine(sdk.Path, sdk.VersionText);
+            string path = Path.Combine(sdk.Path, sdk.Data.VersionDisplay);
             await Cli.Wrap("explorer").WithArguments(path).WithValidation(CommandResultValidation.None).ExecuteAsync();
         }
         catch (Exception ex)
@@ -88,7 +110,8 @@ public class DotnetService
         }
     }
 
-    public async Task<bool> Uninstall(SDK sdk)
+    
+    public async Task<bool> Uninstall(Sdk sdk)
     {
         try
         {
@@ -113,7 +136,7 @@ public class DotnetService
         }
     }
 
-    string GetSetupName(SDK sdk)
+    string GetSetupName(Sdk sdk)
     {
         try
         {
@@ -131,7 +154,7 @@ public class DotnetService
                 os = "macos";
             }
 
-            return $"dotnet-sdk-{sdk.VersionText}-{os}-{arch}{env}.exe";
+            return $"dotnet-sdk-{sdk.Data.VersionDisplay}-{os}-{arch}{env}.exe";
 
         }
         catch(Exception ex)

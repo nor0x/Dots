@@ -9,6 +9,7 @@ public partial class MainPage : ContentPage
     MainViewModel _vm => BindingContext as MainViewModel;
     public MainPage(MainViewModel vm)
 	{
+        Preferences.Clear();
 		BindingContext = vm;
 		InitializeComponent();
 	}
