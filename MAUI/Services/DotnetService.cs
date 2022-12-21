@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Threading.Channels;
 using CliWrap;
 using CliWrap.Buffered;
 using Dots.Data;
@@ -15,6 +16,8 @@ public class DotnetService
 {   
     List<Sdk> _sdks;
     List<InstalledSdk> _installedSdks = new();
+    ReleaseIndex[] _releaseIndex;
+    Dictionary<string, Release[]> _releases = new();
 
     public async Task<List<Sdk>> GetSdks()
     {
@@ -32,29 +35,61 @@ public class DotnetService
             var sdk = new Sdk()
             {
                 Data = release.Sdk,
-                ColorHex = ColorHelper.GenerateHexColor(release.Sdk.VersionDisplay ?? release.Sdk.Version),
-                Path = _installedSdks.FirstOrDefault(x => x.Version == release?.Sdk?.VersionDisplay)?.Path ?? string.Empty
+                ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version),
+                Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty
             };
             result.Add(sdk);
         }
         return result;
     }
 
-    async Task<List<ReleaseIndex>> GetReleaseIndex()
+    async Task<ReleaseIndex[]> GetReleaseIndex(bool force = false)
     {
+        if (!force && _releaseIndex is not null)
+        {
+            return _releaseIndex;
+        }
+        if(_releaseIndex is null && Preferences.ContainsKey(Constants.ReleaseIndexKey) && !force)
+        {
+            var json = await File.ReadAllTextAsync(Constants.ReleaseIndexPath);
+            var deserialized = JsonSerializer.Deserialize<ReleaseIndexInfo>(json, ReleaseSerializerOptions.Options);
+            _releaseIndex = deserialized.ReleasesIndex;
+            return _releaseIndex;
+        }
+
         using var client = new HttpClient();
         var response = await client.GetStringAsync(Constants.ReleaseIndexUrl);
         var releaseIndex = JsonSerializer.Deserialize<ReleaseIndexInfo>(response, ReleaseSerializerOptions.Options);
-        return releaseIndex.ReleasesIndex.ToList();
+        _releaseIndex = releaseIndex.ReleasesIndex;
+        await File.WriteAllTextAsync(Constants.ReleaseIndexPath, response);
+        Preferences.Set(Constants.ReleaseIndexKey, Constants.ReleaseIndexPath);
+        return _releaseIndex;
     }
-
-    async Task<List<Release>> GetReleaseInfos(string channel)
+    
+    async Task<Release[]> GetReleaseInfos(string channel, bool force = false)
     {
+        if (!force && _releases is not null && _releases.ContainsKey(channel))
+        {
+            return _releases[channel];
+        }
+        if (Preferences.ContainsKey(Constants.ReleaseBaseKey + channel) && !force)
+        {
+            var cachedFile = Path.Combine(FileSystem.Current.AppDataDirectory, $"release-{channel}.json");
+            var json = await File.ReadAllTextAsync(cachedFile);
+            var deserialized = JsonSerializer.Deserialize<ReleaseInfo>(json, ReleaseSerializerOptions.Options);
+            
+            _releases.Add(channel, deserialized.Releases);
+            return _releases[channel];
+        }
+
         using var client = new HttpClient();
         var url = Constants.ReleaseInfoUrl + channel + Constants.ReleaseInfoUrlEnd;
         var response = await client.GetStringAsync(url);
         var releases = JsonSerializer.Deserialize<ReleaseInfo>(response, ReleaseSerializerOptions.Options);
-        return releases.Releases.ToList();
+        var path = Path.Combine(FileSystem.Current.AppDataDirectory, $"release-{channel}.json");
+        await File.WriteAllTextAsync(path, response);
+        Preferences.Set(Constants.ReleaseBaseKey + channel, path);
+        return releases.Releases;
     }
 
 
@@ -101,7 +136,7 @@ public class DotnetService
     {
         try
         {
-            string path = Path.Combine(sdk.Path, sdk.Data.VersionDisplay);
+            string path = Path.Combine(sdk.Path, sdk.Data.Version);
             await Cli.Wrap("explorer").WithArguments(path).WithValidation(CommandResultValidation.None).ExecuteAsync();
         }
         catch (Exception ex)
@@ -154,7 +189,7 @@ public class DotnetService
                 os = "macos";
             }
 
-            return $"dotnet-sdk-{sdk.Data.VersionDisplay}-{os}-{arch}{env}.exe";
+            return $"dotnet-sdk-{sdk.Data.Version}-{os}-{arch}{env}.exe";
 
         }
         catch(Exception ex)

@@ -15,7 +15,7 @@ public partial class Sdk : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Installed))]
-    string _path;
+    string _path = "";
 
     //UI
     public string ColorHex { get; set; }

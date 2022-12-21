@@ -61,7 +61,7 @@
                     FontFamily="Lucide"
                     BorderWidth="0"
                     FontSize="15"                    
-                    Command="{Binding ToggleSelectionCommand}"
+                    Command="{Binding ToggleOnlineCommand}"
                     WidthRequest="30"
                     HeightRequest="30" />
                 <Button
@@ -72,7 +72,7 @@
                     FontFamily="Lucide"
                     BorderWidth="0"
                     FontSize="15"                    
-                    Command="{Binding ToggleSelectionCommand}"
+                    Command="{Binding ToggleInstalledCommand}"
                     WidthRequest="30"
                     HeightRequest="30" />
                 <Button
@@ -128,7 +128,7 @@
                             <VerticalStackLayout
                                 Grid.Column="1"
                                 Margin="8,0,0,0">
-                                <Label Text="{Binding Data.VersionDisplay}" />
+                                <Label Text="{Binding Data.Version}" />
                                 <Label
                                     Text="{Binding Path}"
                                     FontSize="11" />
