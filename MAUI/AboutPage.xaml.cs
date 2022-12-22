@@ -6,6 +6,7 @@ public partial class AboutPage : ContentPage
     public AboutPage()
     {
         InitializeComponent();
+        VersionSpan.Text = AppInfo.VersionString;
     }
 
     private async void IconImage_PointerExited(object sender, PointerEventArgs e)
