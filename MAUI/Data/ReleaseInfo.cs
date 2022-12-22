@@ -71,6 +71,9 @@ public partial class Release
 
     [JsonIgnore]
     public bool Preview => Sdk.Version.Contains("-");
+
+    [JsonIgnore]
+    public bool SupportPhase { get; set; }
 }
 
 public partial class AspnetcoreRuntime

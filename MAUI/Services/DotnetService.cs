@@ -19,7 +19,7 @@ public class DotnetService
     ReleaseIndex[] _releaseIndex;
     Dictionary<string, Release[]> _releases = new();
 
-    public async Task<List<Sdk>> GetSdks()
+    public async Task<List<Sdk>> GetSdks(bool force = false)
     {
         var result = new List<Sdk>();
         var index = await GetReleaseIndex();
@@ -35,7 +35,7 @@ public class DotnetService
             var sdk = new Sdk()
             {
                 Data = release,
-                ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version),
+                ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
                 Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty
             };
             result.Add(sdk);
@@ -132,6 +132,52 @@ public class DotnetService
         return _installedSdks;
     }
 
+    public async ValueTask<string> Download(Sdk sdk)
+    {
+        try
+        {
+            Rid rid = GetRid();
+            if (sdk.Data.Sdk.Files.Where(f => f.Rid == rid).FirstOrDefault(r => r.Name.Contains(".exe")) is Data.FileInfo info)
+            {
+                var path = Path.Combine(FileSystem.Current.AppDataDirectory, info.Url.ToString().Split("/").LastOrDefault());
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+                using var client = new HttpClient();
+                var response = await client.GetByteArrayAsync(info.Url);
+                await File.WriteAllBytesAsync(path, response);
+                return path;
+            }
+            return null;
+        }
+        catch(Exception ex)
+        {
+            Debug.WriteLine(ex);
+            return null;
+        }
+    }
+
+    public async Task<bool> Install(string exe)
+    {
+        try
+        {
+            var result = await Cli.Wrap(exe).WithArguments(" /install /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
+            return result.ExitCode == 0;
+        }
+        catch(Exception ex)
+        {
+            Debug.WriteLine(ex);
+            return false;
+        }
+    }
+
+    public async Task<string> GetInstallationPath(Sdk sdk)
+    {
+        var installed = await GetInstalledSdks(true);
+        return installed.FirstOrDefault(x => x.Version == sdk.Data.Sdk.Version)?.Path ?? string.Empty;
+    }
+
     public async Task OpenFolder(Sdk sdk)
     {
         try
@@ -159,7 +205,7 @@ public class DotnetService
 
             if(!files.IsNullOrEmpty())
             {
-                var result = await Cli.Wrap(files.First()).WithArguments(" /uninstall /quiet").WithValidation(CommandResultValidation.None).ExecuteAsync();
+                var result = await Cli.Wrap(files.First()).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
                 return result.ExitCode == 0;
             }
             return false;
@@ -184,7 +230,7 @@ public class DotnetService
                 arch = "arm";
             }
             var os = "win";
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 os = "macos";
             }
@@ -196,6 +242,44 @@ public class DotnetService
         {
             Debug.WriteLine(ex);
             return null;
+        }
+    }
+
+    Rid GetRid()
+    {
+        try
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return 
+                    (RuntimeInformation.OSArchitecture == Architecture.Arm ||
+                    RuntimeInformation.OSArchitecture == Architecture.Arm64 ||
+                    RuntimeInformation.OSArchitecture == Architecture.Armv6) ? Rid.OsxArm64 : Rid.OsxX64;
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                if(Environment.Is64BitOperatingSystem)
+                {
+                    return
+                        (RuntimeInformation.OSArchitecture == Architecture.Arm ||
+                        RuntimeInformation.OSArchitecture == Architecture.Arm64 ||
+                        RuntimeInformation.OSArchitecture == Architecture.Armv6) ? Rid.WinArm64 : Rid.WinX64;
+                }
+                else
+                {
+                    return
+                         (RuntimeInformation.OSArchitecture == Architecture.Arm ||
+                         RuntimeInformation.OSArchitecture == Architecture.Arm64 ||
+                         RuntimeInformation.OSArchitecture == Architecture.Armv6) ? Rid.WinArm : Rid.WinX86;
+                }
+
+            }
+            return Rid.Empty;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+            return Rid.Empty;
         }
     }
 }

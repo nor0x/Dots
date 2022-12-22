@@ -17,6 +17,9 @@ namespace Dots.ViewModels
         {
             _dotnet = dotnet;
         }
+
+        bool _showOnline;
+        bool _showInstalled; 
         DotnetService _dotnet;
         List<Sdk> _baseSdks;
 
@@ -96,23 +99,37 @@ namespace Dots.ViewModels
         [RelayCommand]
         async Task Download(Sdk sdk)
         {
-
+            sdk.IsDownloading = true;
+            await _dotnet.Download(sdk);
+            sdk.IsDownloading = false;
         }
 
         [RelayCommand]
         async Task Install(Sdk sdk)
         {
-
+            sdk.IsInstalling = true;
+            var path = await _dotnet.Download(sdk);
+            if(!string.IsNullOrEmpty(path))
+            {
+                var result = await _dotnet.Install(path);
+                if(result)
+                {
+                    sdk.Path = await _dotnet.GetInstallationPath(sdk);
+                }
+            }
+            sdk.IsInstalling = false;
         }
 
         [RelayCommand]
         async Task Uninstall(Sdk sdk)
         {
+            sdk.IsUninstalling = true;
             var result = await _dotnet.Uninstall(sdk);
             if (result)
             {
                 sdk.Path = string.Empty;
             }
+            sdk.IsUninstalling = false;
         }
 
 
@@ -123,8 +140,13 @@ namespace Dots.ViewModels
             await _dotnet.OpenFolder(sdk);
         }
 
-        bool _showOnline;
-        bool _showInstalled;
+        
+        [RelayCommand]
+        async Task OpenReleaseNotes()
+        {
+            await Browser.Default.OpenAsync(SelectedSdk.Data.ReleaseNotes);
+        }
+
 
         [RelayCommand]
         void ToggleOnline()

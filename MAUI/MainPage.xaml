@@ -13,7 +13,7 @@
     x:Class="Dots.MainPage">
 
     <Grid
-        RowDefinitions="60,*"
+        RowDefinitions="64,*"
         BackgroundColor="{StaticResource Background}">
         <Grid Grid.Row="0">
             <HorizontalStackLayout
@@ -106,7 +106,7 @@
             Grid.Row="1"
             ColumnDefinitions="*,Auto"
             BackgroundColor="{StaticResource BackgroundSubtle}"
-            Padding="12,12,12,0">
+            Padding="12,0,0,0">
             <CollectionView
                 x:Name="SdkCollection"
                 ItemsSource="{Binding Sdks}"
@@ -120,6 +120,7 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Sdk">
                         <Grid
+                            BackgroundColor="Transparent"
                             ColumnDefinitions="Auto,*,Auto"
                             Margin="0,0,4,0">
                             <Border
@@ -135,42 +136,55 @@
                                     HorizontalOptions="Center"
                                     VerticalOptions="Center" />
                             </Border>
-                            <HorizontalStackLayout
+                            <VerticalStackLayout
                                 Grid.Column="1"
                                 Margin="8,0,0,0">
-                                <VerticalStackLayout>
-                                    <Label Text="{Binding Data.Sdk.Version}" />
-                                    <Label
-                                        Text="{Binding Path}"
-                                        FontSize="11" />
+                                <Label Text="{Binding Data.Sdk.Version}" />
+                                <Label
+                                    Text="{Binding Path}"
+                                    FontSize="11" />
 
-                                </VerticalStackLayout>
-                                <Label
-                                    Text="Security Patch"
-                                    Margin="12,0,6,0"
-                                    Padding="1"
-                                    BackgroundColor="{StaticResource Danger}"
-                                    VerticalOptions="Center"
-                                    FontSize="11"
-                                    IsVisible="{Binding Data.Security}" />
-                                <Label
-                                    Text="Preview"
-                                    Margin="6,0,6,0"
-                                    Padding="1"
-                                    BackgroundColor="{StaticResource Attention}"
-                                    VerticalOptions="Center"
-                                    FontSize="11"
-                                    IsVisible="{Binding Data.Preview}" />
-                            </HorizontalStackLayout>
+                            </VerticalStackLayout>
                             <HorizontalStackLayout
                                 Grid.Column="2"
                                 VerticalOptions="Center">
+                                <Border
+                                    HeightRequest="20"
+                                    Padding="6,0"
+                                    Margin="0,0,6,0"
+                                    BackgroundColor="{StaticResource Danger}"
+                                    VerticalOptions="Center"
+                                    IsVisible="{Binding Data.Security}">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="10" />
+                                    </Border.StrokeShape>
+                                    <Label
+                                        VerticalOptions="Center"
+                                        Text="Security Patch"
+                                        FontSize="11" />
+                                </Border>
+                                <Border
+                                    HeightRequest="20"
+                                    IsVisible="{Binding Data.Preview}"
+                                    Padding="6,0"
+                                    Margin="0,0,6,0"
+                                    BackgroundColor="{StaticResource Attention}"
+                                    VerticalOptions="Center">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="10" />
+                                    </Border.StrokeShape>
+                                    <Label
+                                        VerticalOptions="Center"
+                                        Text="Preview"
+                                        BackgroundColor="{StaticResource Attention}"
+                                        FontSize="11" />
+                                </Border>
                                 <Button
                                     Text="Open"
                                     HeightRequest="24"
                                     WidthRequest="100"
                                     FontSize="12"
-                                    Margin="0,0,12,0"
+                                    Margin="12,0,6,0"
                                     FontFamily="Default"
                                     VerticalOptions="Center"
                                     CommandParameter="{Binding .}"
@@ -250,142 +264,192 @@
                 x:Name="DetailsPanel"
                 Grid.Column="1"
                 Grid.Row="1"
-                BackgroundColor="{StaticResource BackgroundSubtle}"
+                BackgroundColor="{StaticResource Background}"
                 BindingContext="{Binding SelectedSdk}">
                 <BoxView
                     Background="{StaticResource Background}"
                     WidthRequest="2"
                     HorizontalOptions="Start"
                     VerticalOptions="FillAndExpand" />
-                <VerticalStackLayout x:DataType="models:Sdk" Margin="12,0,0,0">
-                    <Border
-                        WidthRequest="70"
-                        HeightRequest="70"
-                        BackgroundColor="{Binding Color}"
-                        StrokeThickness="0">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="10" />
-                        </Border.StrokeShape>
+                <ScrollView>
+                    <VerticalStackLayout
+                        x:DataType="models:Sdk"
+                        Margin="12,0,0,0">
+                        <Border
+                            WidthRequest="70"
+                            HeightRequest="70"
+                            BackgroundColor="{Binding Color}"
+                            StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10" />
+                            </Border.StrokeShape>
+                            <Label
+                                Text="{Binding Group}"
+                                FontSize="20"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center" />
+                        </Border>
                         <Label
-                            Text="{Binding Group}"
-                            FontSize="20"
-                            HorizontalOptions="Center"
-                            VerticalOptions="Center" />
-                    </Border>
-                    <Label
-                        Text="{Binding Data.Sdk.Version}"
-                        FontSize="20" />
-                    <HorizontalStackLayout>
+                            Text="{Binding Data.Sdk.Version}"
+                            FontSize="20" />
+                        <HorizontalStackLayout>
+                            <Label
+                                Text="Security Patch"
+                                Padding="1"
+                                Margin="0,8,8,0"
+                                BackgroundColor="{StaticResource Danger}"
+                                FontSize="11"
+                                IsVisible="{Binding Data.Security}" />
+                            <Label
+                                Text="Preview"
+                                Padding="1"
+                                Margin="0,8,8,0"
+                                BackgroundColor="{StaticResource Attention}"
+                                FontSize="11"
+                                IsVisible="{Binding Data.Preview}" />
+                        </HorizontalStackLayout>
                         <Label
-                                    Text="Security Patch"
-                                    Padding="1"
-                                    Margin="0,8,8,0"
-                                    BackgroundColor="{StaticResource Danger}"
-                                    FontSize="11"
-                                    IsVisible="{Binding Data.Security}" />
+                            Text="{Binding Path}"
+                            FontSize="11" />
+                        <HorizontalStackLayout
+                            Margin="0,12,0,0"
+                            VerticalOptions="Center">
+                            <Button
+                                Text="Open"
+                                HeightRequest="24"
+                                WidthRequest="100"
+                                FontSize="12"
+                                Margin="0,0,12,0"
+                                FontFamily="Default"
+                                VerticalOptions="Center"
+                                CommandParameter="{Binding .}"
+                                Grid.Column="2">
+                                <Button.Triggers>
+                                    <DataTrigger
+                                        TargetType="Button"
+                                        Binding="{Binding Installed}"
+                                        Value="True">
+                                        <Setter
+                                            Property="Text"
+                                            Value="Open" />
+                                        <Setter
+                                            Property="Command"
+                                            Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.OpenPathCommand}" />
+                                    </DataTrigger>
+                                    <DataTrigger
+                                        TargetType="Button"
+                                        Binding="{Binding Installed}"
+                                        Value="False">
+                                        <Setter
+                                            Property="Text"
+                                            Value="Download" />
+                                        <Setter
+                                            Property="Command"
+                                            Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.DownloadCommand}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                            <Button
+                                Text="Uninstall"
+                                HeightRequest="24"
+                                WidthRequest="100"
+                                FontSize="12"
+                                Margin="0,0,12,0"
+                                FontFamily="Default"
+                                VerticalOptions="Center"
+                                CommandParameter="{Binding .}"
+                                Grid.Column="2">
+                                <Button.Triggers>
+                                    <DataTrigger
+                                        TargetType="Button"
+                                        Binding="{Binding Installed}"
+                                        Value="True">
+                                        <Setter
+                                            Property="Text"
+                                            Value="Uninstall" />
+                                        <Setter
+                                            Property="BackgroundColor"
+                                            Value="{StaticResource Danger}" />
+                                        <Setter
+                                            Property="Command"
+                                            Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.UninstallCommand}" />
+                                    </DataTrigger>
+                                    <DataTrigger
+                                        TargetType="Button"
+                                        Binding="{Binding Installed}"
+                                        Value="False">
+                                        <Setter
+                                            Property="Text"
+                                            Value="Install" />
+                                        <Setter
+                                            Property="BackgroundColor"
+                                            Value="{StaticResource Accent}" />
+                                        <Setter
+                                            Property="Command"
+                                            Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.InstallCommand}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                        </HorizontalStackLayout>
+                        <BoxView
+                            Background="{StaticResource Background}"
+                            Margin="0, 12"
+                            HeightRequest="1"
+                            HorizontalOptions="FillAndExpand" />
                         <Label
-                                    Text="Preview"
-                                    Padding="1"
-                                    Margin="0,8,8,0"
-                                    BackgroundColor="{StaticResource Attention}"
-                                    FontSize="11"
-                                    IsVisible="{Binding Data.Preview}" />
-                    </HorizontalStackLayout>
-                    <Label
-                        Text="{Binding Path}"
-                        FontSize="11" />
-                    <HorizontalStackLayout
-                        Margin="0,12,0,0"
-                        VerticalOptions="Center">
-                        <Button
-                                    Text="Open"
-                                    HeightRequest="24"
-                                    WidthRequest="100"
-                                    FontSize="12"
-                                    Margin="0,0,12,0"
-                                    FontFamily="Default"
-                                    VerticalOptions="Center"
-                                    CommandParameter="{Binding .}"
-                                    Grid.Column="2">
-                            <Button.Triggers>
-                                <DataTrigger
-                                            TargetType="Button"
-                                            Binding="{Binding Installed}"
-                                            Value="True">
-                                    <Setter
-                                                Property="Text"
-                                                Value="Open" />
-                                    <Setter
-                                                Property="Command"
-                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.OpenPathCommand}" />
-                                </DataTrigger>
-                                <DataTrigger
-                                            TargetType="Button"
-                                            Binding="{Binding Installed}"
-                                            Value="False">
-                                    <Setter
-                                                Property="Text"
-                                                Value="Download" />
-                                    <Setter
-                                                Property="Command"
-                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.DownloadCommand}" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
-                        <Button
-                                    Text="Uninstall"
-                                    HeightRequest="24"
-                                    WidthRequest="100"
-                                    FontSize="12"
-                                    Margin="0,0,12,0"
-                                    FontFamily="Default"
-                                    VerticalOptions="Center"
-                                    CommandParameter="{Binding .}"
-                                    Grid.Column="2">
-                            <Button.Triggers>
-                                <DataTrigger
-                                            TargetType="Button"
-                                            Binding="{Binding Installed}"
-                                            Value="True">
-                                    <Setter
-                                                Property="Text"
-                                                Value="Uninstall" />
-                                    <Setter
-                                                Property="BackgroundColor"
-                                                Value="{StaticResource Danger}" />
-                                    <Setter
-                                                Property="Command"
-                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.UninstallCommand}" />
-                                </DataTrigger>
-                                <DataTrigger
-                                            TargetType="Button"
-                                            Binding="{Binding Installed}"
-                                            Value="False">
-                                    <Setter
-                                                Property="Text"
-                                                Value="Install" />
-                                    <Setter
-                                                Property="BackgroundColor"
-                                                Value="{StaticResource Accent}" />
-                                    <Setter
-                                                Property="Command"
-                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.InstallCommand}" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
-                    </HorizontalStackLayout>
-                    <BoxView
-                    Background="{StaticResource Background}"
-                        Margin="0, 12"
-                    HeightRequest="1"
-                    HorizontalOptions="FillAndExpand" />
+                            Text="Release Notes"
+                            FontAttributes="Bold" />
+                        <Label
+                            Text="{Binding Data.ReleaseNotes}"
+                            TextDecorations="Underline"
+                            TextColor="{StaticResource Accent}">
+                            <Label.GestureRecognizers>
+                                <PointerGestureRecognizer
+                                    PointerEntered="ReleaseNotes_PointerEntered"
+                                    PointerExited="ReleaseNotes_PointerExited" />
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference PageSelf}, Path=BindingContext.OpenReleaseNotesCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
 
-                    <Label Text="Release Notes" FontAttributes="Bold" />
-                    <Label Text="{Binding Data.ReleaseNotes}" />
-
-                    <Label Text="Release Date" FontAttributes="Bold" Margin="0,12,0,0" />
-                    <Label Text="{Binding Data.ReleaseDate}" />
-                </VerticalStackLayout>
+                        <Label
+                            Text="Release Date"
+                            FontAttributes="Bold"
+                            Margin="0,12,0,0" />
+                        <Label Text="{Binding Data.ReleaseDate}" />
+                        <Label
+                            Text="Runtime Version"
+                            FontAttributes="Bold"
+                            Margin="0,12,0,0" />
+                        <Label Text="{Binding Data.Sdk.RuntimeVersion}" />
+                        <Label
+                            Text="C# Version"
+                            FontAttributes="Bold"
+                            Margin="0,12,0,0" />
+                        <Label Text="{Binding Data.Sdk.CsharpVersion}" />
+                        <Label
+                            Text="F# Version"
+                            FontAttributes="Bold"
+                            Margin="0,12,0,0" />
+                        <Label Text="{Binding Data.Sdk.FsharpVersion}" />
+                        <Label
+                            Text="VB Version"
+                            FontAttributes="Bold"
+                            Margin="0,12,0,0" />
+                        <Label Text="{Binding Data.Sdk.VbVersion}" />
+                        <Label
+                            Text="Visual Studio Support"
+                            FontAttributes="Bold"
+                            Margin="0,12,0,0" />
+                        <Label Text="{Binding Data.Sdk.VsSupport}" />
+                        <Label Text="{Binding Data.Sdk.VsVersion}" />
+                        <Label
+                            Text="Visual Studio Mac Support"
+                            FontAttributes="Bold"
+                            Margin="0,12,0,0" />
+                        <Label Text="{Binding Data.Sdk.VsMacSupport}" />
+                        <Label Text="{Binding Data.Sdk.VsMacVersion}" />
+                    </VerticalStackLayout>
+                </ScrollView>
             </Grid>
         </Grid>
 

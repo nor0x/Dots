@@ -27,6 +27,18 @@ public partial class Sdk : ObservableObject
     public bool IsSelected { get; set; }
     [JsonIgnore]
     public bool Installed => !string.IsNullOrEmpty(Path);
+
+    [ObservableProperty]
+    [JsonIgnore]
+    public bool _isDownloading;
+
+    [ObservableProperty]
+    [JsonIgnore]
+    public bool _isInstalling;
+
+    [ObservableProperty]
+    [JsonIgnore]
+    public bool _isUninstalling;
 }
 
 

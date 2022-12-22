@@ -1,5 +1,6 @@
 ﻿using Dots.Helpers;
 using Dots.Models;
+using Microsoft.UI.Input;
 using System;
 using System.Diagnostics;
 
@@ -9,37 +10,61 @@ public partial class MainPage : ContentPage
 {
     MainViewModel _vm => BindingContext as MainViewModel;
     public MainPage(MainViewModel vm)
-	{
-		BindingContext = vm;
-		InitializeComponent();
-	}
+    {
+        BindingContext = vm;
+        InitializeComponent();
+    }
 
     protected async override void OnAppearing()
     {
         base.OnAppearing();
         await _vm.CheckSdks();
     }
-    
-    
-    private void Button_Clicked(object sender, EventArgs e)
-    {
-        Debug.WriteLine("hello world!");
-    }
 
     private async void SdkCollection_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        var newSelection = e.CurrentSelection.FirstOrDefault() != e.PreviousSelection.FirstOrDefault();
         var open = DetailsPanel.Width == 0;
-        if(open)
+        if (open)
         {
             await DetailsPanel.WidthTo(300);
         }
         else
         {
-            await DetailsPanel.WidthTo(0);
+            if (newSelection)
+            {
+                await DetailsPanel.WidthTo(0);
+            }
         }
-        if(e.CurrentSelection.First() is Sdk sdk)
+        if (e.CurrentSelection.FirstOrDefault() is Sdk sdk)
         {
             _vm.SelectedSdk = sdk;
+        }
+    }
+
+    private void ReleaseNotes_PointerExited(object sender, Microsoft.Maui.Controls.PointerEventArgs e)
+    {
+        if (sender is Label label)
+        {
+#if WINDOWS
+            if (label.Handler.PlatformView is Microsoft.UI.Xaml.Controls.TextBlock textBlock)
+            {
+                textBlock.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
+            }
+#endif
+        }
+    }
+
+    private void ReleaseNotes_PointerEntered(object sender, Microsoft.Maui.Controls.PointerEventArgs e)
+    {
+        if (sender is Label label)
+        {
+#if WINDOWS
+            if(label.Handler.PlatformView is Microsoft.UI.Xaml.Controls.TextBlock textBlock)
+            {
+                textBlock.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Hand));
+            }
+#endif
         }
     }
 }
