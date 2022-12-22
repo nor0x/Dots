@@ -79,5 +79,26 @@ public partial class MainPage : ContentPage
         }
         await CollapseDetailsButton.FadeTo(0);
     }
+
+    private void Logo_Tapped(object sender, Microsoft.Maui.Controls.TappedEventArgs e)
+    {
+        if (Application.Current.Windows.Count() == 1)
+        {
+            var secondWindow = new Window
+            {
+                Page = new AboutPage(),
+                MaximumHeight = 420,
+                MaximumWidth = 320,
+                MinimumHeight = 420,
+                MinimumWidth = 320,
+            };
+
+            Application.Current.OpenWindow(secondWindow);
+        }
+        else
+        {
+            App.Current.CloseWindow(Application.Current.Windows.FirstOrDefault(w => w.Page is AboutPage));
+        }
+    }
 }
 

@@ -24,9 +24,14 @@
                 Margin="12,4,0,0"
                 Spacing="12">
                 <Image
+                    ZIndex="99999"
                     Source="logo.png"
                     WidthRequest="40"
-                    HeightRequest="40" />
+                    HeightRequest="40">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="Logo_Tapped" />
+                    </Image.GestureRecognizers>
+                </Image>
                 <VerticalStackLayout>
                     <Label
                         Text="{x:Static local:Constants.AppName}"
@@ -121,6 +126,9 @@
                         ItemSpacing="4"
                         Orientation="Vertical" />
                 </CollectionView.ItemsLayout>
+                <CollectionView.Header>
+                    <BoxView HeightRequest="18" />
+                </CollectionView.Header>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Sdk">
                         <Grid
