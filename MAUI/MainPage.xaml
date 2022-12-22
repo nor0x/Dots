@@ -11,7 +11,11 @@
     x:Name="PageSelf"
     x:DataType="vm:MainViewModel"
     x:Class="Dots.MainPage">
-
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <mct:IsStringNotNullOrEmptyConverter x:Key="IsStringNotNullOrEmptyConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
     <Grid
         RowDefinitions="64,*"
         BackgroundColor="{StaticResource Background}">
@@ -120,12 +124,13 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Sdk">
                         <Grid
+                            HeightRequest="43"
                             BackgroundColor="Transparent"
                             ColumnDefinitions="Auto,*,Auto"
                             Margin="0,0,4,0">
                             <Border
-                                WidthRequest="40"
-                                HeightRequest="40"
+                                WidthRequest="43"
+                                HeightRequest="43"
                                 BackgroundColor="{Binding Color}"
                                 StrokeThickness="0">
                                 <Border.StrokeShape>
@@ -140,13 +145,14 @@
                                     VerticalOptions="Center" />
                             </Border>
                             <VerticalStackLayout
+                                VerticalOptions="Center"
                                 Grid.Column="1"
                                 Margin="8,0,0,0">
                                 <Label Text="{Binding Data.Sdk.Version}" />
                                 <Label
                                     Text="{Binding Path}"
-                                    FontSize="11" />
-
+                                    FontSize="11"
+                                    IsVisible="{Binding Path, Converter={StaticResource IsStringNotNullOrEmptyConverter}}" />
                             </VerticalStackLayout>
                             <HorizontalStackLayout
                                 Grid.Column="2"
