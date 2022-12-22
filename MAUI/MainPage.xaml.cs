@@ -28,12 +28,15 @@ public partial class MainPage : ContentPage
         if (open)
         {
             await DetailsPanel.WidthTo(300);
+            await CollapseDetailsButton.FadeTo(100);
+
         }
         else
         {
             if (newSelection)
             {
                 await DetailsPanel.WidthTo(0);
+                await CollapseDetailsButton.FadeTo(0);
             }
         }
         if (e.CurrentSelection.FirstOrDefault() is Sdk sdk)
@@ -66,6 +69,15 @@ public partial class MainPage : ContentPage
             }
 #endif
         }
+    }
+
+    private async void CollapseDetails_Tapped(object sender, Microsoft.Maui.Controls.TappedEventArgs e)
+    {
+        if(DetailsPanel.Width > 0)
+        {
+            await DetailsPanel.WidthTo(0);
+        }
+        await CollapseDetailsButton.FadeTo(0);
     }
 }
 

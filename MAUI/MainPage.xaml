@@ -133,6 +133,9 @@
                                 </Border.StrokeShape>
                                 <Label
                                     Text="{Binding Group}"
+                                    FontSize="16"
+                                    VerticalTextAlignment="Center"
+                                    HorizontalTextAlignment="Center"
                                     HorizontalOptions="Center"
                                     VerticalOptions="Center" />
                             </Border>
@@ -450,6 +453,21 @@
                         <Label Text="{Binding Data.Sdk.VsMacVersion}" />
                     </VerticalStackLayout>
                 </ScrollView>
+                <Border x:Name="CollapseDetailsButton" BackgroundColor="{StaticResource Background}" WidthRequest="24" HeightRequest="42" VerticalOptions="End" HorizontalOptions="Start" Margin="-23,0,0,0" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="6,0,6,0"/>
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="CollapseDetails_Tapped" />
+                    </Border.GestureRecognizers>
+                    <Label Text="{x:Static helpers:LucideIcons.ChevronsRight}" 
+                           Margin="2,0,0,0"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           FontSize="20"
+                           FontFamily="Lucide"/>
+
+                </Border>
             </Grid>
         </Grid>
 
