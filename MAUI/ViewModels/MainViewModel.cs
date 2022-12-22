@@ -21,7 +21,10 @@ namespace Dots.ViewModels
         List<Sdk> _baseSdks;
 
         [ObservableProperty]
-        bool _selectionEnabled;
+        bool _selectionEnabled;        
+        
+        [ObservableProperty]
+        Sdk _selectedSdk;
 
         [ObservableProperty]
         ObservableRangeCollection<Sdk> _sdks;

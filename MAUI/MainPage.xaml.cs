@@ -1,4 +1,5 @@
 ﻿using Dots.Helpers;
+using Dots.Models;
 using System;
 using System.Diagnostics;
 
@@ -35,7 +36,10 @@ public partial class MainPage : ContentPage
         else
         {
             await DetailsPanel.WidthTo(0);
-
+        }
+        if(e.CurrentSelection.First() is Sdk sdk)
+        {
+            _vm.SelectedSdk = sdk;
         }
     }
 }
