@@ -95,41 +95,50 @@ public class DotnetService
 
     public async ValueTask<List<InstalledSdk>> GetInstalledSdks(bool force = false)
     {
-        if (!_installedSdks.IsNullOrEmpty() && !force)
+        try
         {
-            return _installedSdks;
-        }
-        if (Preferences.ContainsKey(Constants.InstalledSdkSKey) && !force)
-        {
-            var sdks = Preferences.Get(Constants.InstalledSdkSKey, "");
-            _installedSdks = JsonSerializer.Deserialize<List<InstalledSdk>>(sdks);
-            return _installedSdks;
-        }
-
-        List<InstalledSdk> result = new();
-        var cmdresult = await Cli.Wrap("dotnet")
-            .WithArguments("--list-sdks")
-            .ExecuteBufferedAsync();
-
-        if(!string.IsNullOrEmpty(cmdresult.StandardOutput))
-        {
-            if(cmdresult.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries) is string[] sdks)
+            if (!_installedSdks.IsNullOrEmpty() && !force)
             {
-                foreach(var s in sdks)
+                return _installedSdks;
+            }
+            if (Preferences.ContainsKey(Constants.InstalledSdkSKey) && !force)
+            {
+                var sdks = Preferences.Get(Constants.InstalledSdkSKey, "");
+                _installedSdks = JsonSerializer.Deserialize<List<InstalledSdk>>(sdks);
+                return _installedSdks;
+            }
+
+            List<InstalledSdk> result = new();
+            var cmdresult = await Cli.Wrap(Constants.DotnetCommand)
+                .WithArguments(Constants.ListSdksCommand)
+                .ExecuteBufferedAsync(Encoding.UTF8);
+
+            if (!string.IsNullOrEmpty(cmdresult.StandardOutput))
+            {
+                if (cmdresult.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries) is string[] sdks)
                 {
-                    if (!string.IsNullOrEmpty(s))
+                    foreach (var s in sdks)
                     {
-                        var lineSplit = s.Split("[", StringSplitOptions.RemoveEmptyEntries);
-                        var versionString = lineSplit[0].Trim();
-                        var path = lineSplit[1].TrimEnd(']');
-                        result.Add(new InstalledSdk() { Version = versionString, Path = path });
+                        if (!string.IsNullOrEmpty(s))
+                        {
+                            var lineSplit = s.Split("[", StringSplitOptions.RemoveEmptyEntries);
+                            var versionString = lineSplit[0].Trim();
+                            var path = lineSplit[1].TrimEnd(']');
+                            result.Add(new InstalledSdk() { Version = versionString, Path = path });
+                        }
                     }
                 }
             }
+            _installedSdks = result;
+            Preferences.Set(Constants.InstalledSdkSKey, JsonSerializer.Serialize(_installedSdks));
+            return _installedSdks;
         }
-        _installedSdks = result;
-        Preferences.Set(Constants.InstalledSdkSKey, JsonSerializer.Serialize(_installedSdks));
-        return _installedSdks;
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+            return null;
+        }
+
     }
 
     public async ValueTask<string> Download(Sdk sdk)
@@ -183,7 +192,7 @@ public class DotnetService
         try
         {
             string path = Path.Combine(sdk.Path, sdk.Data.Sdk.Version);
-            await Cli.Wrap("explorer").WithArguments(path).WithValidation(CommandResultValidation.None).ExecuteAsync();
+            await Cli.Wrap(Constants.ExplorerCommand).WithArguments(path).WithValidation(CommandResultValidation.None).ExecuteAsync();
         }
         catch (Exception ex)
         {
