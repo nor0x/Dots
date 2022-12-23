@@ -213,6 +213,7 @@
                                     FontFamily="Default"
                                     VerticalOptions="Center"
                                     CommandParameter="{Binding .}"
+                                    Command="{Binding Source={x:Reference PageSelf}, Path=BindingContext.OpenOrDownloadCommand}"
                                     Grid.Column="2">
                                     <Button.Clip>
                                         <OnPlatform x:TypeArguments="RoundRectangleGeometry">
@@ -232,9 +233,6 @@
                                             <Setter
                                                 Property="Text"
                                                 Value="Open" />
-                                            <Setter
-                                                Property="Command"
-                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.OpenPathCommand}" />
                                         </DataTrigger>
                                         <DataTrigger
                                             TargetType="Button"
@@ -243,9 +241,6 @@
                                             <Setter
                                                 Property="Text"
                                                 Value="Download" />
-                                            <Setter
-                                                Property="Command"
-                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.DownloadCommand}" />
                                         </DataTrigger>
                                     </Button.Triggers>
                                 </Button>
@@ -258,6 +253,7 @@
                                     Margin="0,0,12,0"
                                     FontFamily="Default"
                                     VerticalOptions="Center"
+                                    Command="{Binding Source={x:Reference PageSelf}, Path=BindingContext.InstallOrUninstallCommand}"
                                     CommandParameter="{Binding .}"
                                     Grid.Column="2">
                                     <Button.Clip>
@@ -281,9 +277,6 @@
                                             <Setter
                                                 Property="BackgroundColor"
                                                 Value="{StaticResource Danger}" />
-                                            <Setter
-                                                Property="Command"
-                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.UninstallCommand}" />
                                         </DataTrigger>
                                         <DataTrigger
                                             TargetType="Button"
@@ -295,9 +288,6 @@
                                             <Setter
                                                 Property="BackgroundColor"
                                                 Value="{StaticResource Accent}" />
-                                            <Setter
-                                                Property="Command"
-                                                Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.InstallCommand}" />
                                         </DataTrigger>
                                     </Button.Triggers>
                                 </Button>
@@ -387,6 +377,7 @@
                                 Margin="0,0,12,0"
                                 FontFamily="Default"
                                 VerticalOptions="Center"
+                                Command="{Binding Source={x:Reference PageSelf}, Path=BindingContext.OpenOrDownloadCommand}"
                                 CommandParameter="{Binding .}"
                                 Grid.Column="2">
                                 <Button.Clip>
@@ -407,9 +398,6 @@
                                         <Setter
                                             Property="Text"
                                             Value="Open" />
-                                        <Setter
-                                            Property="Command"
-                                            Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.OpenPathCommand}" />
                                     </DataTrigger>
                                     <DataTrigger
                                         TargetType="Button"
@@ -418,9 +406,6 @@
                                         <Setter
                                             Property="Text"
                                             Value="Download" />
-                                        <Setter
-                                            Property="Command"
-                                            Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.DownloadCommand}" />
                                     </DataTrigger>
                                 </Button.Triggers>
                             </Button>
@@ -434,6 +419,7 @@
                                 FontFamily="Default"
                                 VerticalOptions="Center"
                                 CommandParameter="{Binding .}"
+                                Command="{Binding Source={x:Reference PageSelf}, Path=BindingContext.InstallOrUninstallCommand}"
                                 Grid.Column="2">
                                 <Button.Clip>
                                     <OnPlatform x:TypeArguments="RoundRectangleGeometry">
@@ -456,9 +442,6 @@
                                         <Setter
                                             Property="BackgroundColor"
                                             Value="{StaticResource Danger}" />
-                                        <Setter
-                                            Property="Command"
-                                            Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.UninstallCommand}" />
                                     </DataTrigger>
                                     <DataTrigger
                                         TargetType="Button"
@@ -470,9 +453,6 @@
                                         <Setter
                                             Property="BackgroundColor"
                                             Value="{StaticResource Accent}" />
-                                        <Setter
-                                            Property="Command"
-                                            Value="{Binding Source={x:Reference PageSelf}, Path=BindingContext.InstallCommand}" />
                                     </DataTrigger>
                                 </Button.Triggers>
                             </Button>

@@ -97,49 +97,48 @@ namespace Dots.ViewModels
         }
 
         [RelayCommand]
-        async Task Download(Sdk sdk)
+        async Task OpenOrDownload(Sdk sdk)
         {
-            sdk.IsDownloading = true;
-            await _dotnet.Download(sdk);
-            sdk.IsDownloading = false;
+            if (sdk.Installed)
+            {
+                await _dotnet.OpenFolder(sdk);
+            }
+            else
+            {
+                sdk.IsDownloading = true;
+                await _dotnet.Download(sdk);
+                sdk.IsDownloading = false;
+            }
         }
 
         [RelayCommand]
-        async Task Install(Sdk sdk)
+        async Task InstallOrUninstall(Sdk sdk)
         {
-            sdk.IsInstalling = true;
-            var path = await _dotnet.Download(sdk);
-            if(!string.IsNullOrEmpty(path))
+            if (sdk.Installed)
             {
-                var result = await _dotnet.Install(path);
-                if(result)
+                sdk.IsUninstalling = true;
+                var result = await _dotnet.Uninstall(sdk);
+                if (result)
                 {
-                    sdk.Path = await _dotnet.GetInstallationPath(sdk);
+                    sdk.Path = string.Empty;
                 }
+                sdk.IsUninstalling = false;
             }
-            sdk.IsInstalling = false;
-        }
-
-        [RelayCommand]
-        async Task Uninstall(Sdk sdk)
-        {
-            sdk.IsUninstalling = true;
-            var result = await _dotnet.Uninstall(sdk);
-            if (result)
+            else
             {
-                sdk.Path = string.Empty;
+                sdk.IsInstalling = true;
+                var path = await _dotnet.Download(sdk);
+                if (!string.IsNullOrEmpty(path))
+                {
+                    var result = await _dotnet.Install(path);
+                    if (result)
+                    {
+                        sdk.Path = await _dotnet.GetInstallationPath(sdk);
+                    }
+                }
+                sdk.IsInstalling = false;
             }
-            sdk.IsUninstalling = false;
         }
-
-
-
-        [RelayCommand]
-        async Task OpenPath(Sdk sdk)
-        {
-            await _dotnet.OpenFolder(sdk);
-        }
-
         
         [RelayCommand]
         async Task OpenReleaseNotes()
