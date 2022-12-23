@@ -48,12 +48,19 @@
             </HorizontalStackLayout>
             <SearchBar
                 x:Name="MainSearchBar"
+                BackgroundColor="{OnPlatform MacCatalyst={StaticResource BackgroundSubtle}}"
                 WidthRequest="280"
                 HeightRequest="32"
                 Margin="0,8,0,0"
                 VerticalTextAlignment="Center"
                 VerticalOptions="Center"
                 Placeholder="Search...">
+                <SearchBar.Clip>
+                    <RoundRectangleGeometry
+                        CornerRadius="8"
+                        Rect="0,0,280,32" />
+
+                </SearchBar.Clip>
                 <SearchBar.Behaviors>
                     <mct:EventToCommandBehavior
                         EventName="TextChanged"
@@ -178,7 +185,7 @@
                                     <Label
                                         VerticalOptions="Center"
                                         Text="Security Patch"
-                                        FontSize="11" />
+                                        FontSize="{OnPlatform 11, MacCatalyst=12, WinUI=11}" />
                                 </Border>
                                 <Border
                                     HeightRequest="20"
@@ -193,19 +200,30 @@
                                     <Label
                                         VerticalOptions="Center"
                                         Text="Preview"
-                                        BackgroundColor="{StaticResource Attention}"
-                                        FontSize="11" />
+                                        FontSize="{OnPlatform 11, MacCatalyst=12, WinUI=11}" />
                                 </Border>
                                 <Button
                                     Text="Open"
-                                    HeightRequest="24"
+                                    HeightRequest="{OnPlatform 24, MacCatalyst=30, WinUI=24}"
                                     WidthRequest="100"
-                                    FontSize="12"
+                                    FontSize="{OnPlatform 12, MacCatalyst=14, WinUI=12}"
+                                    BackgroundColor="{OnPlatform MacCatalyst=DarkGray}"
+                                    TextColor="White"
                                     Margin="12,0,6,0"
                                     FontFamily="Default"
                                     VerticalOptions="Center"
                                     CommandParameter="{Binding .}"
                                     Grid.Column="2">
+                                    <Button.Clip>
+                                        <OnPlatform x:TypeArguments="RoundRectangleGeometry">
+                                            <On Platform="MacCatalyst">
+                                                <RoundRectangleGeometry
+                                                    Rect="0,0,100,30"
+                                                    CornerRadius="8" />
+                                            </On>
+
+                                        </OnPlatform>
+                                    </Button.Clip>
                                     <Button.Triggers>
                                         <DataTrigger
                                             TargetType="Button"
@@ -233,14 +251,25 @@
                                 </Button>
                                 <Button
                                     Text="Uninstall"
-                                    HeightRequest="24"
+                                    HeightRequest="{OnPlatform 24, MacCatalyst=30, WinUI=24}"
                                     WidthRequest="100"
-                                    FontSize="12"
+                                    FontSize="{OnPlatform 12, MacCatalyst=14, WinUI=12}"
+                                    TextColor="White"
                                     Margin="0,0,12,0"
                                     FontFamily="Default"
                                     VerticalOptions="Center"
                                     CommandParameter="{Binding .}"
                                     Grid.Column="2">
+                                    <Button.Clip>
+                                        <OnPlatform x:TypeArguments="RoundRectangleGeometry">
+                                            <On Platform="MacCatalyst">
+                                                <RoundRectangleGeometry
+                                                    Rect="0,0,100,30"
+                                                    CornerRadius="8" />
+                                            </On>
+
+                                        </OnPlatform>
+                                    </Button.Clip>
                                     <Button.Triggers>
                                         <DataTrigger
                                             TargetType="Button"
@@ -296,6 +325,7 @@
                             WidthRequest="70"
                             HeightRequest="70"
                             BackgroundColor="{Binding Color}"
+                            Margin="0,0,0,6"
                             StrokeThickness="0">
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="10" />
@@ -310,20 +340,36 @@
                             Text="{Binding Data.Sdk.Version}"
                             FontSize="20" />
                         <HorizontalStackLayout>
-                            <Label
-                                Text="Security Patch"
-                                Padding="1"
-                                Margin="0,8,8,0"
+                            <Border
+                                HeightRequest="20"
+                                Padding="6,0"
+                                Margin="0,0,6,0"
                                 BackgroundColor="{StaticResource Danger}"
-                                FontSize="11"
-                                IsVisible="{Binding Data.Security}" />
-                            <Label
-                                Text="Preview"
-                                Padding="1"
-                                Margin="0,8,8,0"
+                                VerticalOptions="Center"
+                                IsVisible="{Binding Data.Security}">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10" />
+                                </Border.StrokeShape>
+                                <Label
+                                    VerticalOptions="Center"
+                                    Text="Security Patch"
+                                    FontSize="{OnPlatform 11, MacCatalyst=12, WinUI=11}" />
+                            </Border>
+                            <Border
+                                HeightRequest="20"
+                                IsVisible="{Binding Data.Preview}"
+                                Padding="6,0"
+                                Margin="0,0,6,0"
                                 BackgroundColor="{StaticResource Attention}"
-                                FontSize="11"
-                                IsVisible="{Binding Data.Preview}" />
+                                VerticalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10" />
+                                </Border.StrokeShape>
+                                <Label
+                                    VerticalOptions="Center"
+                                    Text="Preview"
+                                    FontSize="{OnPlatform 11, MacCatalyst=12, WinUI=11}" />
+                            </Border>
                         </HorizontalStackLayout>
                         <Label
                             Text="{Binding Path}"
@@ -333,14 +379,26 @@
                             VerticalOptions="Center">
                             <Button
                                 Text="Open"
-                                HeightRequest="24"
+                                HeightRequest="{OnPlatform 24, MacCatalyst=30, WinUI=24}"
                                 WidthRequest="100"
-                                FontSize="12"
+                                FontSize="{OnPlatform 12, MacCatalyst=14, WinUI=12}"
+                                BackgroundColor="{OnPlatform MacCatalyst=DarkGray}"
+                                TextColor="White"
                                 Margin="0,0,12,0"
                                 FontFamily="Default"
                                 VerticalOptions="Center"
                                 CommandParameter="{Binding .}"
                                 Grid.Column="2">
+                                <Button.Clip>
+                                    <OnPlatform x:TypeArguments="RoundRectangleGeometry">
+                                        <On Platform="MacCatalyst">
+                                            <RoundRectangleGeometry
+                                                Rect="0,0,100,30"
+                                                CornerRadius="8" />
+                                        </On>
+
+                                    </OnPlatform>
+                                </Button.Clip>
                                 <Button.Triggers>
                                     <DataTrigger
                                         TargetType="Button"
@@ -368,14 +426,25 @@
                             </Button>
                             <Button
                                 Text="Uninstall"
-                                HeightRequest="24"
+                                HeightRequest="{OnPlatform 24, MacCatalyst=30, WinUI=24}"
                                 WidthRequest="100"
-                                FontSize="12"
+                                FontSize="{OnPlatform 12, MacCatalyst=14, WinUI=12}"
+                                TextColor="White"
                                 Margin="0,0,12,0"
                                 FontFamily="Default"
                                 VerticalOptions="Center"
                                 CommandParameter="{Binding .}"
                                 Grid.Column="2">
+                                <Button.Clip>
+                                    <OnPlatform x:TypeArguments="RoundRectangleGeometry">
+                                        <On Platform="MacCatalyst">
+                                            <RoundRectangleGeometry
+                                                Rect="0,0,100,30"
+                                                CornerRadius="8" />
+                                        </On>
+
+                                    </OnPlatform>
+                                </Button.Clip>
                                 <Button.Triggers>
                                     <DataTrigger
                                         TargetType="Button"
@@ -467,19 +536,29 @@
                         <Label Text="{Binding Data.Sdk.VsMacVersion}" />
                     </VerticalStackLayout>
                 </ScrollView>
-                <Border x:Name="CollapseDetailsButton" BackgroundColor="{StaticResource Background}" WidthRequest="24" HeightRequest="42" VerticalOptions="End" HorizontalOptions="Start" Margin="-23,0,0,0" StrokeThickness="0">
+                <Border
+                    x:Name="CollapseDetailsButton"
+                    BackgroundColor="{StaticResource Background}"
+                    WidthRequest="24"
+                    HeightRequest="42"
+                    VerticalOptions="End"
+                    HorizontalOptions="Start"
+                    Margin="-23,0,0,0"
+                    ZIndex="99999"
+                    StrokeThickness="0">
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="6,0,6,0"/>
+                        <RoundRectangle CornerRadius="6,0,6,0" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="CollapseDetails_Tapped" />
                     </Border.GestureRecognizers>
-                    <Label Text="{x:Static helpers:LucideIcons.ChevronsRight}" 
-                           Margin="2,0,0,0"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center"
-                           FontSize="20"
-                           FontFamily="Lucide"/>
+                    <Label
+                        Text="{x:Static helpers:LucideIcons.ChevronsRight}"
+                        Margin="2,0,0,0"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        FontSize="20"
+                        FontFamily="Lucide" />
 
                 </Border>
             </Grid>

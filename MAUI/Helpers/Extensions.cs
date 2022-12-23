@@ -1,5 +1,7 @@
-﻿using Microsoft.UI.Input;
+﻿#if WINDOWS
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;

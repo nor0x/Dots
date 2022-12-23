@@ -1,6 +1,11 @@
-﻿using Dots.Helpers;
-using Dots.Models;
+﻿#if WINDOWS
 using Microsoft.UI.Input;
+#endif
+#if MACCATALYST
+using AppKit;
+#endif
+using Dots.Helpers;
+using Dots.Models;
 using System;
 using System.Diagnostics;
 
@@ -55,6 +60,9 @@ public partial class MainPage : ContentPage
                 textBlock.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
             }
 #endif
+#if MACCATALYST
+            NSCursor.ArrowCursor.Set();
+#endif
         }
     }
 
@@ -67,6 +75,10 @@ public partial class MainPage : ContentPage
             {
                 textBlock.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Hand));
             }
+#endif
+
+#if MACCATALYST
+            NSCursor.PointingHandCursor.Set();
 #endif
         }
     }
