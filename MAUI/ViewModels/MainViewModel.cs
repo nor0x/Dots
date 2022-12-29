@@ -99,6 +99,13 @@ namespace Dots.ViewModels
         [RelayCommand]
         async Task OpenOrDownload(Sdk sdk)
         {
+            sdk.IsDownloading = true;
+            await Task.Delay(3000);
+            sdk.IsDownloading = false;
+
+
+
+            return;
             if (sdk.Installed)
             {
                 await _dotnet.OpenFolder(sdk);

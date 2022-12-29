@@ -9,6 +9,8 @@ using CliWrap.Buffered;
 using Dots.Data;
 using Dots.Helpers;
 using Dots.Models;
+using Microsoft.Maui.Storage;
+using Security;
 
 namespace Dots.Services;
 
@@ -171,8 +173,13 @@ public class DotnetService
     {
         try
         {
+#if WINDOWS
             var result = await Cli.Wrap(exe).WithArguments(" /install /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
             return result.ExitCode == 0;
+#endif
+#if MACCATALYST
+            return 0 == 0;
+#endif
         }
         catch(Exception ex)
         {
@@ -205,6 +212,7 @@ public class DotnetService
     {
         try
         {
+#if WINDOWS
             var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), Constants.UninstallerPath);
             var filename = GetSetupName(sdk);
 
@@ -218,6 +226,23 @@ public class DotnetService
                 return result.ExitCode == 0;
             }
             return false;
+#endif
+#if MACCATALYST
+
+            if (!Directory.Exists(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName)))
+            {
+                Directory.CreateDirectory(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName));
+            }
+
+            using var stream = await FileSystem.OpenAppPackageFileAsync(Constants.UninstallScriptFile);
+            using var reader = new StreamReader(stream);
+            var script = reader.ReadToEnd();
+            script = script.Replace("XXXXX", sdk.Data.Sdk.Version);
+            var filename = "uninstall-" + sdk.Data.Sdk.Version.Replace(".", "-") + ".sh";
+            var path = Path.Combine(FileSystem.AppDataDirectory, Constants.AppName, filename);
+            await File.WriteAllTextAsync(path, script);
+            return RunFileAsRoot(path);
+#endif
         }
         catch(Exception ex)
         {
@@ -253,6 +278,57 @@ public class DotnetService
             return null;
         }
     }
+
+#if MACCATALYST
+    bool RunFileAsRoot(string path)
+    {
+        try
+        {
+            var args = new[] { "path", null };
+            var parameters = new AuthorizationParameters
+            {
+                Prompt = "",
+                PathToSystemPrivilegeTool = ""
+            };
+
+            var flags = AuthorizationFlags.ExtendRights |
+                AuthorizationFlags.InteractionAllowed |
+                AuthorizationFlags.PreAuthorize;
+
+            using var auth = Authorization.Create(parameters, null, flags);
+            int result = auth.ExecuteWithPrivileges(
+                "sh",
+                AuthorizationFlags.Defaults,
+                args);
+            if (result == 0) return true;
+            if (Enum.TryParse(result.ToString(), out AuthorizationStatus authStatus))
+            {
+                if (authStatus == AuthorizationStatus.Canceled)
+                {
+                    return false;
+                }
+                else if (authStatus == AuthorizationStatus.ToolExecuteFailure)
+                {
+                    // Reaches here. -60031
+                    // https://developer.apple.com/documentation/security/1540004-authorization_services_result_co/errauthorizationtoolexecutefailure
+                    throw new InvalidOperationException($"Could not get authorization. {authStatus}");
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Could not get authorization. {authStatus}");
+                }
+            }
+            return false;
+
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+            return false;
+        }
+    }
+
+#endif
 
     Rid GetRid()
     {

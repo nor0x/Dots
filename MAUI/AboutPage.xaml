@@ -44,14 +44,17 @@
                 <Button
                     Text="Open Source"
                     Padding="0"
-                    TextColor="White"
+                    HeightRequest="{OnPlatform 24, MacCatalyst=30, WinUI=24}"
+                    WidthRequest="130"
+                    BackgroundColor="DarkGray"
                     FontSize="{OnPlatform 12, MacCatalyst=14, WinUI=12}"
+                    TextColor="White"
                     Clicked="OpenSourceButton_Clicked">
                     <Button.Clip>
                         <OnPlatform x:TypeArguments="RoundRectangleGeometry">
                             <On Platform="MacCatalyst">
                                 <RoundRectangleGeometry
-                                    Rect="0,0,100,30"
+                                    Rect="0,0,130,30"
                                     CornerRadius="8" />
                             </On>
 
@@ -61,14 +64,17 @@
                 <Button
                     Text="Support Me ☕"
                     Padding="0"
-                    TextColor="White"
+                    HeightRequest="{OnPlatform 24, MacCatalyst=30, WinUI=24}"
+                    WidthRequest="130"
+                    BackgroundColor="DarkGray"
                     FontSize="{OnPlatform 12, MacCatalyst=14, WinUI=12}"
+                    TextColor="White"
                     Clicked="SupportButton_Clicked">
                     <Button.Clip>
                         <OnPlatform x:TypeArguments="RoundRectangleGeometry">
                             <On Platform="MacCatalyst">
                                 <RoundRectangleGeometry
-                                    Rect="0,0,100,30"
+                                    Rect="0,0,130,30"
                                     CornerRadius="8" />
                             </On>
 

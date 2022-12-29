@@ -7,6 +7,7 @@
     xmlns:helpers="clr-namespace:Dots.Helpers"
     xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:local="clr-namespace:Dots"
+    xmlns:ctrl="clr-namespace:Dots.Controls"
     Shell.NavBarIsVisible="false"
     x:Name="PageSelf"
     x:DataType="vm:MainViewModel"
@@ -202,12 +203,13 @@
                                         Text="Preview"
                                         FontSize="{OnPlatform 11, MacCatalyst=12, WinUI=11}" />
                                 </Border>
-                                <Button
+                                <ctrl:BusyButton
+                                    IsBusy="{Binding IsDownloading}"
                                     Text="Open"
                                     HeightRequest="{OnPlatform 24, MacCatalyst=30, WinUI=24}"
                                     WidthRequest="100"
                                     FontSize="{OnPlatform 12, MacCatalyst=14, WinUI=12}"
-                                    BackgroundColor="{OnPlatform MacCatalyst=DarkGray}"
+                                    BackgroundColor="{OnPlatform Transparent, MacCatalyst=DarkGray}"
                                     TextColor="White"
                                     Margin="12,0,6,0"
                                     FontFamily="Default"
@@ -243,7 +245,7 @@
                                                 Value="Download" />
                                         </DataTrigger>
                                     </Button.Triggers>
-                                </Button>
+                                </ctrl:BusyButton>
                                 <Button
                                     Text="Uninstall"
                                     HeightRequest="{OnPlatform 24, MacCatalyst=30, WinUI=24}"
@@ -298,6 +300,7 @@
             </CollectionView>
             <Grid
                 x:Name="DetailsPanel"
+                WidthRequest="0"
                 Grid.Column="1"
                 Grid.Row="1"
                 BackgroundColor="{StaticResource Background}"
@@ -518,6 +521,7 @@
                 </ScrollView>
                 <Border
                     x:Name="CollapseDetailsButton"
+                    Opacity="0"
                     BackgroundColor="{StaticResource Background}"
                     WidthRequest="24"
                     HeightRequest="42"
