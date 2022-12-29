@@ -246,8 +246,8 @@
                                         </DataTrigger>
                                     </Button.Triggers>
                                 </ctrl:BusyButton>
-                                <Button
-                                    Text="Uninstall"
+                                <ctrl:BusyButton
+                                    IsBusy="{Binding IsInstalling}"
                                     HeightRequest="{OnPlatform 24, MacCatalyst=30, WinUI=24}"
                                     WidthRequest="100"
                                     FontSize="{OnPlatform 12, MacCatalyst=14, WinUI=12}"
@@ -258,7 +258,7 @@
                                     Command="{Binding Source={x:Reference PageSelf}, Path=BindingContext.InstallOrUninstallCommand}"
                                     CommandParameter="{Binding .}"
                                     Grid.Column="2">
-                                    <Button.Clip>
+                                    <ctrl:BusyButton.Clip>
                                         <OnPlatform x:TypeArguments="RoundRectangleGeometry">
                                             <On Platform="MacCatalyst">
                                                 <RoundRectangleGeometry
@@ -267,8 +267,8 @@
                                             </On>
 
                                         </OnPlatform>
-                                    </Button.Clip>
-                                    <Button.Triggers>
+                                    </ctrl:BusyButton.Clip>
+                                    <ctrl:BusyButton.Triggers>
                                         <DataTrigger
                                             TargetType="Button"
                                             Binding="{Binding Installed}"
@@ -291,8 +291,8 @@
                                                 Property="BackgroundColor"
                                                 Value="{StaticResource Accent}" />
                                         </DataTrigger>
-                                    </Button.Triggers>
-                                </Button>
+                                    </ctrl:BusyButton.Triggers>
+                                </ctrl:BusyButton>
                             </HorizontalStackLayout>
                         </Grid>
                     </DataTemplate>
@@ -370,7 +370,8 @@
                         <HorizontalStackLayout
                             Margin="0,12,0,0"
                             VerticalOptions="Center">
-                            <Button
+                            <ctrl:BusyButton
+                                IsBusy="{Binding IsDownloading}"
                                 Text="Open"
                                 HeightRequest="{OnPlatform 24, MacCatalyst=30, WinUI=24}"
                                 WidthRequest="100"
@@ -383,7 +384,7 @@
                                 Command="{Binding Source={x:Reference PageSelf}, Path=BindingContext.OpenOrDownloadCommand}"
                                 CommandParameter="{Binding .}"
                                 Grid.Column="2">
-                                <Button.Clip>
+                                <ctrl:BusyButton.Clip>
                                     <OnPlatform x:TypeArguments="RoundRectangleGeometry">
                                         <On Platform="MacCatalyst">
                                             <RoundRectangleGeometry
@@ -392,8 +393,8 @@
                                         </On>
 
                                     </OnPlatform>
-                                </Button.Clip>
-                                <Button.Triggers>
+                                </ctrl:BusyButton.Clip>
+                                <ctrl:BusyButton.Triggers>
                                     <DataTrigger
                                         TargetType="Button"
                                         Binding="{Binding Installed}"
@@ -410,9 +411,10 @@
                                             Property="Text"
                                             Value="Download" />
                                     </DataTrigger>
-                                </Button.Triggers>
-                            </Button>
-                            <Button
+                                </ctrl:BusyButton.Triggers>
+                            </ctrl:BusyButton>
+                            <ctrl:BusyButton
+                                IsBusy="{Binding IsInstalling}"
                                 Text="Uninstall"
                                 HeightRequest="{OnPlatform 24, MacCatalyst=30, WinUI=24}"
                                 WidthRequest="100"
@@ -424,7 +426,7 @@
                                 CommandParameter="{Binding .}"
                                 Command="{Binding Source={x:Reference PageSelf}, Path=BindingContext.InstallOrUninstallCommand}"
                                 Grid.Column="2">
-                                <Button.Clip>
+                                <ctrl:BusyButton.Clip>
                                     <OnPlatform x:TypeArguments="RoundRectangleGeometry">
                                         <On Platform="MacCatalyst">
                                             <RoundRectangleGeometry
@@ -433,8 +435,8 @@
                                         </On>
 
                                     </OnPlatform>
-                                </Button.Clip>
-                                <Button.Triggers>
+                                </ctrl:BusyButton.Clip>
+                                <ctrl:BusyButton.Triggers>
                                     <DataTrigger
                                         TargetType="Button"
                                         Binding="{Binding Installed}"
@@ -457,8 +459,8 @@
                                             Property="BackgroundColor"
                                             Value="{StaticResource Accent}" />
                                     </DataTrigger>
-                                </Button.Triggers>
-                            </Button>
+                                </ctrl:BusyButton.Triggers>
+                            </ctrl:BusyButton>
                         </HorizontalStackLayout>
                         <BoxView
                             Background="{StaticResource Background}"
@@ -547,7 +549,5 @@
                 </Border>
             </Grid>
         </Grid>
-
     </Grid>
-
 </ContentPage>

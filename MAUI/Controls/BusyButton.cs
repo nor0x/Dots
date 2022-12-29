@@ -14,7 +14,7 @@ public partial class BusyButton : Button
 
 #if WINDOWS
     Microsoft.UI.Xaml.Controls.Button _button;
-    Microsoft.UI.Xaml.controls.Indicator _spinner;
+    Microsoft.UI.Xaml.Controls.ProgressRing _spinner;
 #endif
 #if MACCATALYST
     UIButton _button;
@@ -43,14 +43,13 @@ public partial class BusyButton : Button
 #if WINDOWS
             if (Handler.PlatformView is Microsoft.UI.Xaml.Controls.Button btn)
             {
-                //add winui indicator to button
-                _spinner = new Microsoft.UI.Xaml.Controls.Indicator();
-                _spinner.Width = btn.Width;
-                _spinner.Height = btn.Height;
+                _button = btn;
+                _button.Padding = new Microsoft.UI.Xaml.Thickness(0, 0, 0, 0);
+                _spinner = new Microsoft.UI.Xaml.Controls.ProgressRing();
                 _spinner.HorizontalAlignment = Microsoft.UI.Xaml.HorizontalAlignment.Center;
                 _spinner.VerticalAlignment = Microsoft.UI.Xaml.VerticalAlignment.Center;
-                _spinner.Visibility = Microsoft.UI.Xaml.Visibility.Collapsed;
-                btn.Content = _spinner;
+                _spinner.Height = btn.Height - 3;
+                _spinner.Width = btn.Height - 3;
             }
 #endif
         }
@@ -65,7 +64,7 @@ public partial class BusyButton : Button
             _spinner.StartAnimating();
 #endif
 #if WINDOWS
-            _spinner.Visibility = Microsoft.UI.Xaml.Visibility.Visible;
+            _button.Content = _spinner;
 #endif
 
         }
@@ -75,7 +74,7 @@ public partial class BusyButton : Button
             _spinner.StopAnimating();
 #endif
 #if WINDOWS
-            _spinner.Visibility = Microsoft.UI.Xaml.Visibility.Collapsed;
+            _button.Content = _initialText;
 #endif
         }
     }

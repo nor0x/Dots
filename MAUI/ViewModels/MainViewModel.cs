@@ -99,13 +99,6 @@ namespace Dots.ViewModels
         [RelayCommand]
         async Task OpenOrDownload(Sdk sdk)
         {
-            sdk.IsDownloading = true;
-            await Task.Delay(3000);
-            sdk.IsDownloading = false;
-
-
-
-            return;
             if (sdk.Installed)
             {
                 await _dotnet.OpenFolder(sdk);
@@ -121,19 +114,17 @@ namespace Dots.ViewModels
         [RelayCommand]
         async Task InstallOrUninstall(Sdk sdk)
         {
+            sdk.IsInstalling = true;
             if (sdk.Installed)
             {
-                sdk.IsUninstalling = true;
                 var result = await _dotnet.Uninstall(sdk);
                 if (result)
                 {
                     sdk.Path = string.Empty;
                 }
-                sdk.IsUninstalling = false;
             }
             else
             {
-                sdk.IsInstalling = true;
                 var path = await _dotnet.Download(sdk);
                 if (!string.IsNullOrEmpty(path))
                 {
@@ -143,10 +134,10 @@ namespace Dots.ViewModels
                         sdk.Path = await _dotnet.GetInstallationPath(sdk);
                     }
                 }
-                sdk.IsInstalling = false;
             }
+            sdk.IsInstalling = false;
         }
-        
+
         [RelayCommand]
         async Task OpenReleaseNotes()
         {

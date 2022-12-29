@@ -10,7 +10,9 @@ using Dots.Data;
 using Dots.Helpers;
 using Dots.Models;
 using Microsoft.Maui.Storage;
+#if MACCATALYST
 using Security;
+#endif
 
 namespace Dots.Services;
 
@@ -169,7 +171,7 @@ public class DotnetService
         }
     }
 
-    public async Task<bool> Install(string exe)
+    public async ValueTask<bool> Install(string exe)
     {
         try
         {
@@ -186,6 +188,7 @@ public class DotnetService
             Debug.WriteLine(ex);
             return false;
         }
+        return false;
     }
 
     public async Task<string> GetInstallationPath(Sdk sdk)
@@ -247,8 +250,8 @@ public class DotnetService
         catch(Exception ex)
         {
             Debug.WriteLine(ex);
-            return false;
         }
+        return false;
     }
 
     string GetSetupName(Sdk sdk)
