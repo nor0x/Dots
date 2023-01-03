@@ -24,7 +24,10 @@ namespace Dots.ViewModels
         List<Sdk> _baseSdks;
 
         [ObservableProperty]
-        bool _selectionEnabled;        
+        bool _selectionEnabled;
+
+        [ObservableProperty]
+        bool _isBusy;
         
         [ObservableProperty]
         Sdk _selectedSdk;
@@ -63,7 +66,7 @@ namespace Dots.ViewModels
         }
 
         [RelayCommand]
-        async Task ListRuntimes()
+        void ListRuntimes()
         {
             LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
         }
@@ -99,16 +102,17 @@ namespace Dots.ViewModels
         [RelayCommand]
         async Task OpenOrDownload(Sdk sdk)
         {
+
+            sdk.IsDownloading = true;
             if (sdk.Installed)
             {
                 await _dotnet.OpenFolder(sdk);
             }
             else
             {
-                sdk.IsDownloading = true;
                 await _dotnet.Download(sdk);
-                sdk.IsDownloading = false;
             }
+            sdk.IsDownloading = false;
         }
 
         [RelayCommand]
@@ -174,14 +178,20 @@ namespace Dots.ViewModels
             _showInstalled = !_showInstalled;
         }
 
+        [RelayCommand]
+        void ToggleMultiSelection()
+        {
 
+        }
 
         public async Task CheckSdks()
         {
+            IsBusy = true;
             var sdkList = await _dotnet.GetSdks();
             Sdks = new ObservableRangeCollection<Sdk>(sdkList);
             _baseSdks = sdkList;
             LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
+            IsBusy = false;
         }
     }
 }

@@ -9,6 +9,7 @@ using Dots.Helpers;
 using Dots.Models;
 using System;
 using System.Diagnostics;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Dots;
 
@@ -19,6 +20,10 @@ public partial class MainPage : ContentPage
     {
         BindingContext = vm;
         InitializeComponent();
+        AnimationView.Source = new HtmlWebViewSource()
+        {
+            Html = $$"""<body style=background:#605d64;overflow:hidden><video autoplay loop muted style=width:180px;height:180px><source src="https://github.com/nor0x/public_blob/raw/main/dotsanimation_1.mp4" "type=" video/mp4">"""
+        };
     }
 
     protected async override void OnAppearing()
@@ -26,6 +31,7 @@ public partial class MainPage : ContentPage
         base.OnAppearing();
         await _vm.CheckSdks();
     }
+
 
     private async void SdkCollection_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -72,7 +78,7 @@ public partial class MainPage : ContentPage
         if (sender is Label label)
         {
 #if WINDOWS
-            if(label.Handler.PlatformView is Microsoft.UI.Xaml.Controls.TextBlock textBlock)
+            if (label.Handler.PlatformView is Microsoft.UI.Xaml.Controls.TextBlock textBlock)
             {
                 textBlock.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Hand));
             }
@@ -86,7 +92,7 @@ public partial class MainPage : ContentPage
 
     private async void CollapseDetails_Tapped(object sender, Microsoft.Maui.Controls.TappedEventArgs e)
     {
-        if(DetailsPanel.Width > 0)
+        if (DetailsPanel.Width > 0)
         {
             await DetailsPanel.WidthTo(0);
         }

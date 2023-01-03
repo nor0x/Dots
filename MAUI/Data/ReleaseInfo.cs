@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.AppCenter.Analytics;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -249,7 +250,7 @@ public class RidEnumConverter : JsonConverter<Rid>
 
     Rid PrintDiscard(string v)
     {
-        Debug.WriteLine("ADD: " + v);
+        Analytics.TrackEvent("RID Discarded", new Dictionary<string, string> { { "value", v } });
         return Rid.Empty;
     }
 

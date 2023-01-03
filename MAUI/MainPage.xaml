@@ -51,6 +51,7 @@
                 x:Name="MainSearchBar"
                 BackgroundColor="{OnPlatform MacCatalyst={StaticResource BackgroundSubtle}}"
                 WidthRequest="280"
+                IsEnabled="{Binding IsBusy,Converter={mct:InvertedBoolConverter}}"
                 HeightRequest="32"
                 Margin="0,8,0,0"
                 VerticalTextAlignment="Center"
@@ -71,6 +72,7 @@
             </SearchBar>
 
             <HorizontalStackLayout
+                IsVisible="false"
                 HorizontalOptions="End"
                 Margin="0,18,0,0">
                 <Button
@@ -298,6 +300,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+
             <Grid
                 x:Name="DetailsPanel"
                 WidthRequest="0"
@@ -549,5 +552,9 @@
                 </Border>
             </Grid>
         </Grid>
+        <VerticalStackLayout IsVisible="{Binding IsBusy}" x:Name="LoadingPanel" Grid.Row="1" HorizontalOptions="Center" VerticalOptions="Center">
+            <WebView x:Name="AnimationView" WidthRequest="180" HeightRequest="200" InputTransparent="true" />
+            <Label FontAttributes="Italic" Text="connecting the . . ." TextColor="#f4f6ee" FontSize="16" HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
     </Grid>
 </ContentPage>

@@ -9,15 +9,17 @@ public partial class AboutPage : ContentPage
         VersionSpan.Text = AppInfo.VersionString;
     }
 
+    bool canFlipBack = false;
     private async void IconImage_PointerExited(object sender, PointerEventArgs e)
     {
         //rotate back
-        if (_imageFlipped)
+        if (_imageFlipped && canFlipBack)
         {
             await IconImage.RotateYTo(90, 150, Easing.CubicInOut);
             IconImage.Source = "iconlogo.png";
             await IconImage.RotateYTo(0, 150, Easing.CubicInOut);
             _imageFlipped = false;
+            canFlipBack = false;
         }
     }
 
@@ -30,6 +32,8 @@ public partial class AboutPage : ContentPage
             IconImage.Source = "iconlogoback.png";
             await IconImage.RotateYTo(180, 150, Easing.CubicInOut);
             _imageFlipped = true;
+            await Task.Delay(500);
+            canFlipBack = true;
         }
     }
 

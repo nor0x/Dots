@@ -9,6 +9,7 @@ using CliWrap.Buffered;
 using Dots.Data;
 using Dots.Helpers;
 using Dots.Models;
+using Microsoft.AppCenter.Analytics;
 using Microsoft.Maui.Storage;
 #if MACCATALYST
 using Security;
@@ -140,6 +141,7 @@ public class DotnetService
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
+            Analytics.TrackEvent("GetInstalledSdks", new Dictionary<string, string>() { { "Error", ex.Message } });
             return null;
         }
 
@@ -167,6 +169,7 @@ public class DotnetService
         catch(Exception ex)
         {
             Debug.WriteLine(ex);
+            Analytics.TrackEvent("Download SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
             return null;
         }
     }
@@ -186,6 +189,7 @@ public class DotnetService
         catch(Exception ex)
         {
             Debug.WriteLine(ex);
+            Analytics.TrackEvent("Install SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "Exe", exe } });
             return false;
         }
         return false;
@@ -207,6 +211,7 @@ public class DotnetService
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
+            Analytics.TrackEvent("OpenFolder", new Dictionary<string, string>() { { "Error", ex.Message }, { "Path", sdk.Path } });
         }
     }
 
@@ -218,8 +223,6 @@ public class DotnetService
 #if WINDOWS
             var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), Constants.UninstallerPath);
             var filename = GetSetupName(sdk);
-
-            Debug.WriteLine(path);
 
             string[] files = Directory.GetFiles(path, filename, SearchOption.AllDirectories);
 
@@ -250,6 +253,7 @@ public class DotnetService
         catch(Exception ex)
         {
             Debug.WriteLine(ex);
+            Analytics.TrackEvent("Uninstall SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
         }
         return false;
     }
@@ -278,6 +282,7 @@ public class DotnetService
         catch(Exception ex)
         {
             Debug.WriteLine(ex);
+            Analytics.TrackEvent("GetSetupName", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
             return null;
         }
     }
@@ -327,6 +332,7 @@ public class DotnetService
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
+            Analytics.TrackEvent("RunFileAsRoot", new Dictionary<string, string>() { { "Error", ex.Message }, { "Path", path } });
             return false;
         }
     }
@@ -367,6 +373,7 @@ public class DotnetService
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
+            Analytics.TrackEvent("GetRid", new Dictionary<string, string>() { { "Error", ex.Message } });
             return Rid.Empty;
         }
     }

@@ -35,10 +35,6 @@ public partial class Sdk : ObservableObject
     [ObservableProperty]
     [JsonIgnore]
     public bool _isInstalling;
-
-    [ObservableProperty]
-    [JsonIgnore]
-    public bool _isUninstalling;
 }
 
 
