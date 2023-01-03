@@ -27,12 +27,12 @@ public partial class AboutPage : ContentPage
     {
         if (!_imageFlipped)
         {
-            //3d flip animation of IconImage
+            _imageFlipped = true;
+            canFlipBack = false;
             await IconImage.RotateYTo(90, 150, Easing.CubicInOut);
             IconImage.Source = "iconlogoback.png";
             await IconImage.RotateYTo(180, 150, Easing.CubicInOut);
-            _imageFlipped = true;
-            await Task.Delay(500);
+            await Task.Delay(300);
             canFlipBack = true;
         }
     }
