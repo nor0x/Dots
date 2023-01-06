@@ -66,6 +66,11 @@ public class DotnetService
         var response = await client.GetStringAsync(Constants.ReleaseIndexUrl);
         var releaseIndex = JsonSerializer.Deserialize<ReleaseIndexInfo>(response, ReleaseSerializerOptions.Options);
         _releaseIndex = releaseIndex.ReleasesIndex;
+        if (!Directory.Exists(FileSystem.Current.AppDataDirectory))
+        {
+            Directory.CreateDirectory(FileSystem.Current.AppDataDirectory);
+        }
+
         await File.WriteAllTextAsync(Constants.ReleaseIndexPath, response);
         Preferences.Set(Constants.ReleaseIndexKey, Constants.ReleaseIndexPath);
         return _releaseIndex;
