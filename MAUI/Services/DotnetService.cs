@@ -183,10 +183,11 @@ public class DotnetService
             return result.ExitCode == 0;
 #endif
 #if MACCATALYST
+//blocked by https://github.com/dotnet/maui/issues/12409
             return 0 == 0;
 #endif
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Debug.WriteLine(ex);
             Analytics.TrackEvent("Install SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "Exe", exe } });

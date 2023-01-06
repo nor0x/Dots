@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mop:PopupPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:mop="clr-namespace:Mopups.Pages;assembly=Mopups"
+    xmlns:mopani="clr-namespace:Mopups.Animations;assembly=Mopups"
+    x:Class="Dots.Controls.ErrorPopup"
+    BackgroundInputTransparent="False"
+    CloseWhenBackgroundIsClicked="True">
+    <mop:PopupPage.Animation>
+        <mopani:MoveAnimation
+            DurationIn="230"
+            DurationOut="230"
+            PositionIn="Bottom"
+            PositionOut="Top" />
+    </mop:PopupPage.Animation>
+    <Border
+        VerticalOptions="Center"
+        HorizontalOptions="Center"
+        WidthRequest="350"
+        HeightRequest="240"
+        BackgroundColor="{StaticResource Background}">
+        <Border.StrokeShape>
+            <RoundRectangle CornerRadius="8" />
+        </Border.StrokeShape>
+        <Grid Padding="12">
+            <ScrollView>
+
+                <VerticalStackLayout>
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="18"
+                        Text="Oooops!"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center" />
+                    <BoxView
+                        HeightRequest="1"
+                        BackgroundColor="{StaticResource BackgroundSubtle}"
+                        Margin="0,12" />
+                    <Label
+                        x:Name="TitleLabel"
+                        FontAttributes="Bold"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center" />
+                    <Label
+                        x:Name="InfoLabel"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </ScrollView>
+            <Button
+                Text="cancel"
+                VerticalOptions="End"
+                HorizontalOptions="Center" 
+                Clicked="Cancel_Clicked"
+                />
+
+        </Grid>
+    </Border>
+</mop:PopupPage>

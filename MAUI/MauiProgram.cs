@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Core;
+using Dots.Helpers;
 using Dots.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.LifecycleEvents;
+using Mopups.Hosting;
 
 namespace Dots;
 
@@ -14,6 +16,7 @@ public static class MauiProgram
 		builder
 			.UseMauiApp<App>()
 			.UseMauiCommunityToolkit()
+			.ConfigureMopups()
 			.ConfigureLifecycleEvents(lifecycle => {
 			#if WINDOWS
 				lifecycle
@@ -25,6 +28,7 @@ public static class MauiProgram
 							});
 					});
 			#endif
+
 			}).ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -37,6 +41,7 @@ public static class MauiProgram
 #endif
 		builder.Services.AddSingleton<DotnetService>();
 		builder.Services.AddSingleton<MainPage>();
+		builder.Services.AddSingleton<ErrorPopupHelper>();
 		builder.Services.AddSingleton<MainViewModel>();
 		return builder.Build();
 	}

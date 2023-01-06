@@ -554,7 +554,7 @@
         </Grid>
         <VerticalStackLayout IsVisible="{Binding IsBusy}" x:Name="LoadingPanel" Grid.Row="1" HorizontalOptions="Center" VerticalOptions="Center">
             <WebView x:Name="AnimationView" WidthRequest="180" HeightRequest="200" InputTransparent="true" />
-            <Label FontAttributes="Italic" Text="connecting the . . ." TextColor="#f4f6ee" FontSize="16" HorizontalTextAlignment="Center" />
+            <Label FontAttributes="Italic" Text="connecting the • • •" TextColor="#f4f6ee" FontSize="16" HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
     </Grid>
 </ContentPage>
