@@ -2,8 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net7.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
-		<OutputType>Exe</OutputType>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">
+			$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
+		<OutputType>WinExe</OutputType>
 		<RootNamespace>Dots</RootNamespace>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
@@ -25,37 +26,79 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
+	<!-- WINDOWS PUBLISHING Condition Release-->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<SelfContained>true</SelfContained>
+		<WindowsAppSdkSelfContained>true</WindowsAppSdkSelfContained>
+		<PublishReadyToRun>true</PublishReadyToRun>
+	</PropertyGroup>
+	<PropertyGroup>
+		<WindowsPackageType>None</WindowsPackageType>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+		<MauiIcon
+			Include="Resources\AppIcon\appicon.svg"
+			ForegroundFile="Resources\AppIcon\appiconfg.svg"
+			Color="#512BD4" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+		<MauiSplashScreen
+			Include="Resources\Splash\splash.svg"
+			Color="#512BD4"
+			BaseSize="128,128" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
-		<MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
+		<MauiImage
+			Update="Resources\Images\dotnet_bot.svg"
+			BaseSize="168,208" />
 
 		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*" />
 
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
-		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+		<MauiAsset
+			Include="Resources\Raw\**"
+			LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CliWrap" Version="3.6.0-alpha1" />
-		<PackageReference Include="CommunityToolkit.Maui" Version="3.1.0" />
-		<PackageReference Include="Microsoft.AppCenter.Analytics" Version="5.0.1" />
-		<PackageReference Include="Microsoft.AppCenter.Crashes" Version="5.0.1" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0-preview2" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
-		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-		<PackageReference Include="System.Reactive" Version="5.0.0" />
-		<PackageReference Include="M.BindableProperty.Generator" Version="0.9.3" />
-    <PackageReference Include="Mopups" Version="1.1.0" />
-  </ItemGroup>
+		<PackageReference
+			Include="CliWrap"
+			Version="3.6.0-alpha1" />
+		<PackageReference
+			Include="CommunityToolkit.Maui"
+			Version="3.1.0" />
+		<PackageReference
+			Include="Microsoft.AppCenter.Analytics"
+			Version="5.0.1" />
+		<PackageReference
+			Include="Microsoft.AppCenter.Crashes"
+			Version="5.0.1" />
+		<PackageReference
+			Include="Microsoft.Extensions.DependencyInjection.Abstractions"
+			Version="7.0.0" />
+		<PackageReference
+			Include="CommunityToolkit.Mvvm"
+			Version="8.1.0-preview2" />
+		<PackageReference
+			Include="Microsoft.Extensions.Logging.Debug"
+			Version="7.0.0" />
+		<PackageReference
+			Include="System.CommandLine"
+			Version="2.0.0-beta4.22272.1" />
+		<PackageReference
+			Include="System.Reactive"
+			Version="5.0.0" />
+		<PackageReference
+			Include="M.BindableProperty.Generator"
+			Version="0.9.3" />
+		<PackageReference
+			Include="Mopups"
+			Version="1.1.0" />
+	</ItemGroup>
 	<ItemGroup>
 		<BundleResource Include="Resources\Raw\macosuninstallscript.txt" />
 	</ItemGroup>
