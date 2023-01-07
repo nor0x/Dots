@@ -84,7 +84,7 @@
             </VerticalStackLayout>
             <Label
                 FontSize="11"
-                Text="©️ 2022 Joachim Leonfellner"
+                Text="©️ 2023 Joachim Leonfellner"
                 HorizontalOptions="Center"
                 VerticalOptions="End"
                 Margin="0,0,0,12" />
