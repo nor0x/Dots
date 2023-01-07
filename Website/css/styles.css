@@ -1165,3 +1165,15 @@ a:hover.back-to-top {
 ::-webkit-scrollbar-thumb {
     background: #38343d;
 }
+
+
+/* .logo-image hover animation */
+
+.logo-image {
+    transition: all 0.2s;
+}
+
+.logo-image:hover {
+    transform: scale(1.1);
+    rotate: 3deg;
+}
