@@ -89,7 +89,7 @@ namespace Dots.ViewModels
                 }
                 else if (!Sdks.Contains(s))
                 {
-                    Sdks.Add(s);
+                    Sdks.Insert(s.Index, s);
                 }
             }
         }

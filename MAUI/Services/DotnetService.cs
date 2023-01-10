@@ -35,14 +35,17 @@ public class DotnetService
             var infos = await GetReleaseInfos(item.ChannelVersion);
             releaseInfos.AddRange(infos);
         }
+        int i = 0;
         foreach(var release in releaseInfos)
         {
             var sdk = new Sdk()
             {
                 Data = release,
                 ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
-                Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty
+                Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty,
+                Index = i
             };
+            i++;
             result.Add(sdk);
         }
         return result;

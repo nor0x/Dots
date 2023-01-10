@@ -35,6 +35,9 @@ public partial class Sdk : ObservableObject
     [ObservableProperty]
     [JsonIgnore]
     public bool _isInstalling;
+
+    [JsonIgnore]
+    public int Index { get; set; }
 }
 
 
