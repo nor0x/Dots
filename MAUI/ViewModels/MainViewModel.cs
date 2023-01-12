@@ -8,6 +8,7 @@ using Dots.Services;
 using System.Reactive;
 using Dots.Data;
 using Dots.Helpers;
+using CoFiSo;
 
 namespace Dots.ViewModels
 {
@@ -35,7 +36,8 @@ namespace Dots.ViewModels
         Sdk _selectedSdk;
 
         [ObservableProperty]
-        ObservableRangeCollection<Sdk> _sdks;
+        AdvancedCollectionView _sdks;
+
 
         [ObservableProperty]
         string _lastUpdated;
@@ -71,12 +73,15 @@ namespace Dots.ViewModels
         void ListRuntimes()
         {
             LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
+            Sdks.SortDescriptions.Add(new SortDescription("Installed", SortDirection.Ascending));
+
         }
 
         [RelayCommand]
         void FilterSdks(string query)
         {
-
+            Sdks.Filter = s => ((Sdk)s).Data.Sdk.Version.ToLowerInvariant().Contains(query.ToLowerInvariant());
+            /*
             var filteredCollection = _baseSdks.Where(s =>
             s.Data.Sdk.Version.ToLowerInvariant().Contains(query.ToLowerInvariant()) ||
             s.Path.ToLowerInvariant().Contains(query.ToLowerInvariant())).ToList();
@@ -89,9 +94,10 @@ namespace Dots.ViewModels
                 }
                 else if (!Sdks.Contains(s))
                 {
-                    Sdks.Insert(s.Index, s);
+                    Sdks.Add(s);
                 }
             }
+            */
         }
 
         [RelayCommand]
@@ -180,11 +186,11 @@ namespace Dots.ViewModels
         {
             if (!_showOnline)
             {
-                Sdks.RemoveRange(_baseSdks.Where(s => !s.Installed).ToList());
+                Sdks.Filter = s => !((Sdk)s).Installed;
             }
             else
             {
-                Sdks.AddRange(_baseSdks.Where(s => !s.Installed));
+                Sdks.Filter = null;
             }
             _showOnline = !_showOnline;
         }
@@ -195,11 +201,11 @@ namespace Dots.ViewModels
             //filter observable collection
             if(!_showInstalled)
             {
-                Sdks.RemoveRange(_baseSdks.Where(s => s.Installed).ToList());
+                Sdks.Filter = s => ((Sdk)s).Installed;
             }
             else
             {
-                Sdks.AddRange(_baseSdks.Where(s => s.Installed));
+                Sdks.Filter = null;
             }
             _showInstalled = !_showInstalled;
         }
@@ -216,7 +222,7 @@ namespace Dots.ViewModels
             {
                 IsBusy = true;
                 var sdkList = await _dotnet.GetSdks();
-                Sdks = new ObservableRangeCollection<Sdk>(sdkList);
+                Sdks = new AdvancedCollectionView(new ObservableRangeCollection<Sdk>(sdkList));
                 _baseSdks = sdkList;
                 LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
                 IsBusy = false;
