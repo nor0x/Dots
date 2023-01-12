@@ -128,7 +128,7 @@
             Padding="12,0,0,0">
             <CollectionView
                 x:Name="SdkCollection"
-                ItemsSource="{Binding Sdks, Mode=OneWay}"
+                ItemsSource="{Binding Sdks.View, Mode=OneWay}"
                 SelectionChanged="SdkCollection_SelectionChanged"
                 SelectionMode="Single">
                 <CollectionView.ItemsLayout>
@@ -166,7 +166,7 @@
                                 VerticalOptions="Center"
                                 Grid.Column="1"
                                 Margin="8,0,0,0">
-                                <Label Text="{Binding Data.Sdk.Version}" />
+                                <Label Text="{Binding VersionDisplay}" />
                                 <Label
                                     Text="{Binding Path}"
                                     FontSize="11"

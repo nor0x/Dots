@@ -1,4 +1,5 @@
 ﻿using Microsoft.AppCenter.Analytics;
+using ObservableView.Searching;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -142,6 +143,7 @@ public partial class Runtime
 
 public partial class SdkInfo
 {
+    [Searchable]
     [JsonPropertyName("version")]
     public string Version { get; set; }
 

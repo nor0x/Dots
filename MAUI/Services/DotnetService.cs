@@ -43,7 +43,7 @@ public class DotnetService
                 Data = release,
                 ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
                 Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty,
-                Index = i
+                VersionDisplay = release.Sdk.Version,
             };
             i++;
             result.Add(sdk);
