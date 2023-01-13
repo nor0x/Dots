@@ -301,7 +301,7 @@ public class DotnetService
     {
         try
         {
-            var args = new[] { "path", null };
+            var args = new[] { path, null };
             var parameters = new AuthorizationParameters
             {
                 Prompt = "",
@@ -314,7 +314,7 @@ public class DotnetService
 
             using var auth = Authorization.Create(parameters, null, flags);
             int result = auth.ExecuteWithPrivileges(
-                "sh",
+                "/bin/sh",
                 AuthorizationFlags.Defaults,
                 args);
             if (result == 0) return true;

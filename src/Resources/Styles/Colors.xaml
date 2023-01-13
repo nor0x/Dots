@@ -29,4 +29,10 @@
         x:Key="DangerBrush"
         Color="{StaticResource Danger}" />
 
+    <Style TargetType="Label">
+        <Setter
+            Property="TextColor"
+            Value="White" />
+    </Style>
+
 </ResourceDictionary>

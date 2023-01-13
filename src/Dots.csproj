@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net7.0-maccatalyst</TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
-		<OutputType>WinExe</OutputType>
+		<OutputType>Exe</OutputType>
 		<RootNamespace>Dots</RootNamespace>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
@@ -27,6 +27,9 @@
 	</PropertyGroup>
 
 	<!-- WINDOWS PUBLISHING Condition Release-->
+	<PropertyGroup Condition="$([MSBuild]::IsOSPlatform('windows'))">
+		<OutputType>WinExe</OutputType>
+	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<SelfContained>true</SelfContained>
 		<WindowsAppSdkSelfContained>true</WindowsAppSdkSelfContained>
