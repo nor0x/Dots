@@ -8,6 +8,8 @@ using Dots.Services;
 using System.Reactive;
 using Dots.Data;
 using Dots.Helpers;
+using ObservableView;
+using ObservableView.Searching.Operators;
 
 namespace Dots.ViewModels
 {
@@ -19,8 +21,8 @@ namespace Dots.ViewModels
             _errorHelper = errorHelper;
         }
 
-        bool _showOnline;
-        bool _showInstalled;
+        string _query = "";
+
         DotnetService _dotnet;
         ErrorPopupHelper _errorHelper;
         List<Sdk> _baseSdks;
@@ -35,10 +37,16 @@ namespace Dots.ViewModels
         Sdk _selectedSdk;
 
         [ObservableProperty]
-        ObservableRangeCollection<Sdk> _sdks;
+        ObservableView<Sdk> _sdks;
 
         [ObservableProperty]
         string _lastUpdated;
+
+        [ObservableProperty]
+        bool _showOnline = true;
+        
+        [ObservableProperty]
+        bool _showInstalled = true;
 
         [RelayCommand]
         async Task DownloadScript()
@@ -71,12 +79,15 @@ namespace Dots.ViewModels
         void ListRuntimes()
         {
             LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
+
         }
 
         [RelayCommand]
         void FilterSdks(string query)
         {
-
+            _query = query;
+            Sdks.Search(_query);
+            /*
             var filteredCollection = _baseSdks.Where(s =>
             s.Data.Sdk.Version.ToLowerInvariant().Contains(query.ToLowerInvariant()) ||
             s.Path.ToLowerInvariant().Contains(query.ToLowerInvariant())).ToList();
@@ -89,16 +100,16 @@ namespace Dots.ViewModels
                 }
                 else if (!Sdks.Contains(s))
                 {
-                    Sdks.Insert(s.Index, s);
+                    Sdks.Add(s);
                 }
             }
+            */
         }
 
         [RelayCommand]
-        async Task ToggleSelection()
+        void ToggleSelection()
         {
             SelectionEnabled = !SelectionEnabled;
-            await _dotnet.GetSdks();
         }
 
         [RelayCommand]
@@ -178,31 +189,23 @@ namespace Dots.ViewModels
         [RelayCommand]
         void ToggleOnline()
         {
-            if (!_showOnline)
-            {
-                Sdks.RemoveRange(_baseSdks.Where(s => !s.Installed).ToList());
-            }
-            else
-            {
-                Sdks.AddRange(_baseSdks.Where(s => !s.Installed));
-            }
-            _showOnline = !_showOnline;
+            ShowOnline = !ShowOnline;
+            Sdks.Search(" ");
+            Sdks.Search(_query);
+            IsBusy = (!ShowOnline && !ShowInstalled);
+
         }
-        
+
         [RelayCommand]
         void ToggleInstalled()
         {
-            //filter observable collection
-            if(!_showInstalled)
-            {
-                Sdks.RemoveRange(_baseSdks.Where(s => s.Installed).ToList());
-            }
-            else
-            {
-                Sdks.AddRange(_baseSdks.Where(s => s.Installed));
-            }
-            _showInstalled = !_showInstalled;
+            ShowInstalled = !ShowInstalled;
+            Sdks.Search(" ");
+            Sdks.Search(_query);
+            IsBusy = (!ShowOnline && !ShowInstalled);
         }
+
+
 
         [RelayCommand]
         void ToggleMultiSelection()
@@ -210,13 +213,39 @@ namespace Dots.ViewModels
 
         }
 
+        void Sdks_FilterHandler(object sender, ObservableView.Filtering.FilterEventArgs<Sdk> e)
+        {
+            if(ShowOnline && ShowInstalled)
+            {
+                e.IsAllowed = true;
+            }
+            else if(ShowOnline && !ShowInstalled)
+            {
+                e.IsAllowed = !e.Item.Installed;
+            }
+            else if(!ShowOnline && ShowInstalled)
+            {
+                e.IsAllowed = e.Item.Installed;
+            }
+            else
+            {
+                e.IsAllowed = false;
+            }
+        }
+
         public async Task CheckSdks()
         {
             try
             {
+                if(Sdks is not null) Sdks.FilterHandler -= Sdks_FilterHandler;
                 IsBusy = true;
                 var sdkList = await _dotnet.GetSdks();
-                Sdks = new ObservableRangeCollection<Sdk>(sdkList);
+                Sdks = new ObservableView<Sdk>(sdkList);
+
+                Sdks.SearchSpecification.Add(x => x.VersionDisplay, BinaryOperator.Contains);
+                Sdks.SearchSpecification.Add(x => x.Path, BinaryOperator.Contains);
+                Sdks.FilterHandler += Sdks_FilterHandler;
+
                 _baseSdks = sdkList;
                 LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
                 IsBusy = false;

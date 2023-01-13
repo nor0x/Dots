@@ -32,31 +32,6 @@ public partial class MainPage : ContentPage
         await _vm.CheckSdks();
     }
 
-
-    private async void SdkCollection_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        var newSelection = e.CurrentSelection.FirstOrDefault() != e.PreviousSelection.FirstOrDefault();
-        var open = DetailsPanel.Width == 0;
-        if (open)
-        {
-            await DetailsPanel.WidthTo(300);
-            await CollapseDetailsButton.FadeTo(100);
-
-        }
-        else
-        {
-            if (newSelection)
-            {
-                await DetailsPanel.WidthTo(0);
-                await CollapseDetailsButton.FadeTo(0);
-            }
-        }
-        if (e.CurrentSelection.FirstOrDefault() is Sdk sdk)
-        {
-            _vm.SelectedSdk = sdk;
-        }
-    }
-
     private void ReleaseNotes_PointerExited(object sender, Microsoft.Maui.Controls.PointerEventArgs e)
     {
         if (sender is Label label)
@@ -117,6 +92,35 @@ public partial class MainPage : ContentPage
         else
         {
             App.Current.CloseWindow(Application.Current.Windows.FirstOrDefault(w => w.Page is AboutPage));
+        }
+    }
+
+    private async void Item_Tapped(object sender, Microsoft.Maui.Controls.TappedEventArgs e)
+    {
+        if (sender is Grid gr && gr.BindingContext is Sdk s)
+        {
+            var border = (VisualElement)gr.Children.First();
+            await border.ScaleTo(0.80, 150, Easing.BounceIn);
+            await border.ScaleTo(1.0, 150, Easing.BounceOut);
+
+            bool newSelection = s != _vm.SelectedSdk;
+            _vm.SelectedSdk = s;
+
+            var open = DetailsPanel.Width == 0;
+            if (open)
+            {
+                await DetailsPanel.WidthTo(300);
+                await CollapseDetailsButton.FadeTo(100);
+
+            }
+            else
+            {
+                if (!newSelection)
+                {
+                    await DetailsPanel.WidthTo(0);
+                    await CollapseDetailsButton.FadeTo(0);
+                }
+            }
         }
     }
 }

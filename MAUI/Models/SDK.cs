@@ -37,7 +37,7 @@ public partial class Sdk : ObservableObject
     public bool _isInstalling;
 
     [JsonIgnore]
-    public int Index { get; set; }
+    public string VersionDisplay { get; set; }
 }
 
 

@@ -23,17 +23,16 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">13.1</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+		<WindowsPackageType>MSIX</WindowsPackageType>
 	</PropertyGroup>
 
 	<!-- WINDOWS PUBLISHING Condition Release-->
-	<!--
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<SelfContained>true</SelfContained>
 		<WindowsAppSdkSelfContained>true</WindowsAppSdkSelfContained>
 		<PublishReadyToRun>true</PublishReadyToRun>
 		<WindowsPackageType>None</WindowsPackageType>
 	</PropertyGroup>
-	-->
 
 	<ItemGroup>
 		<!-- App Icon -->
@@ -61,6 +60,7 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0-preview3" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
+		<PackageReference Include="ObservableView" Version="2.2.19286.1-pre" />
 		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
 		<PackageReference Include="System.Reactive" Version="5.0.0" />
 		<PackageReference Include="M.BindableProperty.Generator" Version="0.9.3" />
