@@ -43,9 +43,10 @@ namespace Dots.ViewModels
         string _lastUpdated;
 
         [ObservableProperty]
-        bool _showOnline;
+        bool _showOnline = true;
+        
         [ObservableProperty]
-        bool _showInstalled;
+        bool _showInstalled = true;
 
         [RelayCommand]
         async Task DownloadScript()
@@ -191,6 +192,8 @@ namespace Dots.ViewModels
             ShowOnline = !ShowOnline;
             Sdks.Search(" ");
             Sdks.Search(_query);
+            IsBusy = (!ShowOnline && !ShowInstalled);
+
         }
 
         [RelayCommand]
@@ -199,6 +202,7 @@ namespace Dots.ViewModels
             ShowInstalled = !ShowInstalled;
             Sdks.Search(" ");
             Sdks.Search(_query);
+            IsBusy = (!ShowOnline && !ShowInstalled);
         }
 
 
