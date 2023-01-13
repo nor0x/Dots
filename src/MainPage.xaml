@@ -512,17 +512,15 @@
                         <Label
                             Text="Release Notes"
                             FontAttributes="Bold" />
-                        <Label
+
+                        <ctrl:HyperLinkLabel
                             Text="{Binding Data.ReleaseNotes}"
                             TextDecorations="Underline"
                             TextColor="{StaticResource Accent}">
                             <Label.GestureRecognizers>
-                                <PointerGestureRecognizer
-                                    PointerEntered="ReleaseNotes_PointerEntered"
-                                    PointerExited="ReleaseNotes_PointerExited" />
                                 <TapGestureRecognizer Command="{Binding Source={x:Reference PageSelf}, Path=BindingContext.OpenReleaseNotesCommand}" />
                             </Label.GestureRecognizers>
-                        </Label>
+                        </ctrl:HyperLinkLabel>
 
                         <Label
                             Text="Release Date"
