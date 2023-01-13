@@ -22,7 +22,7 @@ public partial class MainPage : ContentPage
         InitializeComponent();
         AnimationView.Source = new HtmlWebViewSource()
         {
-            Html = $$"""<body style=background:#605d64;overflow:hidden><video autoplay loop muted style=width:180px;height:180px><source src="https://github.com/nor0x/public_blob/raw/main/dotsanimation_1.mp4" "type=" video/mp4">"""
+            Html = $$"""<body style=background:#605d64;overflow:hidden><video autoplay loop muted style=width:180px;height:180px><source src="https://github.com/nor0x/Dots/raw/main/Assets/dotsanimation1.mp4" "type=" video/mp4">"""
         };
     }
 
