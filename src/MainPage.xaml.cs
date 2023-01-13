@@ -32,39 +32,6 @@ public partial class MainPage : ContentPage
         await _vm.CheckSdks();
     }
 
-    private void ReleaseNotes_PointerExited(object sender, Microsoft.Maui.Controls.PointerEventArgs e)
-    {
-        if (sender is Label label)
-        {
-#if WINDOWS
-            if (label.Handler.PlatformView is Microsoft.UI.Xaml.Controls.TextBlock textBlock)
-            {
-                textBlock.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
-            }
-#endif
-#if MACCATALYST
-            NSCursor.ArrowCursor.Set();
-#endif
-        }
-    }
-
-    private void ReleaseNotes_PointerEntered(object sender, Microsoft.Maui.Controls.PointerEventArgs e)
-    {
-        if (sender is Label label)
-        {
-#if WINDOWS
-            if (label.Handler.PlatformView is Microsoft.UI.Xaml.Controls.TextBlock textBlock)
-            {
-                textBlock.ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Hand));
-            }
-#endif
-
-#if MACCATALYST
-            NSCursor.PointingHandCursor.Set();
-#endif
-        }
-    }
-
     private async void CollapseDetails_Tapped(object sender, Microsoft.Maui.Controls.TappedEventArgs e)
     {
         if (DetailsPanel.Width > 0)
