@@ -76,10 +76,10 @@ namespace Dots.ViewModels
         }
 
         [RelayCommand]
-        void ListRuntimes()
+        async Task ListRuntimes()
         {
             LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
-
+            await CheckSdks(true);
         }
 
         [RelayCommand]
@@ -233,13 +233,13 @@ namespace Dots.ViewModels
             }
         }
 
-        public async Task CheckSdks()
+        public async Task CheckSdks(bool force = false)
         {
             try
             {
                 if(Sdks is not null) Sdks.FilterHandler -= Sdks_FilterHandler;
                 IsBusy = true;
-                var sdkList = await _dotnet.GetSdks();
+                var sdkList = await _dotnet.GetSdks(force);
                 Sdks = new ObservableView<Sdk>(sdkList);
 
                 Sdks.SearchSpecification.Add(x => x.VersionDisplay, BinaryOperator.Contains);

@@ -29,7 +29,7 @@ public class DotnetService
         var result = new List<Sdk>();
         var index = await GetReleaseIndex();
         var releaseInfos = new List<Release>();
-        var installed = GetInstalledSdks();
+        var installed = GetInstalledSdks(force);
         foreach(var item in index)
         {
             var infos = await GetReleaseInfos(item.ChannelVersion);
@@ -69,10 +69,11 @@ public class DotnetService
         var response = await client.GetStringAsync(Constants.ReleaseIndexUrl);
         var releaseIndex = JsonSerializer.Deserialize<ReleaseIndexInfo>(response, ReleaseSerializerOptions.Options);
         _releaseIndex = releaseIndex.ReleasesIndex;
-        if (!Directory.Exists(FileSystem.Current.AppDataDirectory))
+        if (!Directory.Exists(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName)))
         {
-            Directory.CreateDirectory(FileSystem.Current.AppDataDirectory);
+            Directory.CreateDirectory(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName));
         }
+
 
         await File.WriteAllTextAsync(Constants.ReleaseIndexPath, response);
         Preferences.Set(Constants.ReleaseIndexKey, Constants.ReleaseIndexPath);
@@ -87,7 +88,7 @@ public class DotnetService
         }
         if (Preferences.ContainsKey(Constants.ReleaseBaseKey + channel) && !force)
         {
-            var cachedFile = Path.Combine(FileSystem.Current.AppDataDirectory, $"release-{channel}.json");
+            var cachedFile = Path.Combine(FileSystem.Current.AppDataDirectory, Constants.AppName, $"release-{channel}.json");
             var json = await File.ReadAllTextAsync(cachedFile);
             var deserialized = JsonSerializer.Deserialize<ReleaseInfo>(json, ReleaseSerializerOptions.Options);
             
@@ -99,7 +100,7 @@ public class DotnetService
         var url = Constants.ReleaseInfoUrl + channel + Constants.ReleaseInfoUrlEnd;
         var response = await client.GetStringAsync(url);
         var releases = JsonSerializer.Deserialize<ReleaseInfo>(response, ReleaseSerializerOptions.Options);
-        var path = Path.Combine(FileSystem.Current.AppDataDirectory, $"release-{channel}.json");
+        var path = Path.Combine(FileSystem.Current.AppDataDirectory, Constants.AppName, $"release-{channel}.json");
         await File.WriteAllTextAsync(path, response);
         Preferences.Set(Constants.ReleaseBaseKey + channel, path);
         return releases.Releases;
@@ -160,9 +161,14 @@ public class DotnetService
         try
         {
             Rid rid = GetRid();
-            if (sdk.Data.Sdk.Files.Where(f => f.Rid == rid).FirstOrDefault(r => r.Name.Contains(".exe")) is Data.FileInfo info)
+            var extension = GetExtension();
+            if (sdk.Data.Sdk.Files.Where(f => f.Rid == rid).FirstOrDefault(r => r.Name.Contains(extension)) is Data.FileInfo info)
             {
-                var path = Path.Combine(FileSystem.Current.AppDataDirectory, info.Url.ToString().Split("/").LastOrDefault());
+                if (!Directory.Exists(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName)))
+                {
+                    Directory.CreateDirectory(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName));
+                }
+                var path = Path.Combine(FileSystem.AppDataDirectory, Constants.AppName, info.Url.ToString().Split("/").LastOrDefault());
                 if (File.Exists(path))
                 {
                     return path;
@@ -191,8 +197,8 @@ public class DotnetService
             return result.ExitCode == 0;
 #endif
 #if MACCATALYST
-//blocked by https://github.com/dotnet/maui/issues/12409
-            return 0 == 0;
+
+            return RunAsRoot("/usr/sbin/installer", new[] { "-pkg", exe , "-target", "/", null});
 #endif
         }
         catch (Exception ex)
@@ -256,7 +262,7 @@ public class DotnetService
             var filename = "uninstall-" + sdk.Data.Sdk.Version.Replace(".", "-") + ".sh";
             var path = Path.Combine(FileSystem.AppDataDirectory, Constants.AppName, filename);
             await File.WriteAllTextAsync(path, script);
-            return RunFileAsRoot(path);
+            return RunAsRoot("/bin/sh", new[] { path, null });
 #endif
         }
         catch(Exception ex)
@@ -297,11 +303,10 @@ public class DotnetService
     }
 
 #if MACCATALYST
-    bool RunFileAsRoot(string path)
+    bool RunAsRoot(string exe, string[] args)
     {
         try
         {
-            var args = new[] { path, null };
             var parameters = new AuthorizationParameters
             {
                 Prompt = "",
@@ -314,7 +319,7 @@ public class DotnetService
 
             using var auth = Authorization.Create(parameters, null, flags);
             int result = auth.ExecuteWithPrivileges(
-                "/bin/sh",
+                exe,
                 AuthorizationFlags.Defaults,
                 args);
             if (result == 0) return true;
@@ -341,18 +346,34 @@ public class DotnetService
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            Analytics.TrackEvent("RunFileAsRoot", new Dictionary<string, string>() { { "Error", ex.Message }, { "Path", path } });
+            Analytics.TrackEvent("RunAsRoot", new Dictionary<string, string>() { { "Error", ex.Message }, { "Executable", exe }, { "Args", string.Join("", args) } });
             return false;
         }
     }
 
 #endif
 
+    string GetExtension()
+    {
+        var ext = ".tar.gz";
+        //if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) doesn't work on mac-catalyst
+        if (RuntimeInformation.RuntimeIdentifier.Contains("mac"))
+        {
+            ext = ".pkg";
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            ext = ".exe";
+        }
+        return ext;
+    }
+
     Rid GetRid()
     {
         try
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            //if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) doesn't work on mac-catalyst
+            if (RuntimeInformation.RuntimeIdentifier.Contains("mac"))
             {
                 return 
                     (RuntimeInformation.OSArchitecture == Architecture.Arm ||

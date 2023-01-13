@@ -34,5 +34,10 @@
             Property="TextColor"
             Value="White" />
     </Style>
+        <Style TargetType="SearchBar">
+        <Setter
+            Property="TextColor"
+            Value="White" />
+    </Style>
 
 </ResourceDictionary>

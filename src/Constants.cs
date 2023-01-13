@@ -27,7 +27,7 @@ public class Constants
     public static string ReleaseInfoUrl = "https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/";
     public static string ReleaseInfoUrlEnd = "/releases.json";
     public static string ReleaseIndexUrl = "https://raw.githubusercontent.com/dotnet/core/main/release-notes/releases-index.json";
-    public static string ReleaseIndexPath = Path.Combine(FileSystem.Current.AppDataDirectory, "release-index.json");
+    public static string ReleaseIndexPath = Path.Combine(FileSystem.AppDataDirectory, AppName, "release-index.json");
     public static string ReleaseIndexKey = "release-index-key";
     public static string ReleaseBaseKey = "release-key-";
 
