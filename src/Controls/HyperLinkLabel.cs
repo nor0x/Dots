@@ -1,5 +1,11 @@
-﻿using System;
+﻿using Dots.Helpers;
+#if WINDOWS
+using Microsoft.UI.Input;
+#endif
+#if MACCATALYST
 using AppKit;
+using UIKit;
+#endif
 
 namespace Dots.Controls;
 
