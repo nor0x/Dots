@@ -187,6 +187,20 @@ namespace Dots.ViewModels
 
 
         [RelayCommand]
+        async Task LaunchFileLink(Uri url)
+        {
+            try
+            {
+                await Browser.Default.OpenAsync(url);
+            }
+            catch (Exception ex)
+            {
+                await _errorHelper.ShowPopup(ex);
+            }
+        }
+
+
+        [RelayCommand]
         void ToggleOnline()
         {
             ShowOnline = !ShowOnline;

@@ -8,6 +8,7 @@
     xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:local="clr-namespace:Dots"
     xmlns:ctrl="clr-namespace:Dots.Controls"
+    xmlns:data="clr-namespace:Dots.Data"
     Shell.NavBarIsVisible="false"
     x:Name="PageSelf"
     x:DataType="vm:MainViewModel"
@@ -15,6 +16,7 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <mct:IsStringNotNullOrEmptyConverter x:Key="IsStringNotNullOrEmptyConverter" />
+            <helpers:RidToIconConverter x:Key="RidToIconConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
     <Grid
@@ -559,6 +561,45 @@
                             Margin="0,12,0,0" />
                         <Label Text="{Binding Data.Sdk.VsMacSupport}" />
                         <Label Text="{Binding Data.Sdk.VsMacVersion}" />
+                        <Label
+                            Text="Download Files"
+                            FontAttributes="Bold"
+                            Margin="0,12,0,0" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Data.Sdk.Files}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="data:FileInfo">
+                                    <HorizontalStackLayout
+                                        Spacing="8"
+                                        Margin="8">
+                                        <Border
+                                            Background="#5effffff"
+                                            Padding="2">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="8" />
+                                            </Border.StrokeShape>
+                                            <Label
+                                                VerticalOptions="Center"
+                                                FontSize="30"
+                                                Text="{Binding Rid, Converter={StaticResource RidToIconConverter}}" />
+                                        </Border>
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label
+                                                VerticalOptions="Center"
+                                                Text="{Binding Rid}" />
+                                            <ctrl:HyperLinkLabel
+                                                Text="{Binding Name}"
+                                                TextColor="{StaticResource Accent}">
+                                                <Label.GestureRecognizers>
+                                                    <TapGestureRecognizer
+                                                        Command="{Binding Source={x:Reference PageSelf}, Path=BindingContext.LaunchFileLinkCommand}"
+                                                        CommandParameter="{Binding Url}" />
+                                                </Label.GestureRecognizers>
+                                            </ctrl:HyperLinkLabel>
+                                        </VerticalStackLayout>
+                                    </HorizontalStackLayout>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
                     </VerticalStackLayout>
                 </ScrollView>
                 <Border
