@@ -2,8 +2,8 @@ name: release
 
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - CICD
 
 jobs:
   build-macos:
