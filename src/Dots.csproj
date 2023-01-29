@@ -13,36 +13,49 @@
 		<ApplicationTitle>Dots</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.dots</ApplicationId>
+		<ApplicationId>com.nor0x.dots</ApplicationId>
 		<ApplicationIdGuid>87c84e14-38b5-4b30-beca-ae34d453cb49</ApplicationIdGuid>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>0.0.1</ApplicationDisplayVersion>
+		<ApplicationVersion>0.0.1</ApplicationVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">13.1</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-		<WindowsPackageType>MSIX</WindowsPackageType>
 	</PropertyGroup>
 
 	<!-- WINDOWS PUBLISHING Condition Release-->
 	<PropertyGroup Condition="$([MSBuild]::IsOSPlatform('windows'))">
 		<OutputType>WinExe</OutputType>
+		<WindowsPackageType>MSIX</WindowsPackageType>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND $([MSBuild]::IsOSPlatform('windows'))">
 		<SelfContained>true</SelfContained>
 		<WindowsAppSdkSelfContained>true</WindowsAppSdkSelfContained>
 		<PublishReadyToRun>true</PublishReadyToRun>
 		<WindowsPackageType>None</WindowsPackageType>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-maccatalyst|AnyCPU'">
+	  <CreatePackage>false</CreatePackage>
+	  <CodesignKey>Mac Developer</CodesignKey>
+	  <PackageSigningKey>3rd Party Mac Developer Installer</PackageSigningKey>
+	  <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-maccatalyst|AnyCPU'">
+	  <CreatePackage>false</CreatePackage>
+	  <CodesignProvision>dots-profile</CodesignProvision>
+	  <CodesignKey>Developer ID Application</CodesignKey>
+	  <PackageSigningKey>3rd Party Mac Developer Installer</PackageSigningKey>
+	  <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
+	</PropertyGroup>
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#38343d" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#38343d" BaseSize="128,128" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
