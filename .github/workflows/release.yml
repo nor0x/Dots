@@ -49,6 +49,7 @@ jobs:
     - name: run build scripts
       run: |
         cd $GITHUB_WORKSPACE/src
+        dotnet workload restore
         dotnet publish -f:net7.0-maccatalyst -c:Release
         cd $GITHUB_WORKSPACE/src/bin/Release/net7.0-maccatalyst/
         ditto -c -k --sequesterRsrc --keepParent Dots.app Dots.app.zip 
