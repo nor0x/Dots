@@ -1,0 +1,139 @@
+name: release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3.0.0
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v2.0.0
+      with:
+        # Optional SDK version(s) to use. If not provided, will install global.json version when available. Examples: 2.2.104, 3.1, 3.1.x
+        dotnet-version: '7.0.x'
+        include-prerelease: true
+    - name: Install the Apple certificate and provisioning profile
+      env:
+        BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+        P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      run: |
+        # create variables
+        CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+        PP_PATH=$RUNNER_TEMP/build_pp.provisionprofile
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+        # import certificate and provisioning profile from secrets
+        echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+        echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode --output $PP_PATH
+
+        # create temporary keychain
+        security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+        # import certificate to keychain
+        security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security list-keychain -d user -s $KEYCHAIN_PATH
+
+        # apply provisioning profile
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+    
+    - name: run build scripts
+      run: |
+        cd $GITHUB_WORKSPACE/src
+        dotnet workload restore
+        dotnet publish -f:net7.0-maccatalyst -c:Release
+        cd $GITHUB_WORKSPACE/src/bin/Release/net7.0-maccatalyst/
+        ditto -c -k --sequesterRsrc --keepParent Dots.app Dots.app.zip 
+      
+    - uses: actions/upload-artifact@v3
+      with:
+        name: macOS
+        path: ${{ github.workspace }}/src/bin/Release/net7.0-maccatalyst/Dots.app.zip
+
+  # build-windows:
+  #   runs-on: windows-latest  # For a list of available runner types, refer to
+
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v3
+  #     with:
+  #       fetch-depth: 0
+
+  #   # Install the .NET Core workload
+  #   - name: Install .NET Core
+  #     uses: actions/setup-dotnet@v2
+  #     with:
+  #       dotnet-version: 6.0.300-preview.22204.3
+
+  #   # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+  #   - name: Setup MSBuild.exe
+  #     uses: microsoft/setup-msbuild@v1.0.2
+
+
+  #   # Decode the base 64 encoded pfx and save the Signing_Certificate
+  #   - name: Decode the pfx
+  #     run: |
+  #       cd $env:GITHUB_WORKSPACE
+  #       $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.Base64_Encoded_Pfx }}")
+  #       $certificatePath = Join-Path -Path $env:GITHUB_WORKSPACE\Dots -ChildPath GitHubActionsWorkflow.pfx
+  #       [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
+  #       $SecurePassword = ConvertTo-SecureString ${{ secrets.Pfx_Key }} –asplaintext –force
+  #       Get-ChildItem -Path $env:GITHUB_WORKSPACE\Dots\GitHubActionsWorkflow.pfx | Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -Password $SecurePassword
+
+  #   # Decode the base 64 encoded pfx and save the Signing_Certificate
+  #   - name: Build the app
+  #     run: |
+  #       dotnet workload install maui-windows
+  #       dotnet workload restore
+  #       cd $env:GITHUB_WORKSPACE/Dots
+  #       msbuild /restore /t:Publish /p:TargetFramework=net6.0-windows10.0.19041 /p:configuration=Release
+
+  #   - name: Find and Prepare MSIX
+  #     run: |
+  #       cd $env:GITHUB_WORKSPACE/Dots
+  #       ls
+  #       Get-ChildItem -Path ".\" -Include Dots*.msix -Recurse | Copy-Item -Destination .\
+  #       ls
+  #       get-childitem -Path $dir | where-object { $_.Name -like "Dots*.msix" } | %{ rename-item -LiteralPath $_.FullName -NewName "$d`Dots.msix" }
+  #       ls  
+
+  #   - uses: actions/upload-artifact@v3
+  #     with:
+  #       name: Windows
+  #       path: ${{ github.workspace }}/Dots/Dots.msix
+
+  create-release:
+    #needs: [build-macos, build-windows]
+    needs: [build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: macOS
+          path: $GITHUB_WORKSPACE
+
+      # - uses: actions/download-artifact@v3
+      #   with:
+      #     name: Windows
+      #     path: $GITHUB_WORKSPACE
+          
+      - name: Display structure of downloaded files
+        run: |
+          cd $GITHUB_WORKSPACE
+          ls
+
+        # You may pin to the exact commit or the version.
+        # uses: ncipollo/release-action@40bb172bd05f266cf9ba4ff965cb61e9ee5f6d01
+      - uses: ncipollo/release-action@v1.9.0
+        with:
+          artifacts: "$GITHUB_WORKSPACE/Dots.app.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
