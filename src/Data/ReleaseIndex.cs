@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Dots.Data;
@@ -39,7 +40,7 @@ public class ReleaseIndex
     public SupportPhase SupportPhase { get; set; }
 
     [JsonPropertyName("eol-date")]
-    public DateTimeOffset EolDate { get; set; }
+    public DateTimeOffset? EolDate { get; set; }
 
     [JsonPropertyName("releases.json")]
     public Uri ReleasesJson { get; set; }
@@ -49,7 +50,7 @@ public enum Product { Net, NetCore };
 
 public enum ReleaseType { Lts, Sts };
 
-public enum SupportPhase { Active, Eol };
+public enum SupportPhase { Active, Eol, Preview };
 
 
 public class ProductEnumConverter : JsonConverter<Product>
@@ -104,6 +105,7 @@ public class SupportPhaseEnumConverter : JsonConverter<SupportPhase>
     {
         return reader.GetString() switch
         {
+            "preview" => SupportPhase.Preview,
             "active" => SupportPhase.Active,
             "eol" => SupportPhase.Eol,
             _ => throw new JsonException()
@@ -114,6 +116,7 @@ public class SupportPhaseEnumConverter : JsonConverter<SupportPhase>
     {
         writer.WriteStringValue(value switch
         {
+            SupportPhase.Preview => "preview",
             SupportPhase.Active => "active",
             SupportPhase.Eol => "eol",
             _ => throw new JsonException()
