@@ -644,13 +644,13 @@
             </Border.Background>
         <VerticalStackLayout
             x:Name="LoadingPanel"
-            BackgroundColor="{StaticResource BackgroundSubtle}"
+            BackgroundColor="Transparent"
             HorizontalOptions="Center"
             VerticalOptions="Center">
             <WebView
                 x:Name="AnimationView"
+                BackgroundColor="Transparent"
                 WidthRequest="180"
-                BackgroundColor="{StaticResource BackgroundSubtle}"
                 HeightRequest="200"
                 InputTransparent="true" />
             <Label
