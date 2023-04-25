@@ -27,12 +27,12 @@ public class DotnetService
     public async Task<List<Sdk>> GetSdks(bool force = false)
     {
         var result = new List<Sdk>();
-        var index = await GetReleaseIndex();
+        var index = await GetReleaseIndex(force);
         var releaseInfos = new List<Release>();
         var installed = GetInstalledSdks(force);
         foreach(var item in index)
         {
-            var infos = await GetReleaseInfos(item.ChannelVersion);
+            var infos = await GetReleaseInfos(item.ChannelVersion, force);
             releaseInfos.AddRange(infos);
         }
         int i = 0;
