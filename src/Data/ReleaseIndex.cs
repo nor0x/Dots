@@ -46,11 +46,11 @@ public class ReleaseIndex
     public Uri ReleasesJson { get; set; }
 }
 
-public enum Product { Net, NetCore };
+public enum Product { Net, NetCore, Undefined };
 
-public enum ReleaseType { Lts, Sts };
+public enum ReleaseType { Lts, Sts, Undefined };
 
-public enum SupportPhase { Active, Eol, Preview };
+public enum SupportPhase { Active, Eol, Preview, Undefined };
 
 
 public class ProductEnumConverter : JsonConverter<Product>
@@ -61,7 +61,7 @@ public class ProductEnumConverter : JsonConverter<Product>
         {
             ".NET" => Product.Net,
             ".NET Core" => Product.NetCore,
-            _ => throw new JsonException()
+            _ => Product.Undefined
         };
     }
 
@@ -71,7 +71,7 @@ public class ProductEnumConverter : JsonConverter<Product>
         {
             Product.Net => ".NET",
             Product.NetCore => ".NET Core",
-            _ => throw new JsonException()
+            _ => ""
         });
     }
 }
@@ -84,7 +84,7 @@ public class ReleaseTypeEnumConverter : JsonConverter<ReleaseType>
         {
             "lts" => ReleaseType.Lts,
             "sts" => ReleaseType.Sts,
-            _ => throw new JsonException()
+            _ => ReleaseType.Undefined
         };
     }
 
@@ -94,7 +94,7 @@ public class ReleaseTypeEnumConverter : JsonConverter<ReleaseType>
         {
             ReleaseType.Lts => "lts",
             ReleaseType.Sts => "sts",
-            _ => throw new JsonException()
+            _ => ""
         });
     }
 }
@@ -108,7 +108,7 @@ public class SupportPhaseEnumConverter : JsonConverter<SupportPhase>
             "preview" => SupportPhase.Preview,
             "active" => SupportPhase.Active,
             "eol" => SupportPhase.Eol,
-            _ => throw new JsonException()
+            _ => SupportPhase.Undefined
         };
     }
 
@@ -119,7 +119,7 @@ public class SupportPhaseEnumConverter : JsonConverter<SupportPhase>
             SupportPhase.Preview => "preview",
             SupportPhase.Active => "active",
             SupportPhase.Eol => "eol",
-            _ => throw new JsonException()
+            _ => ""
         });
     }
 }
