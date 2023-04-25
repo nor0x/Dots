@@ -9,7 +9,8 @@ namespace Dots;
 public class Constants
 {
     public const string AppName = "Dots";
-    public const string InstalledSdkSKey = "Installed-Sdks-Key";
+    public const string InstalledSdkSKey = "installed-sdks-key";
+    public const string LastCheckedKey = "last-checked";
 #if MACCATALYST
     public const string UninstallerPath = "Package Cache";
     public const string InstallerScript = "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh";

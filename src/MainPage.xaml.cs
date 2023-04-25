@@ -29,7 +29,16 @@ public partial class MainPage : ContentPage
     protected async override void OnAppearing()
     {
         base.OnAppearing();
-        await _vm.CheckSdks();
+        var lastChecked = Preferences.Get(Constants.LastCheckedKey, DateTime.MinValue);
+
+        bool force = false;
+        if (DateTime.Now.Subtract(lastChecked).TotalDays > 15)
+        {
+            force = true;
+            Preferences.Set(Constants.LastCheckedKey, DateTime.Now);
+        }
+        await _vm.CheckSdks(force);
+
     }
 
     private async void CollapseDetails_Tapped(object sender, Microsoft.Maui.Controls.TappedEventArgs e)
