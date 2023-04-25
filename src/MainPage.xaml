@@ -629,15 +629,28 @@
                 </Border>
             </Grid>
         </Grid>
+        <Border
+            IsVisible="{Binding IsBusy}"      
+            Padding="0"
+            StrokeThickness="0"
+            Grid.RowSpan="2">
+            <Border.Background>
+                <RadialGradientBrush>
+                    <GradientStopCollection>
+                        <GradientStop Color="{StaticResource BackgroundSubtle}" Offset="0" />
+                        <GradientStop Color="#aa605d64" Offset="1" />
+                    </GradientStopCollection>
+                </RadialGradientBrush>
+            </Border.Background>
         <VerticalStackLayout
-            IsVisible="{Binding IsBusy}"
             x:Name="LoadingPanel"
-            Grid.Row="1"
+            BackgroundColor="{StaticResource BackgroundSubtle}"
             HorizontalOptions="Center"
             VerticalOptions="Center">
             <WebView
                 x:Name="AnimationView"
                 WidthRequest="180"
+                BackgroundColor="{StaticResource BackgroundSubtle}"
                 HeightRequest="200"
                 InputTransparent="true" />
             <Label
@@ -647,5 +660,6 @@
                 FontSize="16"
                 HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
+        </Border>
     </Grid>
 </ContentPage>

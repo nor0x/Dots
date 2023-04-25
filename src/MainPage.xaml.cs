@@ -10,6 +10,7 @@ using Dots.Models;
 using System;
 using System.Diagnostics;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.Maui.Platform;
 
 namespace Dots;
 
@@ -22,8 +23,19 @@ public partial class MainPage : ContentPage
         InitializeComponent();
         AnimationView.Source = new HtmlWebViewSource()
         {
-            Html = $$"""<body style=background:#605d64;overflow:hidden><video autoplay loop muted style=width:180px;height:180px><source src="https://github.com/nor0x/Dots/raw/main/Assets/dotsanimation1.mp4" "type=" video/mp4">"""
+            Html = $$"""<body style="background:#605d64 !important;overflow:hidden"><video autoplay loop muted style="width:180px;height:180px;background:#605d64 !important;border:0px!important"><source src="https://github.com/nor0x/Dots/raw/main/Assets/dotsanimation1.mp4" "type=" video/mp4">"""
         };
+    }
+
+    protected override void OnHandlerChanged()
+    {
+        base.OnHandlerChanged();
+#if WINDOWS
+        if(MainSearchBar.Handler.PlatformView is Microsoft.UI.Xaml.Controls.AutoSuggestBox asb)
+        {
+
+        }
+#endif
     }
 
     protected async override void OnAppearing()
