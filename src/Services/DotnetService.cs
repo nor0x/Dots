@@ -18,7 +18,7 @@ using Security;
 namespace Dots.Services;
 
 public class DotnetService
-{   
+{
     List<Sdk> _sdks;
     List<InstalledSdk> _installedSdks = new();
     ReleaseIndex[] _releaseIndex;
@@ -30,25 +30,35 @@ public class DotnetService
         var index = await GetReleaseIndex(force);
         var releaseInfos = new List<Release>();
         var installed = GetInstalledSdks(force);
-        foreach(var item in index)
+        foreach (var item in index)
         {
             var infos = await GetReleaseInfos(item.ChannelVersion, force);
             releaseInfos.AddRange(infos);
         }
         int i = 0;
-        foreach(var release in releaseInfos)
+        foreach (var release in releaseInfos)
         {
-            var sdk = new Sdk()
+            if (release.Sdks is not null)
             {
-                Data = release,
-                ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
-                Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty,
-                VersionDisplay = release.Sdk.Version,
-            };
-            i++;
-            result.Add(sdk);
+                foreach (var sdk in release.Sdks)
+                {
+                    if (result.FirstOrDefault(s => s.VersionDisplay == sdk.VersionDisplay) is null)
+                    {
+                        var addSdk = new Sdk()
+                        {
+                            Data = release,
+                            ColorHex = ColorHelper.GenerateHexColor(sdk.Version.First().ToString()),
+                            Path = _installedSdks.FirstOrDefault(x => x.Version == sdk.Version)?.Path ?? string.Empty,
+                            VersionDisplay = sdk.Version,
+                        };
+                        i++;
+                        result.Add(addSdk);
+                    }
+                }
+            }
+
         }
-        return result;
+        return result.OrderByDescending(x => x.VersionDisplay).ToList();
     }
 
     async Task<ReleaseIndex[]> GetReleaseIndex(bool force = false)
@@ -57,7 +67,7 @@ public class DotnetService
         {
             return _releaseIndex;
         }
-        if(_releaseIndex is null && Preferences.ContainsKey(Constants.ReleaseIndexKey) && !force)
+        if (_releaseIndex is null && Preferences.ContainsKey(Constants.ReleaseIndexKey) && !force)
         {
             var json = await File.ReadAllTextAsync(Constants.ReleaseIndexPath);
             var deserialized = JsonSerializer.Deserialize<ReleaseIndexInfo>(json, ReleaseSerializerOptions.Options);
@@ -79,7 +89,7 @@ public class DotnetService
         Preferences.Set(Constants.ReleaseIndexKey, Constants.ReleaseIndexPath);
         return _releaseIndex;
     }
-    
+
     async Task<Release[]> GetReleaseInfos(string channel, bool force = false)
     {
         if (!force && _releases is not null && _releases.ContainsKey(channel))
@@ -91,7 +101,7 @@ public class DotnetService
             var cachedFile = Path.Combine(FileSystem.Current.AppDataDirectory, Constants.AppName, $"release-{channel}.json");
             var json = await File.ReadAllTextAsync(cachedFile);
             var deserialized = JsonSerializer.Deserialize<ReleaseInfo>(json, ReleaseSerializerOptions.Options);
-            
+
             _releases.Add(channel, deserialized.Releases);
             return _releases[channel];
         }
@@ -180,7 +190,7 @@ public class DotnetService
             }
             return null;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Debug.WriteLine(ex);
             Analytics.TrackEvent("Download SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
@@ -198,7 +208,7 @@ public class DotnetService
 #endif
 #if MACCATALYST
 
-            return RunAsRoot("/usr/sbin/installer", new[] { "-pkg", exe , "-target", "/", null});
+            return RunAsRoot("/usr/sbin/installer", new[] { "-pkg", exe, "-target", "/", null });
 #endif
         }
         catch (Exception ex)
@@ -230,7 +240,7 @@ public class DotnetService
         }
     }
 
-    
+
     public async Task<bool> Uninstall(Sdk sdk)
     {
         try
@@ -265,7 +275,7 @@ public class DotnetService
             return RunAsRoot("/bin/sh", new[] { path, null });
 #endif
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Debug.WriteLine(ex);
             Analytics.TrackEvent("Uninstall SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
@@ -294,7 +304,7 @@ public class DotnetService
             return $"dotnet-sdk-{sdk.Data.Sdk.Version}-{os}-{arch}{env}.exe";
 
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Debug.WriteLine(ex);
             Analytics.TrackEvent("GetSetupName", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
@@ -375,14 +385,14 @@ public class DotnetService
             //if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) doesn't work on mac-catalyst
             if (RuntimeInformation.RuntimeIdentifier.Contains("mac"))
             {
-                return 
+                return
                     (RuntimeInformation.OSArchitecture == Architecture.Arm ||
                     RuntimeInformation.OSArchitecture == Architecture.Arm64 ||
                     RuntimeInformation.OSArchitecture == Architecture.Armv6) ? Rid.OsxArm64 : Rid.OsxX64;
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if(Environment.Is64BitOperatingSystem)
+                if (Environment.Is64BitOperatingSystem)
                 {
                     return
                         (RuntimeInformation.OSArchitecture == Architecture.Arm ||
