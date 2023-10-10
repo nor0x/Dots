@@ -1,5 +1,4 @@
-﻿using Microsoft.AppCenter.Analytics;
-using ObservableView.Searching;
+﻿using ObservableView.Searching;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -252,7 +251,7 @@ public class RidEnumConverter : JsonConverter<Rid>
 
     Rid PrintDiscard(string v)
     {
-        Analytics.TrackEvent("RID Discarded", new Dictionary<string, string> { { "value", v } });
+        //Analytics.TrackEvent("RID Discarded", new Dictionary<string, string> { { "value", v } });
         return Rid.Empty;
     }
 

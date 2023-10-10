@@ -1,85 +1,53 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>    
+  </PropertyGroup>
 
-	<PropertyGroup>
-		<TargetFrameworks>net7.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
-		<OutputType>Exe</OutputType>
-		<RootNamespace>Dots</RootNamespace>
-		<UseMaui>true</UseMaui>
-		<SingleProject>true</SingleProject>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<LangVersion>preview</LangVersion>
-		<!-- Display name -->
-		<ApplicationTitle>Dots</ApplicationTitle>
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+  
+  
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
+  </PropertyGroup>
 
-		<!-- App Identifier -->
-		<ApplicationId>com.nor0x.dots</ApplicationId>
-		<ApplicationIdGuid>87c84e14-38b5-4b30-beca-ae34d453cb49</ApplicationIdGuid>
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('MacOS'))">
+    <DefineConstants>$(DefineConstants);MACOS</DefineConstants>
+  </PropertyGroup>
 
-		<!-- Versions -->
-		<ApplicationDisplayVersion>0.0.1</ApplicationDisplayVersion>
-		<ApplicationVersion>0.0.1</ApplicationVersion>
+  <ItemGroup>
+    <!-- all files and files in subfolders of Assets -->
+    <AvaloniaResource Include="Assets\**\*" />
+    <AvaloniaResource Include="Assets\*" />
+  </ItemGroup>
 
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">13.1</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
-		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-	</PropertyGroup>
 
-	<!-- WINDOWS PUBLISHING Condition Release-->
-	<PropertyGroup Condition="$([MSBuild]::IsOSPlatform('windows'))">
-		<OutputType>WinExe</OutputType>
-		<WindowsPackageType>MSIX</WindowsPackageType>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND $([MSBuild]::IsOSPlatform('windows'))">
-		<SelfContained>true</SelfContained>
-		<WindowsAppSdkSelfContained>true</WindowsAppSdkSelfContained>
-		<PublishReadyToRun>true</PublishReadyToRun>
-		<WindowsPackageType>None</WindowsPackageType>
-	</PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.0.5-rc1" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.5-rc1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.5-rc1" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.5-rc1" />
+    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.2" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.5-rc1" />
+  </ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-maccatalyst|AnyCPU'">
-	  <CreatePackage>false</CreatePackage>
-	  <CodesignKey>Mac Developer</CodesignKey>
-	  <PackageSigningKey>3rd Party Mac Developer Installer</PackageSigningKey>
-	  <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-maccatalyst|AnyCPU'">
-	  <CreatePackage>false</CreatePackage>
-	  <CodesignProvision>dots-profile</CodesignProvision>
-	  <CodesignKey>Developer ID Application</CodesignKey>
-	  <PackageSigningKey>3rd Party Mac Developer Installer</PackageSigningKey>
-	  <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
-	</PropertyGroup>
-	<ItemGroup>
-		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#38343d" />
 
-		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#38343d" BaseSize="128,128" />
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageReference Include="System.Reactive" Version="6.0.1-preview.1" />
+    <PackageReference Include="M.BindableProperty.Generator" Version="0.11.1" />
+    <PackageReference Include="CliWrap" Version="3.6.4" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+    <PackageReference Include="akavache" Version="9.1.20" />
+    <PackageReference Include="HyperText.Avalonia" Version="11.0.0-rc1" />
+  </ItemGroup>
 
-		<!-- Images -->
-		<MauiImage Include="Resources\Images\*" />
-		<MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
 
-		<!-- Custom Fonts -->
-		<MauiFont Include="Resources\Fonts\*" />
-
-		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
-		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="CliWrap" Version="3.6.0" />
-		<PackageReference Include="CommunityToolkit.Maui" Version="3.1.0" />
-		<PackageReference Include="Microsoft.AppCenter.Analytics" Version="5.0.1" />
-		<PackageReference Include="Microsoft.AppCenter.Crashes" Version="5.0.1" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0-preview3" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
-		<PackageReference Include="ObservableView" Version="2.2.19286.1-pre" />
-		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-		<PackageReference Include="System.Reactive" Version="5.0.0" />
-		<PackageReference Include="M.BindableProperty.Generator" Version="0.9.3" />
-		<PackageReference Include="Mopups" Version="1.1.0" />
-	</ItemGroup>
 </Project>

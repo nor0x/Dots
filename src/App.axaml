@@ -1,0 +1,50 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:helpers="using:Dots.Helpers"
+             xmlns:hyper="clr-namespace:HyperText.Avalonia;assembly=HyperText.Avalonia"
+             x:Class="Dots.App"
+             RequestedThemeVariant="Default">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+  <Application.Resources>
+    <!-- colors from primer.style -->
+    <Color x:Key="Accent">#0969da</Color>
+    <Color x:Key="Success">#2da44e</Color>
+    <Color x:Key="Attention">#bf8700</Color>
+    <Color x:Key="Danger">#cf222e</Color>
+    <Color x:Key="Link">#3483eb</Color>
+    <Color x:Key="LinkHover">#3496eb</Color>
+
+    <Color x:Key="Background">#38343d</Color>
+    <Color x:Key="BackgroundLighter">#4B4552</Color>
+    <Color x:Key="BackgroundDarker">#2F2B33</Color>
+    <Color x:Key="BackgroundSubtle">#605d64</Color>
+    <Color x:Key="Foreground">#ffffff</Color>
+    <Color x:Key="SubtleForeground">#e1e4e8</Color>
+
+    <FontFamily x:Key="SpaceGrotesk">avares://Dots/Assets/Fonts/SpaceGrotesk.ttf#Space Grotesk</FontFamily>
+    <FontFamily x:Key="SpaceGroteskBold">avares://Dots/Assets/Fonts/SpaceGrotesk-Bold.ttf#Space Grotesk</FontFamily>
+    <FontFamily x:Key="LucideIcons">avares://Dots/Assets/Fonts/Lucide.ttf#lucide</FontFamily>
+
+
+    <!-- brushes -->
+    <SolidColorBrush
+        x:Key="AccentBrush"
+        Color="{StaticResource Accent}" />
+    <SolidColorBrush
+        x:Key="SuccessBrush"
+        Color="{StaticResource Success}" />
+    <SolidColorBrush
+        x:Key="AttentionBrush"
+        Color="{StaticResource Attention}" />
+    <SolidColorBrush
+        x:Key="DangerBrush"
+        Color="{StaticResource Danger}" />
+    
+    <helpers:RidToIconConverter x:Key="RidToIconConverter" />
+    <helpers:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmptyConverter" />
+  </Application.Resources>
+    <Application.Styles>
+        <FluentTheme />
+        <hyper:HyperLinkStyle />
+    </Application.Styles>
+</Application>

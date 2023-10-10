@@ -1,24 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.IO;
+using System.Net.Http;
+using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using System.Threading.Channels;
+using Akavache;
 using CliWrap;
 using CliWrap.Buffered;
 using Dots.Data;
 using Dots.Helpers;
 using Dots.Models;
-using Microsoft.AppCenter.Analytics;
-using Microsoft.Maui.Storage;
-#if MACCATALYST
+#if MACOS
 using Security;
 #endif
 
 namespace Dots.Services;
 
 public class DotnetService
-{
+{   
     List<Sdk> _sdks;
     List<InstalledSdk> _installedSdks = new();
     ReleaseIndex[] _releaseIndex;
@@ -30,35 +29,25 @@ public class DotnetService
         var index = await GetReleaseIndex(force);
         var releaseInfos = new List<Release>();
         var installed = GetInstalledSdks(force);
-        foreach (var item in index)
+        foreach(var item in index)
         {
             var infos = await GetReleaseInfos(item.ChannelVersion, force);
             releaseInfos.AddRange(infos);
         }
         int i = 0;
-        foreach (var release in releaseInfos)
+        foreach(var release in releaseInfos)
         {
-            if (release.Sdks is not null)
+            var sdk = new Sdk()
             {
-                foreach (var sdk in release.Sdks)
-                {
-                    if (result.FirstOrDefault(s => s.VersionDisplay == sdk.VersionDisplay) is null)
-                    {
-                        var addSdk = new Sdk()
-                        {
-                            Data = release,
-                            ColorHex = ColorHelper.GenerateHexColor(sdk.Version.First().ToString()),
-                            Path = _installedSdks.FirstOrDefault(x => x.Version == sdk.Version)?.Path ?? string.Empty,
-                            VersionDisplay = sdk.Version,
-                        };
-                        i++;
-                        result.Add(addSdk);
-                    }
-                }
-            }
-
+                Data = release,
+                ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
+                Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty,
+                VersionDisplay = release.Sdk.Version,
+            };
+            i++;
+            result.Add(sdk);
         }
-        return result.OrderByDescending(x => x.VersionDisplay).ToList();
+        return result;
     }
 
     async Task<ReleaseIndex[]> GetReleaseIndex(bool force = false)
@@ -67,7 +56,7 @@ public class DotnetService
         {
             return _releaseIndex;
         }
-        if (_releaseIndex is null && Preferences.ContainsKey(Constants.ReleaseIndexKey) && !force)
+        if(_releaseIndex is null && await BlobCache.UserAccount.ContainsKey(Constants.ReleaseIndexKey) && !force)
         {
             var json = await File.ReadAllTextAsync(Constants.ReleaseIndexPath);
             var deserialized = JsonSerializer.Deserialize<ReleaseIndexInfo>(json, ReleaseSerializerOptions.Options);
@@ -79,29 +68,29 @@ public class DotnetService
         var response = await client.GetStringAsync(Constants.ReleaseIndexUrl);
         var releaseIndex = JsonSerializer.Deserialize<ReleaseIndexInfo>(response, ReleaseSerializerOptions.Options);
         _releaseIndex = releaseIndex.ReleasesIndex;
-        if (!Directory.Exists(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName)))
+        if (!Directory.Exists(Constants.AppDataPath))
         {
-            Directory.CreateDirectory(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName));
+            Directory.CreateDirectory(Constants.AppDataPath);
         }
 
 
         await File.WriteAllTextAsync(Constants.ReleaseIndexPath, response);
-        Preferences.Set(Constants.ReleaseIndexKey, Constants.ReleaseIndexPath);
+        BlobCache.UserAccount.InsertObject(Constants.ReleaseIndexKey, Constants.ReleaseIndexPath);
         return _releaseIndex;
     }
-
+    
     async Task<Release[]> GetReleaseInfos(string channel, bool force = false)
     {
         if (!force && _releases is not null && _releases.ContainsKey(channel))
         {
             return _releases[channel];
         }
-        if (Preferences.ContainsKey(Constants.ReleaseBaseKey + channel) && !force)
+        if (await BlobCache.UserAccount.ContainsKey(Constants.ReleaseBaseKey + channel) && !force)
         {
-            var cachedFile = Path.Combine(FileSystem.Current.AppDataDirectory, Constants.AppName, $"release-{channel}.json");
+            var cachedFile = Path.Combine(Constants.AppDataPath, $"release-{channel}.json");
             var json = await File.ReadAllTextAsync(cachedFile);
             var deserialized = JsonSerializer.Deserialize<ReleaseInfo>(json, ReleaseSerializerOptions.Options);
-
+            
             _releases.Add(channel, deserialized.Releases);
             return _releases[channel];
         }
@@ -110,9 +99,9 @@ public class DotnetService
         var url = Constants.ReleaseInfoUrl + channel + Constants.ReleaseInfoUrlEnd;
         var response = await client.GetStringAsync(url);
         var releases = JsonSerializer.Deserialize<ReleaseInfo>(response, ReleaseSerializerOptions.Options);
-        var path = Path.Combine(FileSystem.Current.AppDataDirectory, Constants.AppName, $"release-{channel}.json");
+        var path = Path.Combine(Constants.AppDataPath, $"release-{channel}.json");
         await File.WriteAllTextAsync(path, response);
-        Preferences.Set(Constants.ReleaseBaseKey + channel, path);
+        await BlobCache.UserAccount.InsertObject(Constants.ReleaseBaseKey + channel, path);
         return releases.Releases;
     }
 
@@ -125,9 +114,9 @@ public class DotnetService
             {
                 return _installedSdks;
             }
-            if (Preferences.ContainsKey(Constants.InstalledSdkSKey) && !force)
+            if (await BlobCache.UserAccount.ContainsKey(Constants.InstalledSdksKey) && !force)
             {
-                var sdks = Preferences.Get(Constants.InstalledSdkSKey, "");
+                var sdks = await BlobCache.UserAccount.GetObject<string>(Constants.InstalledSdksKey);
                 _installedSdks = JsonSerializer.Deserialize<List<InstalledSdk>>(sdks);
                 return _installedSdks;
             }
@@ -154,19 +143,19 @@ public class DotnetService
                 }
             }
             _installedSdks = result;
-            Preferences.Set(Constants.InstalledSdkSKey, JsonSerializer.Serialize(_installedSdks));
+            await BlobCache.UserAccount.InsertObject(Constants.InstalledSdksKey, JsonSerializer.Serialize(result));
             return _installedSdks;
         }
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            Analytics.TrackEvent("GetInstalledSdks", new Dictionary<string, string>() { { "Error", ex.Message } });
+            ////Analytics.TrackEvent("GetInstalledSdks", new Dictionary<string, string>() { { "Error", ex.Message } });
             return null;
         }
 
     }
 
-    public async ValueTask<string> Download(Sdk sdk)
+    public async ValueTask<string> Download(Sdk sdk, bool toDesktop = false)
     {
         try
         {
@@ -174,26 +163,50 @@ public class DotnetService
             var extension = GetExtension();
             if (sdk.Data.Sdk.Files.Where(f => f.Rid == rid).FirstOrDefault(r => r.Name.Contains(extension)) is Data.FileInfo info)
             {
-                if (!Directory.Exists(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName)))
+                if (!Directory.Exists(Constants.AppDataPath))
                 {
-                    Directory.CreateDirectory(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName));
+                    Directory.CreateDirectory(Constants.AppDataPath);
                 }
-                var path = Path.Combine(FileSystem.AppDataDirectory, Constants.AppName, info.Url.ToString().Split("/").LastOrDefault());
+                var sdkFile = info.Url.ToString().Split("/").LastOrDefault();
+                var path = Path.Combine(Constants.AppDataPath, sdkFile);
                 if (File.Exists(path))
                 {
+                    if (toDesktop)
+                    {
+                        //if file exists on desktop, return desktop path otherwise copy and return desktop path
+                        var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                        var filename = Path.Combine(desktop, sdkFile);
+                        if(File.Exists(Path.Combine(desktop, filename)))
+                        {
+                            return desktop;
+                        }
+                        else
+                        {
+                            await File.WriteAllBytesAsync(Path.Combine(desktop, sdkFile), await File.ReadAllBytesAsync(path));
+                            return desktop;
+                        }
+                    }
                     return path;
                 }
                 using var client = new HttpClient();
                 var response = await client.GetByteArrayAsync(info.Url);
                 await File.WriteAllBytesAsync(path, response);
+                if(toDesktop)
+                {
+                    //copy to desktop
+                    var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    var filename = Path.Combine(desktop, sdkFile);
+                    await File.WriteAllBytesAsync(filename, response);
+                    return desktop;
+                }
                 return path;
             }
             return null;
         }
-        catch (Exception ex)
+        catch(Exception ex)
         {
             Debug.WriteLine(ex);
-            Analytics.TrackEvent("Download SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
+            //Analytics.TrackEvent("Download SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
             return null;
         }
     }
@@ -206,15 +219,15 @@ public class DotnetService
             var result = await Cli.Wrap(exe).WithArguments(" /install /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
             return result.ExitCode == 0;
 #endif
-#if MACCATALYST
+#if MACOS
 
-            return RunAsRoot("/usr/sbin/installer", new[] { "-pkg", exe, "-target", "/", null });
+            return RunAsRoot("/usr/sbin/installer", new[] { "-pkg", exe , "-target", "/", null});
 #endif
         }
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            Analytics.TrackEvent("Install SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "Exe", exe } });
+            //Analytics.TrackEvent("Install SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "Exe", exe } });
             return false;
         }
         return false;
@@ -236,7 +249,20 @@ public class DotnetService
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            Analytics.TrackEvent("OpenFolder", new Dictionary<string, string>() { { "Error", ex.Message }, { "Path", sdk.Path } });
+            //Analytics.TrackEvent("OpenFolder", new Dictionary<string, string>() { { "Error", ex.Message }, { "Path", sdk.Path } });
+        }
+    }
+
+    public async Task OpenFolder(string path)
+    {
+        try
+        {
+            await Cli.Wrap(Constants.ExplorerCommand).WithArguments(path).WithValidation(CommandResultValidation.None).ExecuteAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+            //Analytics.TrackEvent("OpenFolder", new Dictionary<string, string>() { { "Error", ex.Message }, { "Path", sdk.Path } });
         }
     }
 
@@ -258,11 +284,11 @@ public class DotnetService
             }
             return false;
 #endif
-#if MACCATALYST
+#if MACOS
 
-            if (!Directory.Exists(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName)))
+            if (!Directory.Exists(Constants.AppDataPath))
             {
-                Directory.CreateDirectory(Path.Combine(FileSystem.AppDataDirectory, Constants.AppName));
+                Directory.CreateDirectory(Constants.AppDataPath);
             }
 
             using var stream = await FileSystem.OpenAppPackageFileAsync(Constants.UninstallScriptFile);
@@ -270,15 +296,15 @@ public class DotnetService
             var script = reader.ReadToEnd();
             script = script.Replace("XXXXX", sdk.Data.Sdk.Version);
             var filename = "uninstall-" + sdk.Data.Sdk.Version.Replace(".", "-") + ".sh";
-            var path = Path.Combine(FileSystem.AppDataDirectory, Constants.AppName, filename);
+            var path = Path.Combine(Constants.AppDataPath, filename);
             await File.WriteAllTextAsync(path, script);
             return RunAsRoot("/bin/sh", new[] { path, null });
 #endif
         }
-        catch (Exception ex)
+        catch(Exception ex)
         {
             Debug.WriteLine(ex);
-            Analytics.TrackEvent("Uninstall SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
+            //Analytics.TrackEvent("Uninstall SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
         }
         return false;
     }
@@ -304,15 +330,15 @@ public class DotnetService
             return $"dotnet-sdk-{sdk.Data.Sdk.Version}-{os}-{arch}{env}.exe";
 
         }
-        catch (Exception ex)
+        catch(Exception ex)
         {
             Debug.WriteLine(ex);
-            Analytics.TrackEvent("GetSetupName", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
+            //Analytics.TrackEvent("GetSetupName", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
             return null;
         }
     }
 
-#if MACCATALYST
+#if MACOS
     bool RunAsRoot(string exe, string[] args)
     {
         try
@@ -356,7 +382,7 @@ public class DotnetService
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            Analytics.TrackEvent("RunAsRoot", new Dictionary<string, string>() { { "Error", ex.Message }, { "Executable", exe }, { "Args", string.Join("", args) } });
+            //Analytics.TrackEvent("RunAsRoot", new Dictionary<string, string>() { { "Error", ex.Message }, { "Executable", exe }, { "Args", string.Join("", args) } });
             return false;
         }
     }
@@ -385,14 +411,14 @@ public class DotnetService
             //if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) doesn't work on mac-catalyst
             if (RuntimeInformation.RuntimeIdentifier.Contains("mac"))
             {
-                return
+                return 
                     (RuntimeInformation.OSArchitecture == Architecture.Arm ||
                     RuntimeInformation.OSArchitecture == Architecture.Arm64 ||
                     RuntimeInformation.OSArchitecture == Architecture.Armv6) ? Rid.OsxArm64 : Rid.OsxX64;
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if (Environment.Is64BitOperatingSystem)
+                if(Environment.Is64BitOperatingSystem)
                 {
                     return
                         (RuntimeInformation.OSArchitecture == Architecture.Arm ||
@@ -413,7 +439,7 @@ public class DotnetService
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            Analytics.TrackEvent("GetRid", new Dictionary<string, string>() { { "Error", ex.Message } });
+            //Analytics.TrackEvent("GetRid", new Dictionary<string, string>() { { "Error", ex.Message } });
             return Rid.Empty;
         }
     }
