@@ -9,6 +9,9 @@ namespace Dots
     public partial class MainWindow : Window
     {
         MainViewModel _vm = new MainViewModel(new Services.DotnetService(),new Helpers.ErrorPopupHelper());
+        AboutWindow _aboutWindow = new AboutWindow();
+        bool _aboutWindowOpen = false;
+
         public MainWindow()
         {
             this.DataContext = _vm;
@@ -42,7 +45,17 @@ namespace Dots
 
         private void Logo_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
         {
-
+            if (_aboutWindowOpen)
+            {
+                _aboutWindow.Close();
+                _aboutWindowOpen = false;
+            }
+            else
+            {
+                _aboutWindow = new AboutWindow();
+                _aboutWindow.Show();
+                _aboutWindowOpen = true;
+            }
         }
 
         private void CollapseDetails_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)

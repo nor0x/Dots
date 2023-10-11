@@ -1,0 +1,85 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        MaxWidth="320"
+        MinWidth="320"
+        MaxHeight="410"
+        MinHeight="420"
+        Background="{StaticResource Background}"
+        x:Class="Dots.AboutWindow"
+        Title="About Dots">
+  <Grid RowDefinitions="*,110">
+    <Grid Grid.Row="0" RowDefinitions="*,Auto">
+      <Image
+          x:Name="IconImage"
+          Grid.Row="0"
+          Margin="0,20,0,0"
+          Source="/Assets/iconlogo.png"
+          Width="140"
+          Height="140"
+          PointerEntered="Image_PointerEntered"
+          PointerExited="Image_PointerExited">
+      </Image>
+    <StackPanel Grid.Row="1" Spacing="4" Margin="0,0,0,20">
+
+      <TextBlock
+          Text="Dots"
+          FontSize="34"
+          FontFamily="{StaticResource SpaceGroteskBold}"
+          HorizontalAlignment="Center" />      
+      <TextBlock
+          Text="the 🙂 friendly .NET SDK manager"
+          Margin="0,-8,0,8"
+          FontFamily="{StaticResource SpaceGrotesk}"
+          HorizontalAlignment="Center" />
+      <TextBlock HorizontalAlignment="Center" FontFamily="{StaticResource SpaceGrotesk}">
+          <Run Text="Version " />
+          <Run x:Name="VersionRun" Text="0.0.1" />
+      </TextBlock>
+    </StackPanel>
+    </Grid>
+    <Grid
+        Grid.Row="1"
+        Background="{StaticResource BackgroundSubtle}">
+      <StackPanel
+          VerticalAlignment="Top"
+          HorizontalAlignment="Center"
+          Spacing="6"
+          Margin="0,12,0,0">
+        <Button
+            Content="Open Source"
+            Padding="0"
+            Height="32"
+            Width="130"
+            Background="{StaticResource Background}"
+            HorizontalContentAlignment="Center"
+            VerticalContentAlignment="Center"
+                        HorizontalAlignment="Center"
+            FontSize="12"
+            Foreground="White"
+            Tapped="OpenSourceButton_Clicked">
+        </Button>
+        <Button
+            Content="Support Me ☕"
+            Padding="0"
+            Height="32"
+            Width="130"
+            Background="{StaticResource Background}"
+            HorizontalContentAlignment="Center"
+            VerticalContentAlignment="Center"
+            HorizontalAlignment="Center"
+            FontSize="11"
+            Foreground="White"
+            Tapped="SupportButton_Clicked">
+        </Button>
+        <TextBlock
+    FontSize="11"
+    Text="©️ 2023 Joachim Leonfellner"/>
+      </StackPanel>
+
+
+    </Grid>
+  </Grid>
+</Window>
