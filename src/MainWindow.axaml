@@ -141,6 +141,18 @@
             VerticalContentAlignment="Center"
             Width="30"
             Height="30" />
+		  <Button
+	        Background="Transparent"
+	        Foreground="White"
+	        Padding="0"
+	        Content="{x:Static helpers:LucideIcons.Cog}"
+	        FontFamily="{StaticResource LucideIcons}"
+	        FontSize="15"
+	        Command="{Binding OpenSettingsCommand}"
+			HorizontalContentAlignment="Center"
+	        VerticalContentAlignment="Center"
+	        Width="30"
+	        Height="30" />
       </StackPanel>
     </Grid>
     <Grid

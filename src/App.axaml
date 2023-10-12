@@ -25,7 +25,9 @@
     <FontFamily x:Key="SpaceGroteskBold">avares://Dots/Assets/Fonts/SpaceGrotesk-Bold.ttf#Space Grotesk</FontFamily>
     <FontFamily x:Key="LucideIcons">avares://Dots/Assets/Fonts/Lucide.ttf#lucide</FontFamily>
 
-
+	  <Image x:Key="IconFront">avares://Dots/Assets/iconlogo.png</Image>
+	  <Image x:Key="IconBack">avares://Dots/Assets/iconlogoback.png</Image>
+	  
     <!-- brushes -->
     <SolidColorBrush
         x:Key="AccentBrush"

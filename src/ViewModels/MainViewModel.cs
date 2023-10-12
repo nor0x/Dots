@@ -268,6 +268,10 @@ public partial class MainViewModel : ObservableRecipient
 
     }
 
+    [RelayCommand]
+    void OpenSettings()
+    { }
+
     void Sdks_FilterHandler(object sender, ObservableView.Filtering.FilterEventArgs<Sdk> e)
     {
         if (ShowOnline && ShowInstalled)

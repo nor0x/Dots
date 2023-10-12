@@ -3,10 +3,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        MaxWidth="320"
-        MinWidth="320"
-        MaxHeight="410"
-        MinHeight="420"
+        MaxWidth="360"
+        MinWidth="360"
+        MaxHeight="450"
+        MinHeight="450"
         Background="{StaticResource Background}"
         x:Class="Dots.AboutWindow"
         Title="About Dots">
@@ -16,12 +16,27 @@
           x:Name="IconImage"
           Grid.Row="0"
           Margin="0,20,0,0"
-          Source="/Assets/iconlogo.png"
-          Width="140"
-          Height="140"
+          Width="180"
+          Height="180"
           PointerEntered="Image_PointerEntered"
-          PointerExited="Image_PointerExited">
-      </Image>
+          PointerExited="Image_PointerExited" >
+		  <Image.Transitions>
+			  <Transitions>
+				  <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.075"/>
+			  </Transitions>
+		  </Image.Transitions>
+		  <!--<Image.Styles>
+			  <Style Selector="Image">
+				  <Setter Property="RenderTransform" Value="matrix(1,0,0,1,1,0)"/>
+				  <Setter Property="Source" Value="/Assets/iconlogo.png" />
+			  </Style>
+			  <Style Selector="Image:pointerover">
+				  --><!-- 180 horizontal flip matrix --><!--
+				  <Setter Property="RenderTransform" Value="matrix(-1,0,0,1,1,0)"/>
+				  <Setter Property="Source" Value="/Assets/iconlogoback.png" />
+			  </Style>
+		  </Image.Styles>-->
+		  </Image>
     <StackPanel Grid.Row="1" Spacing="4" Margin="0,0,0,20">
 
       <TextBlock
