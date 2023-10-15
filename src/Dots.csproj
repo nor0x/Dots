@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -47,6 +47,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
     <PackageReference Include="akavache" Version="9.1.20" />
     <PackageReference Include="HyperText.Avalonia" Version="11.0.0-rc1" />
+    <PackageReference Include="FluentAvalonia.ProgressRing" Version="1.69.1" />
   </ItemGroup>
 
 

@@ -4,6 +4,8 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Styling;
+using Newtonsoft.Json.Linq;
 
 namespace Dots
 {
@@ -17,11 +19,11 @@ namespace Dots
         {
             InitializeComponent();
 
-            App.Current.TryGetResource("IconFront", out var front);
-            App.Current.TryGetResource("IconBack", out var back);
-            _front = ((Image)front).Source;
-            _back = ((Image)back).Source;
-            IconImage.Source = _front;
+            //App.Current.TryGetResource("IconFront", out var front);
+            //App.Current.TryGetResource("IconBack", out var back);
+            //_front = ((Image)front).Source;
+            //_back = ((Image)back).Source;
+            //IconImage.Source = _front;
         }
 
         private void OpenSourceButton_Clicked(object? sender, Avalonia.Input.TappedEventArgs e)
@@ -30,32 +32,6 @@ namespace Dots
         
         private void SupportButton_Clicked(object? sender, Avalonia.Input.TappedEventArgs e)
         {
-        }
-
-        private async void Image_PointerEntered(object? sender, Avalonia.Input.PointerEventArgs e)
-        {
-            if (!_imageFlipped)
-            {
-                _imageFlipped = true;
-                _canFlipBack = false;
-                IconImage.RenderTransform = new MatrixTransform(new Matrix(1, 0, 0, 1, 1, 0));
-
-                IconImage.Source = _back;
-                await Task.Delay(300);
-                _canFlipBack = true;
-            }
-        }
-
-        private void Image_PointerExited(object? sender, Avalonia.Input.PointerEventArgs e)
-        {
-            if (_imageFlipped && _canFlipBack)
-            {
-                IconImage.RenderTransform = new MatrixTransform(new Matrix(-1, 0, 0, 1, 1, 0));
-
-                IconImage.Source = _front;
-                _imageFlipped = false;
-                _canFlipBack = false;
-            }
         }
     }
 }
