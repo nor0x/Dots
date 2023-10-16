@@ -16,6 +16,7 @@
   xmlns:data="using:Dots.Data"
   x:Class="Dots.MainWindow"
   x:DataType="vm:MainViewModel"
+  Icon="/Assets/logo_empty.png"
   x:Name="PageSelf"
   Title="Dots">
   <Grid

@@ -12,6 +12,7 @@
   MinHeight="500"
   Background="{StaticResource Background}"
   x:Class="Dots.AboutWindow"
+  Icon="/Assets/logo_empty.png"
   Title="About Dots">
   <Grid RowDefinitions="*,110">
     <Grid
