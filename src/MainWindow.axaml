@@ -16,7 +16,7 @@
   xmlns:data="using:Dots.Data"
   x:Class="Dots.MainWindow"
   x:DataType="vm:MainViewModel"
-  Icon="/Assets/logo_empty.png"
+  Icon="/Assets/iconlogo.png"
   x:Name="PageSelf"
   Title="Dots">
   <Grid
@@ -511,6 +511,7 @@
                   <TextBlock
                     Margin="0,5,0,0"
                     Text="{Binding Path}"
+                    Tapped="PathTextBlock_Tapped"
                     FontSize="11">
                     <TextBlock.Styles>
                       <Style Selector="TextBlock">

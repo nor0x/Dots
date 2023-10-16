@@ -3,10 +3,13 @@ using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Styling;
+using HyperText.Avalonia.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -84,5 +87,56 @@ public static class Extensions
              ex => tcs.SetResult(false));
 
         return tcs.Task;
+    }
+
+    private static bool IsValidUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return false;
+        if (!Uri.IsWellFormedUriString(url, UriKind.Absolute)) return false;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var tmp)) return false;
+        return tmp.Scheme == Uri.UriSchemeHttp || tmp.Scheme == Uri.UriSchemeHttps;
+    }
+
+    public static void OpenUrl(this string url)
+    {
+        if (!IsValidUrl(url)) throw new InvalidUrlException("invalid url: " + url);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            using var proc = new Process { StartInfo = { UseShellExecute = true, FileName = url } };
+            proc.Start();
+
+            return;
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            Process.Start("x-www-browser", url);
+            return;
+        }
+
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) throw new InvalidUrlException("invalid url: " + url);
+        Process.Start("open", url);
+        return;
+    }
+
+    public static void OpenFilePath(this string path)
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            using var proc = new Process { StartInfo = { UseShellExecute = true, FileName = $"explorer", Arguments = path } };
+            proc.Start();
+
+            return;
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            Process.Start("xdg-open", path);
+            return;
+        }
+
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) throw new InvalidUrlException("invalid path: " + path);
+        Process.Start("open", path);
+        return;
     }
 }

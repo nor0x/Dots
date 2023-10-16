@@ -108,5 +108,11 @@ namespace Dots
             ToggleDetailsButton.Content = MainSplitView.IsPaneOpen ? LucideIcons.ChevronsRight : LucideIcons.ChevronsLeft;
 
         }
+
+        private void PathTextBlock_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
+        {
+            var path = ((TextBlock)sender).Text;
+            path.OpenFilePath();
+        }
     }
 }
