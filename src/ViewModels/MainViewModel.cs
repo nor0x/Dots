@@ -28,6 +28,7 @@ public partial class MainViewModel : ObservableRecipient
     }
 
     string _query = "";
+    bool _isLoading = false;
 
     DotnetService _dotnet;
     ErrorPopupHelper _errorHelper;
@@ -115,8 +116,8 @@ public partial class MainViewModel : ObservableRecipient
         }
     }
 
-    [RelayCommand]
-    async Task ListRuntimes()
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    async Task ListSdks()
     {
         LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
         await CheckSdks(true);
@@ -305,6 +306,8 @@ public partial class MainViewModel : ObservableRecipient
     {
         try
         {
+            if (_isLoading) return;
+            _isLoading = true;
             if (Sdks is not null) Sdks.FilterHandler -= Sdks_FilterHandler;
             IsBusy = true;
             var sdkList = await _dotnet.GetSdks(force);
@@ -316,6 +319,7 @@ public partial class MainViewModel : ObservableRecipient
             _baseSdks = sdkList;
             LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
             IsBusy = false;
+            _isLoading = false;
         }
         catch (Exception ex)
         {

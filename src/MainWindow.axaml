@@ -6,6 +6,7 @@
   xmlns:i="using:Avalonia.Xaml.Interactivity"
   xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
   xmlns:hyper="clr-namespace:HyperText.Avalonia.Controls;assembly=HyperText.Avalonia"
+  xmlns:anim="https://github.com/whistyun/AnimatedImage.Avalonia"
   mc:Ignorable="d"
   d:DesignWidth="800"
   d:DesignHeight="450"
@@ -31,7 +32,36 @@
           Source="/Assets/logo.png"
           Height="50"
           Margin="0,-5,0,0"
-          Tapped="Logo_Tapped" />
+          Tapped="Logo_Tapped">
+          <Image.Styles>
+            <Style Selector="Image">
+              <Setter Property="Transitions">
+                <Transitions>
+                  <TransformOperationsTransition
+                    Property="RenderTransform"
+                    Duration="0:0:0.15"
+                    Easing="CircularEaseInOut" />
+                </Transitions>
+              </Setter>
+            </Style>
+            <Style Selector="Image:pointerover">
+              <Style.Setters>
+                <Setter
+                  Property="RenderTransform"
+                  Value="scale(0.9)" />
+              </Style.Setters>
+            </Style>
+            <Style Selector="Image">
+              <Style.Setters>
+                <Setter
+                  Property="RenderTransform"
+                  Value="scale(1.0)" />
+
+              </Style.Setters>
+            </Style>
+
+          </Image.Styles>
+        </Image>
         <StackPanel Orientation="Vertical">
           <TextBlock
             Text="Dots"
@@ -148,7 +178,7 @@
           Content="{x:Static helpers:LucideIcons.RefreshCcw}"
           FontFamily="{StaticResource LucideIcons}"
           FontSize="15"
-          Command="{Binding ListRuntimesCommand}"
+          Command="{Binding ListSdksCommand}"
           HorizontalContentAlignment="Center"
           VerticalContentAlignment="Center"
           Width="30"
@@ -400,7 +430,7 @@
               Margin="0,0,0,-1"
               x:Name="ToggleDetailsButton"
               Tapped="ToggleDetails_Tapped" />
-            
+
             <Grid
               x:Name="DetailsPanel"
               Grid.Column="1"
@@ -411,13 +441,24 @@
                 Width="2"
                 HorizontalAlignment="Start"
                 VerticalAlignment="FillAndExpand" />-->
-              <StackPanel Margin="20" VerticalAlignment="Center" IsVisible="{ReflectionBinding ElementName=PageSelf, Path=DataContext.SelectedSdk, Converter={x:Static ObjectConverters.IsNull}}">
-                <Image Source="/Assets/logo_nothing.png" Stretch="UniformToFill" Margin="20,0,20,20" />
-                <TextBlock Text="It's empty here" HorizontalAlignment="Center" FontFamily="{StaticResource SpaceGroteskBold}" />
-                <TextBlock Text="Select an SDK to view details" HorizontalAlignment="Center" />
+              <StackPanel
+                Margin="20"
+                VerticalAlignment="Center"
+                IsVisible="{ReflectionBinding ElementName=PageSelf, Path=DataContext.SelectedSdk, Converter={x:Static ObjectConverters.IsNull}}">
+                <Image
+                  Source="/Assets/logo_nothing.png"
+                  Stretch="UniformToFill"
+                  Margin="20,0,20,20" />
+                <TextBlock
+                  Text="It's empty here"
+                  HorizontalAlignment="Center"
+                  FontFamily="{StaticResource SpaceGroteskBold}" />
+                <TextBlock
+                  Text="Select an SDK to view details"
+                  HorizontalAlignment="Center" />
 
               </StackPanel>
-              
+
               <ScrollViewer IsVisible="{ReflectionBinding ElementName=PageSelf, Path=DataContext.SelectedSdk, Converter={x:Static ObjectConverters.IsNotNull}}">
                 <StackPanel
                   x:DataType="models:Sdk"
@@ -709,5 +750,25 @@
         </SplitView.Pane>
       </SplitView>
     </Grid>
+    <Border
+      IsVisible="{Binding IsBusy}"
+      Grid.Row="1"
+      Background="#cc605d64"
+      VerticalAlignment="Stretch"
+      HorizontalAlignment="Stretch">
+      <StackPanel
+        VerticalAlignment="Center"
+        HorizontalAlignment="Center">
+        <Image
+          Width="170"
+          Height="170"
+          anim:ImageBehavior.AnimatedSource="avares://Dots/Assets/Loading.gif" />
+        <TextBlock
+          Text="Loading..."
+          FontSize="18"
+          FontFamily="{StaticResource SpaceGroteskBold}"
+          HorizontalAlignment="Center" />
+      </StackPanel>
+    </Border>
   </Grid>
 </Window>
