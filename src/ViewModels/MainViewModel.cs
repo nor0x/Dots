@@ -153,7 +153,7 @@ public partial class MainViewModel : ObservableRecipient
 
     public ICommand MyTestCommand { get; set; }
 
-    [RelayCommand]
+    [RelayCommand(AllowConcurrentExecutions = true)]
     async Task OpenOrDownload(Sdk sdk)
     {
         try
@@ -178,7 +178,7 @@ public partial class MainViewModel : ObservableRecipient
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(AllowConcurrentExecutions = true)]
     async Task InstallOrUninstall(Sdk sdk)
     {
         try

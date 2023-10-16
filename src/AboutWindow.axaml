@@ -1,71 +1,92 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        MaxWidth="360"
-        MinWidth="360"
-        MaxHeight="500"
-        MinHeight="500"
-        Background="{StaticResource Background}"
-        x:Class="Dots.AboutWindow"
-        Title="About Dots">
+<Window
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  d:DesignWidth="800"
+  d:DesignHeight="450"
+  MaxWidth="360"
+  MinWidth="360"
+  MaxHeight="500"
+  MinHeight="500"
+  Background="{StaticResource Background}"
+  x:Class="Dots.AboutWindow"
+  Title="About Dots">
   <Grid RowDefinitions="*,110">
-    <Grid Grid.Row="0" RowDefinitions="*,Auto">
-      <Border x:Name="IconContainer" Grid.Row="0"
-              Background="{StaticResource Background}"
-          Margin="0,20,0,0"
-          Width="270"
-          Height="270">
+    <Grid
+      Grid.Row="0"
+      RowDefinitions="*,Auto">
+      <Border
+        x:Name="IconContainer"
+        Grid.Row="0"
+        Background="{StaticResource Background}"
+        Margin="0,20,0,0"
+        Width="270"
+        Height="270">
         <Border.Styles>
           <Style Selector="Border > Image">
-            <Setter Property="RenderTransform" Value="matrix(1,0,0,1,1,0)"/>
-            <Setter Property="Source" Value="/Assets/iconlogo.png" />
+            <Setter
+              Property="RenderTransform"
+              Value="matrix(1,0,0,1,1,0)" />
+            <Setter
+              Property="Source"
+              Value="/Assets/iconlogo.png" />
           </Style>
           <Style Selector="Border:pointerover > Image">
-            <Setter Property="Source" Value="/Assets/iconlogoback.png" />
-            <Setter Property="RenderTransform" Value="matrix(-1,0,0,1,1,0)"/>
+            <Setter
+              Property="Source"
+              Value="/Assets/iconlogoback.png" />
+            <Setter
+              Property="RenderTransform"
+              Value="matrix(-1,0,0,1,1,0)" />
           </Style>
         </Border.Styles>
-      <Image
-          x:Name="IconImage"
-          >
-        <Image.Transitions>
-			  <Transitions>
-				  <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12"/>
-			  </Transitions>
-		  </Image.Transitions>
+        <Image x:Name="IconImage">
+          <Image.Transitions>
+            <Transitions>
+              <TransformOperationsTransition
+                Property="RenderTransform"
+                Duration="0:0:0.12" />
+            </Transitions>
+          </Image.Transitions>
 
-      </Image>
+        </Image>
       </Border>
-    <StackPanel Grid.Row="1" Spacing="4" Margin="0,0,0,10">
-<ProgressBar IsEnabled="True" />
-      <TextBlock
+      <StackPanel
+        Grid.Row="1"
+        Spacing="4"
+        Margin="0,0,0,10">
+        <TextBlock
           Text="Dots"
           FontSize="34"
           FontFamily="{StaticResource SpaceGroteskBold}"
-          HorizontalAlignment="Center" />      
-      <TextBlock
+          HorizontalAlignment="Center" />
+        <TextBlock
           Text="the 🙂 friendly .NET SDK manager"
           Margin="0,-8,0,8"
           FontFamily="{StaticResource SpaceGrotesk}"
           HorizontalAlignment="Center" />
-    </StackPanel>
+      </StackPanel>
     </Grid>
     <Grid
-        Grid.Row="1"
-        Background="{StaticResource BackgroundSubtle}">
+      Grid.Row="1"
+      Background="{StaticResource BackgroundSubtle}">
       <StackPanel
-          VerticalAlignment="Top"
+        VerticalAlignment="Top"
+        HorizontalAlignment="Center"
+        Spacing="6"
+        Margin="0,10,0,0">
+        <TextBlock
           HorizontalAlignment="Center"
-          Spacing="6"
-          Margin="0,10,0,0">
-        <TextBlock HorizontalAlignment="Center" FontFamily="{StaticResource SpaceGrotesk}">
+          FontFamily="{StaticResource SpaceGrotesk}">
           <Run Text="Version " />
-          <Run x:Name="VersionRun" Text="0.0.1" />
+          <Run
+            x:Name="VersionRun"
+            Text="0.0.1" />
         </TextBlock>
         <StackPanel Orientation="Horizontal">
-        <Button
+          <Button
             Content="Open Source"
             Padding="0"
             Height="32"
@@ -73,12 +94,11 @@
             Background="{StaticResource Background}"
             HorizontalContentAlignment="Center"
             VerticalContentAlignment="Center"
-                        HorizontalAlignment="Center"
+            HorizontalAlignment="Center"
             FontSize="12"
             Foreground="White"
-            Tapped="OpenSourceButton_Clicked">
-        </Button>
-        <Button
+            Tapped="OpenSourceButton_Clicked" />
+          <Button
             Content="Support Me ☕"
             Padding="0"
             Height="32"
@@ -89,13 +109,12 @@
             HorizontalAlignment="Center"
             FontSize="11"
             Foreground="White"
-            Tapped="SupportButton_Clicked">
-        </Button>
+            Tapped="SupportButton_Clicked" />
         </StackPanel>
         <TextBlock
           HorizontalAlignment="Center"
-    FontSize="11"
-    Text="©️ 2023 Joachim Leonfellner"/>
+          FontSize="11"
+          Text="©️ 2023 Joachim Leonfellner" />
       </StackPanel>
 
 

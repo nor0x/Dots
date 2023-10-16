@@ -78,6 +78,11 @@ namespace Dots
 
         private void SdkItem_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
         {
+            if(e.Source is Control control && (control.Parent is Button || control.Parent.Parent is Button))
+            {
+                //workaround for button click inside ListBox item
+                return;
+            }
             var paneWidth = (int)(this.Width * 0.25);
             paneWidth = paneWidth < 200 ? 200 : paneWidth;
             MainSplitView.OpenPaneLength = Math.Min(paneWidth, 500);
