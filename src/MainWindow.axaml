@@ -129,6 +129,7 @@
           </Button.Styles>
         </Button>
         <Button
+          IsVisible="false"
           Background="Transparent"
           Foreground="White"
           Padding="0"
@@ -156,7 +157,7 @@
           Background="Transparent"
           Foreground="White"
           Padding="0"
-          Content="{x:Static helpers:LucideIcons.Cog}"
+          Content="{x:Static helpers:LucideIcons.Wrench}"
           FontFamily="{StaticResource LucideIcons}"
           FontSize="15"
           Command="{Binding OpenSettingsCommand}"
@@ -397,8 +398,9 @@
               CornerRadius="20,0,0,20"
               Padding="0"
               Margin="0,0,0,-1"
-              x:Name="CollapseDetailsButton"
-              Tapped="CollapseDetails_Tapped" />
+              x:Name="ToggleDetailsButton"
+              Tapped="ToggleDetails_Tapped" />
+            
             <Grid
               x:Name="DetailsPanel"
               Grid.Column="1"
@@ -409,7 +411,14 @@
                 Width="2"
                 HorizontalAlignment="Start"
                 VerticalAlignment="FillAndExpand" />-->
-              <ScrollViewer>
+              <StackPanel Margin="20" VerticalAlignment="Center" IsVisible="{ReflectionBinding ElementName=PageSelf, Path=DataContext.SelectedSdk, Converter={x:Static ObjectConverters.IsNull}}">
+                <Image Source="/Assets/logo_nothing.png" Stretch="UniformToFill" Margin="20,0,20,20" />
+                <TextBlock Text="It's empty here" HorizontalAlignment="Center" FontFamily="{StaticResource SpaceGroteskBold}" />
+                <TextBlock Text="Select an SDK to view details" HorizontalAlignment="Center" />
+
+              </StackPanel>
+              
+              <ScrollViewer IsVisible="{ReflectionBinding ElementName=PageSelf, Path=DataContext.SelectedSdk, Converter={x:Static ObjectConverters.IsNotNull}}">
                 <StackPanel
                   x:DataType="models:Sdk"
                   Margin="12,0,0,0">

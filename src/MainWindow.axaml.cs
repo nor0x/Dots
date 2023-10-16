@@ -1,5 +1,6 @@
 using Akavache;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Dots.Helpers;
 using Dots.Models;
 using System.Reactive.Linq;
@@ -58,12 +59,19 @@ namespace Dots
             }
         }
 
-        private void CollapseDetails_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
+        private void ToggleDetails_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
         {
             var paneWidth = (int)(this.Width * 0.25);
             paneWidth = paneWidth < 200 ? 200 : paneWidth;
             MainSplitView.OpenPaneLength = Math.Min(paneWidth, 500);
             MainSplitView.IsPaneOpen = !MainSplitView.IsPaneOpen;
+            ToggleDetailsButton.Content = MainSplitView.IsPaneOpen ? LucideIcons.ChevronsRight : LucideIcons.ChevronsLeft;
+            if (!MainSplitView.IsPaneOpen)
+            {
+                _vm.SetSelectedSdk(null);
+                SdkList.SelectedItem = null;
+                SdkList.Selection = null;
+            }
         }       
         
         private void ReleaseNotes_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
@@ -90,7 +98,15 @@ namespace Dots
             if(unselect)
             {
                 SdkList.SelectedItem = null;
+                SdkList.Selection = null;
+                MainSplitView.IsPaneOpen = false;
             }
+            else
+            {
+                MainSplitView.IsPaneOpen = true;
+            }
+            ToggleDetailsButton.Content = MainSplitView.IsPaneOpen ? LucideIcons.ChevronsRight : LucideIcons.ChevronsLeft;
+
         }
     }
 }

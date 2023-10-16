@@ -249,6 +249,11 @@ public partial class MainViewModel : ObservableRecipient
         Sdks.Search(" ");
         Sdks.Search(_query);
         IsBusy = (!ShowOnline && !ShowInstalled);
+
+        if(!Sdks.View.Contains(SelectedSdk))
+        {
+            SelectedSdk = null;
+        }
     }
 
     [RelayCommand]
@@ -258,6 +263,10 @@ public partial class MainViewModel : ObservableRecipient
         Sdks.Search(" ");
         Sdks.Search(_query);
         IsBusy = (!ShowOnline && !ShowInstalled);
+        if (!Sdks.View.Contains(SelectedSdk))
+        {
+            SelectedSdk = null;
+        }
     }
 
 
