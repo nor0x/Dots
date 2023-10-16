@@ -92,9 +92,5 @@ namespace Dots
                 SdkList.SelectedItem = null;
             }
         }
-
-        private void TextBlock_Tapped_1(object? sender, Avalonia.Input.TappedEventArgs e)
-        {
-        }
     }
 }
