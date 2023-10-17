@@ -267,7 +267,7 @@ public class DotnetService
     }
 
 
-    public async Task<bool> Uninstall(Sdk sdk)
+    public async Task<bool> Uninstall(Sdk sdk, string setupPath = "")
     {
         try
         {
@@ -281,6 +281,29 @@ public class DotnetService
             {
                 var result = await Cli.Wrap(files.First()).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
                 return result.ExitCode == 0;
+            }
+            else
+            {
+                
+                var setupInLocalDirectory = Path.Combine(Constants.AppDataPath, filename);
+                if (!string.IsNullOrEmpty(setupPath))
+                {
+                    var result = await Cli.Wrap(setupPath).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
+                    return result.ExitCode == 0;
+                }
+                else if (File.Exists(setupInLocalDirectory))
+                {
+                    var result = await Cli.Wrap(setupInLocalDirectory).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
+                    return result.ExitCode == 0;
+                }
+                else
+                {
+                    var exe = await Download(sdk);
+                    if (!string.IsNullOrEmpty(exe))
+                    {
+                        return await Uninstall(sdk, exe);
+                    }
+                }
             }
             return false;
 #endif
