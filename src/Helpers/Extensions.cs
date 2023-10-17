@@ -97,6 +97,12 @@ public static class Extensions
         return tmp.Scheme == Uri.UriSchemeHttp || tmp.Scheme == Uri.UriSchemeHttps;
     }
 
+    public static void OpenUrl(this Uri url)
+    {
+        OpenUrl(url.ToString());
+    }
+
+
     public static void OpenUrl(this string url)
     {
         if (!IsValidUrl(url)) throw new InvalidUrlException("invalid url: " + url);

@@ -48,5 +48,6 @@
     <Application.Styles>
         <FluentTheme />
         <hyper:HyperLinkStyle />
+        <StyleInclude Source="/Styles.axaml" />
     </Application.Styles>
 </Application>

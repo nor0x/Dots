@@ -662,8 +662,7 @@
                     TextWrapping="Wrap"
                     Margin="0,0,12,0"
                     HorizontalAlignment="Left"
-                    Url="{Binding Data.ReleaseNotes}"
-                    Tapped="ReleaseNotes_Tapped" />
+                    Url="{Binding Data.ReleaseNotes}" />
 
                   <TextBlock
                     Text="Release Date"

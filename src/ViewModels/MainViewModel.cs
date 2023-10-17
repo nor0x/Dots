@@ -203,6 +203,10 @@ public partial class MainViewModel : ObservableRecipient
                     {
                         sdk.Path = await _dotnet.GetInstallationPath(sdk);
                     }
+                    else
+                    {
+                        //show popup and prompt to manually install
+                    }
                 }
             }
             sdk.IsInstalling = false;
@@ -214,34 +218,6 @@ public partial class MainViewModel : ObservableRecipient
             await _errorHelper.ShowPopup(ex);
         }
     }
-
-    [RelayCommand]
-    async Task OpenReleaseNotes()
-    {
-        try
-        {
-            BrowserHelper.OpenBrowser(SelectedSdk.Data.ReleaseNotes);
-        }
-        catch (Exception ex)
-        {
-            await _errorHelper.ShowPopup(ex);
-        }
-    }
-
-
-    [RelayCommand]
-    async Task LaunchFileLink(Uri url)
-    {
-        try
-        {
-            BrowserHelper.OpenBrowser(url);
-        }
-        catch (Exception ex)
-        {
-            await _errorHelper.ShowPopup(ex);
-        }
-    }
-
 
     [RelayCommand]
     void ToggleOnline()

@@ -73,12 +73,7 @@ namespace Dots
                 SdkList.Selection = null;
             }
         }       
-        
-        private void ReleaseNotes_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
-        {
-            _vm.OpenReleaseNotesCommand.Execute(null);
-        }
-
+       
         private void TextBox_TextChanged(object? sender, Avalonia.Controls.TextChangedEventArgs e)
         {
             _vm.FilterSdksCommand.Execute(MainSearchBar.Text);
