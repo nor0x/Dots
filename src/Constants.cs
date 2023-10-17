@@ -12,7 +12,7 @@ public class Constants
     public const string AppName = "Dots";
     public const string InstalledSdksKey = "installed-sdks-key";
     public const string LastCheckedKey = "last-checked";
-#if MACCATALYST
+#if MACOS
     public const string UninstallerPath = "Package Cache";
     public const string InstallerScript = "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh";
     public const string DotnetCommand = "/usr/local/share/dotnet/dotnet";
@@ -34,4 +34,6 @@ public class Constants
     public static string ReleaseBaseKey = "release-key-";
     public static string AppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppName);
 
+    public const string SupportURl = "https://bento.me/nor0x";
+    public const string GithubUrl = "https://github.com/nor0x/Dots";
 }

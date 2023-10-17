@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Styling;
+using Dots.Helpers;
 using Newtonsoft.Json.Linq;
 
 namespace Dots
@@ -18,20 +19,16 @@ namespace Dots
         public AboutWindow()
         {
             InitializeComponent();
-
-            //App.Current.TryGetResource("IconFront", out var front);
-            //App.Current.TryGetResource("IconBack", out var back);
-            //_front = ((Image)front).Source;
-            //_back = ((Image)back).Source;
-            //IconImage.Source = _front;
         }
 
         private void OpenSourceButton_Clicked(object? sender, Avalonia.Input.TappedEventArgs e)
         {
+            Constants.GithubUrl.OpenUrl();
         }       
         
         private void SupportButton_Clicked(object? sender, Avalonia.Input.TappedEventArgs e)
         {
+            Constants.SupportURl.OpenUrl();
         }
     }
 }

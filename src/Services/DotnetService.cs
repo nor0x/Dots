@@ -244,7 +244,7 @@ public class DotnetService
         try
         {
             string path = Path.Combine(sdk.Path, sdk.Data.Sdk.Version);
-            await Cli.Wrap(Constants.ExplorerCommand).WithArguments(path).WithValidation(CommandResultValidation.None).ExecuteAsync();
+            path.OpenFilePath();
         }
         catch (Exception ex)
         {

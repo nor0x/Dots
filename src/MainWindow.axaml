@@ -187,6 +187,7 @@
         <Button
           Background="Transparent"
           Foreground="White"
+          IsVisible="False"
           Padding="0"
           Content="{x:Static helpers:LucideIcons.Wrench}"
           FontFamily="{StaticResource LucideIcons}"
