@@ -79,6 +79,7 @@ jobs:
         cd D:/a/Dots/Dots/src
         dotnet workload restore
     - name: run housekeeping scripts
+      shell: bash
       run: |
         cd D:/a/Dots/Dots/
         version=$(cat version.txt)
