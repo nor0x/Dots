@@ -64,11 +64,11 @@ jobs:
     - uses: actions/upload-artifact@v3.1.3
       with:
         name: $macosx64file
-        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-x64/publish/$macosx64file
+        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-x64/publish/${{ macosx64file }}}
     - uses: actions/upload-artifact@v3.1.3
       with:
         name: $macosarm64file
-        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-arm64/publish/$macosarm64file
+        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-arm64/publish/${{ macosarm64file }}}
 
   build-windows:
     runs-on: windows-latest
@@ -97,15 +97,15 @@ jobs:
     - uses: actions/upload-artifact@v3.1.3
       with:
         name: $windowsx86file
-        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-x86/publish/$windowsx86file
+        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-x86/publish/$(windowsx86file)
     - uses: actions/upload-artifact@v3.1.3
       with:
         name: $windowsx64file
-        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-x64/publish/$windowsx64file
+        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-x64/publish/$(windowsx64file)
     - uses: actions/upload-artifact@v3.1.3
       with:
         name: $windowsarm64file
-        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-arm64/publish/$windowsarm64file
+        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-arm64/publish/$(windowsarm64file)
 
   create-release:
     needs: [build-macos, build-windows]
