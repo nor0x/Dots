@@ -80,9 +80,9 @@ jobs:
         dotnet workload restore
     - name: run housekeeping scripts
       run: |
-        cd D:/a/Dots/Dots/src
+        cd D:/a/Dots/Dots/
         version=$(cat version.txt)
-
+        cd src
         sed -i '' "s/CFBundleVersion>.*</CFBundleVersion>$version</" Dots.csproj
         sed -i '' "s/CFBundleShortVersionString>.*</CFBundleShortVersionString>$version</" Dots.csproj
         sed -i '' "s/Version>.*</Version>$version</" Dots.csproj
