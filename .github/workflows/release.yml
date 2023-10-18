@@ -17,7 +17,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v3.0.0
+      uses: actions/checkout@v4.1.1
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v3.2.0
       with:
@@ -65,11 +65,11 @@ jobs:
         bash build-macos.sh
         echo "macosx64file=${{ env.macosx64file }}" >> "$GITHUB_ENV"
         echo "macosarm64file=${{ env.macosarm64file }}" >> "$GITHUB_ENV"
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v3.1.3
       with:
         name: ${{ env.macosx64file }}
         path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-x64/publish/${{ env.macosx64file }}
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v3.1.3
       with:
         name: ${{ env.macosarm64file }}
         path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-arm64/publish/${{ env.macosarm64file }}
@@ -78,7 +78,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v3.0.0
+      uses: actions/checkout@v4.1.1
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v3.2.0
       with:
@@ -98,16 +98,15 @@ jobs:
         echo "windowsx86file=${{ env.windowsx86file }}" >> "$GITHUB_ENV"
         echo "windowsx64file=${{ env.windowsx64file }}" >> "$GITHUB_ENV"
         echo "windowsarm64file=${{ env.windowsarm64file }}" >> "$GITHUB_ENV"
-
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v3.1.3
       with:
         name: ${{ env.windowsx86file }}
         path: ${{ github.workspace }}/src/bin/Release/net8.0/win-x86/publish/${{ env.windowsx86file }}
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v3.1.3
       with:
         name: ${{ env.windowsx64file }}
         path: ${{ github.workspace }}/src/bin/Release/net8.0/win-x64/publish/${{ env.windowsx64file }}
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v3.1.3
       with:
         name: ${{ env.windowsarm64file }}
         path: ${{ github.workspace }}/src/bin/Release/net8.0/win-arm64/publish/${{ env.windowsarm64file }}
@@ -116,23 +115,23 @@ jobs:
     needs: [build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3.0.2
         with:
           name: ${{ env.macosx64file }}
           path: $GITHUB_WORKSPACE
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3.0.2
         with:
           name: ${{ env.macosarm64file }}
           path: $GITHUB_WORKSPACE
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3.0.2
         with:
           name: ${{ env.windowsx86file }}
           path: $GITHUB_WORKSPACE
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3.0.2
         with:
           name: ${{ env.windowsx64file }}
           path: $GITHUB_WORKSPACE
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3.0.2
         with:
           name: ${{ env.windowsarm64file }}
           path: $GITHUB_WORKSPACE
