@@ -1,8 +1,8 @@
 cd ..
 version=$(cat version.txt)
 
-cd src/
-
+cd src
+dotnet restore
 echo "Building Dots for Windows x64"
 dotnet publish "Dots.csproj" -c Release -f net8.0 -r win-x64
 echo "Building Dots for Windows x86"

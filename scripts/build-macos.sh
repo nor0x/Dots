@@ -2,6 +2,7 @@ cd ..
 version=$(cat version.txt)
 
 cd src/
+dotnet restore
 echo "Building Dots for macOS x64"
 dotnet msbuild -t:BundleApp -property:Configuration=Release -p:UseAppHost=true -p:RuntimeIdentifier=osx-x64
 echo "Building Dots for macOS arm64"
