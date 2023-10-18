@@ -17,7 +17,7 @@ using Security;
 namespace Dots.Services;
 
 public class DotnetService
-{   
+{
     List<Sdk> _sdks;
     List<InstalledSdk> _installedSdks = new();
     ReleaseIndex[] _releaseIndex;
@@ -29,13 +29,13 @@ public class DotnetService
         var index = await GetReleaseIndex(force);
         var releaseInfos = new List<Release>();
         var installed = GetInstalledSdks(force);
-        foreach(var item in index)
+        foreach (var item in index)
         {
             var infos = await GetReleaseInfos(item.ChannelVersion, force);
             releaseInfos.AddRange(infos);
         }
         int i = 0;
-        foreach(var release in releaseInfos)
+        foreach (var release in releaseInfos)
         {
             var sdk = new Sdk()
             {
@@ -56,7 +56,7 @@ public class DotnetService
         {
             return _releaseIndex;
         }
-        if(_releaseIndex is null && await BlobCache.UserAccount.ContainsKey(Constants.ReleaseIndexKey) && !force)
+        if (_releaseIndex is null && await BlobCache.UserAccount.ContainsKey(Constants.ReleaseIndexKey) && !force)
         {
             var json = await File.ReadAllTextAsync(Constants.ReleaseIndexPath);
             var deserialized = JsonSerializer.Deserialize<ReleaseIndexInfo>(json, ReleaseSerializerOptions.Options);
@@ -78,7 +78,7 @@ public class DotnetService
         BlobCache.UserAccount.InsertObject(Constants.ReleaseIndexKey, Constants.ReleaseIndexPath);
         return _releaseIndex;
     }
-    
+
     async Task<Release[]> GetReleaseInfos(string channel, bool force = false)
     {
         if (!force && _releases is not null && _releases.ContainsKey(channel))
@@ -90,7 +90,7 @@ public class DotnetService
             var cachedFile = Path.Combine(Constants.AppDataPath, $"release-{channel}.json");
             var json = await File.ReadAllTextAsync(cachedFile);
             var deserialized = JsonSerializer.Deserialize<ReleaseInfo>(json, ReleaseSerializerOptions.Options);
-            
+
             _releases.Add(channel, deserialized.Releases);
             return _releases[channel];
         }
@@ -176,7 +176,7 @@ public class DotnetService
                         //if file exists on desktop, return desktop path otherwise copy and return desktop path
                         var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                         var filename = Path.Combine(desktop, sdkFile);
-                        if(File.Exists(Path.Combine(desktop, filename)))
+                        if (File.Exists(Path.Combine(desktop, filename)))
                         {
                             return desktop;
                         }
@@ -191,7 +191,7 @@ public class DotnetService
                 using var client = new HttpClient();
                 var response = await client.GetByteArrayAsync(info.Url);
                 await File.WriteAllBytesAsync(path, response);
-                if(toDesktop)
+                if (toDesktop)
                 {
                     //copy to desktop
                     var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
@@ -203,7 +203,7 @@ public class DotnetService
             }
             return null;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Debug.WriteLine(ex);
             //Analytics.TrackEvent("Download SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
@@ -221,7 +221,7 @@ public class DotnetService
 #endif
 #if MACOS
 
-            return RunAsRoot("/usr/sbin/installer", new[] { "-pkg", exe , "-target", "/", null});
+            return RunAsRoot("/usr/sbin/installer", new[] { "-pkg", exe, "-target", "/", null });
 #endif
         }
         catch (Exception ex)
@@ -313,10 +313,8 @@ public class DotnetService
             {
                 Directory.CreateDirectory(Constants.AppDataPath);
             }
-
-            using var stream = await FileSystem.OpenAppPackageFileAsync(Constants.UninstallScriptFile);
-            using var reader = new StreamReader(stream);
-            var script = reader.ReadToEnd();
+            //write Constants.UninstallScriptFile to file
+            var script = Constants.UninstallScriptFile.Replace("XXXXX", sdk.Data.Sdk.Version);
             script = script.Replace("XXXXX", sdk.Data.Sdk.Version);
             var filename = "uninstall-" + sdk.Data.Sdk.Version.Replace(".", "-") + ".sh";
             var path = Path.Combine(Constants.AppDataPath, filename);
@@ -324,7 +322,7 @@ public class DotnetService
             return RunAsRoot("/bin/sh", new[] { path, null });
 #endif
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Debug.WriteLine(ex);
             //Analytics.TrackEvent("Uninstall SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
@@ -353,7 +351,7 @@ public class DotnetService
             return $"dotnet-sdk-{sdk.Data.Sdk.Version}-{os}-{arch}{env}.exe";
 
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Debug.WriteLine(ex);
             //Analytics.TrackEvent("GetSetupName", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
@@ -434,14 +432,14 @@ public class DotnetService
             //if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) doesn't work on mac-catalyst
             if (RuntimeInformation.RuntimeIdentifier.Contains("mac"))
             {
-                return 
+                return
                     (RuntimeInformation.OSArchitecture == Architecture.Arm ||
                     RuntimeInformation.OSArchitecture == Architecture.Arm64 ||
                     RuntimeInformation.OSArchitecture == Architecture.Armv6) ? Rid.OsxArm64 : Rid.OsxX64;
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if(Environment.Is64BitOperatingSystem)
+                if (Environment.Is64BitOperatingSystem)
                 {
                     return
                         (RuntimeInformation.OSArchitecture == Architecture.Arm ||

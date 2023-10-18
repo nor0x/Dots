@@ -17,7 +17,14 @@ public class Constants
     public const string InstallerScript = "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh";
     public const string DotnetCommand = "/usr/local/share/dotnet/dotnet";
     public const string ExplorerCommand = "open";
-    public const string UninstallScriptFile = "macosuninstallscript.txt";
+    public const string UninstallScriptFile = """
+                                                version="XXXXX"
+                                                rm -rf /usr/local/share/dotnet/sdk/$version
+                                                rm -rf /usr/local/share/dotnet/shared/Microsoft.NETCore.App/$version
+                                                rm -rf /usr/local/share/dotnet/shared/Microsoft.AspNetCore.All/$version
+                                                rm -rf /usr/local/share/dotnet/shared/Microsoft.AspNetCore.App/$version
+                                                rm -rf /usr/local/share/dotnet/host/fxr/$version
+                                            """;
 #else
     public const string UninstallerPath = "Package Cache";
     public const string InstallerScript = "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1";

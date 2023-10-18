@@ -1,34 +1,63 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <ApplicationIcon>Assets/appicon.ico</ApplicationIcon>
-  </PropertyGroup>
-
-  <!-- Publishing -->
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <PublishSingleFile>true</PublishSingleFile>
-    <PublishTrimmed>false</PublishTrimmed>
-    <PublishReadyToRun>true</PublishReadyToRun>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <ApplicationId>com.nor0x.dots</ApplicationId>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <ApplicationIcon>Assets/appicon.ico</ApplicationIcon>
   </PropertyGroup>
-  
-  
-  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-    <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows')) and '$(Configuration)' == 'Release'">
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('MacOS'))">
     <DefineConstants>$(DefineConstants);MACOS</DefineConstants>
+    <TargetFramework>net8.0-macos</TargetFramework>
+    <RuntimeIdentifiers>osx-x64;osx-arm64</RuntimeIdentifiers>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>true</UseAppHost>
+    <PublishTrimmed>true</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <SelfContained>true</SelfContained>
+    <!-- bunde publishing metadata -->
+    <CFBundleName>Dots</CFBundleName>
+    <CFBundleDisplayName>Dots</CFBundleDisplayName>
+    <CFBundleIdentifier>com.nor0x.dots</CFBundleIdentifier>
+    <CFBundleVersion>2.0.0</CFBundleVersion>
+    <CFBundleShortVersionString>2.0.0 </CFBundleShortVersionString>
+    <CFBundlePackageType>APPL</CFBundlePackageType>
+    <CFBundleSignature>????</CFBundleSignature>
+    <CFBundleExecutable>Dots</CFBundleExecutable>
+    <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
+    <NSPrincipalClass>NSApplication</NSPrincipalClass>
+    <NSHighResolutionCapable>true</NSHighResolutionCapable>
+    <NSRequiresAquaSystemAppearance>true</NSRequiresAquaSystemAppearance>
   </PropertyGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('MacOS'))">
+    <CFBundleURLTypes Include="dots">
+      <CFBundleURLName>Dots</CFBundleURLName>
+      <CFBundleURLSchemes>dots;dots://</CFBundleURLSchemes>
+    </CFBundleURLTypes>
+  </ItemGroup>
+
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
+  </PropertyGroup>
+
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**\*" />
@@ -37,24 +66,58 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.0.5-rc1" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.0.5-rc1" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.5-rc1" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.5-rc1" />
-    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.2" />
-    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.5-rc1" />
+    <PackageReference
+      Include="Avalonia"
+      Version="11.0.5-rc1" />
+    <PackageReference
+      Include="Avalonia.Desktop"
+      Version="11.0.5-rc1" />
+    <PackageReference
+      Include="Avalonia.Themes.Fluent"
+      Version="11.0.5-rc1" />
+    <PackageReference
+      Include="Avalonia.Fonts.Inter"
+      Version="11.0.5-rc1" />
+    <PackageReference
+      Include="Avalonia.Xaml.Behaviors"
+      Version="11.0.2" />
+    <!--Condition
+    below is needed to remove Avalonia.Diagnostics package from build output in Release
+    configuration.-->
+    <PackageReference
+      Condition="'$(Configuration)' == 'Debug'"
+      Include="Avalonia.Diagnostics"
+      Version="11.0.5-rc1" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="System.Reactive" Version="6.0.1-preview.1" />
-    <PackageReference Include="M.BindableProperty.Generator" Version="0.11.1" />
-    <PackageReference Include="CliWrap" Version="3.6.4" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
-    <PackageReference Include="akavache" Version="9.1.20" />
-    <PackageReference Include="HyperText.Avalonia" Version="11.0.0-rc1" />
-    <PackageReference Include="AnimatedImage.Avalonia" Version="1.0.3" />
+    <PackageReference
+      Include="System.CommandLine"
+      Version="2.0.0-beta4.22272.1" />
+    <PackageReference
+      Include="System.Reactive"
+      Version="6.0.1-preview.1" />
+    <PackageReference
+      Include="M.BindableProperty.Generator"
+      Version="0.11.1" />
+    <PackageReference
+      Include="CliWrap"
+      Version="3.6.4" />
+    <PackageReference
+      Include="CommunityToolkit.Mvvm"
+      Version="8.2.1" />
+    <PackageReference
+      Include="akavache"
+      Version="9.1.20" />
+    <PackageReference
+      Include="HyperText.Avalonia"
+      Version="11.0.0-rc1" />
+    <PackageReference
+      Include="AnimatedImage.Avalonia"
+      Version="1.0.3" />
+    <PackageReference
+      Include="Dotnet.Bundle"
+      Version="*" />
   </ItemGroup>
 
 </Project>
