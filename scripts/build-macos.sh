@@ -1,6 +1,4 @@
 cd ..
-version=$(cat version.txt)
-
 cd /Users/runner/work/Dots/Dots/src/
 dotnet restore
 echo "Building Dots for macOS arm64"
@@ -25,12 +23,8 @@ cp bin/Release/net8.0-macos/osx-x64/Dots.app/Contents/PkgInfo bin/Release/net8.0
 
 echo "dittoing Dots for macOS x64"
 cd /Users/runner/work/Dots/Dots/src/bin/Release/net8.0-macos/osx-x64/publish
-ditto -c -k --sequesterRsrc --keepParent Dots.app Dots-$version-macos-x64.zip
-macosx64file=$(echo Dots-$version-macos-x64.zip)
-export macosx64file
+ditto -c -k --sequesterRsrc --keepParent Dots.app $macosx64file
 
 echo "dittoing Dots for macOS arm64"
 cd /Users/runner/work/Dots/Dots/src/bin/Release/net8.0-macos/osx-arm64/publish
-ditto -c -k --sequesterRsrc --keepParent Dots.app Dots-$version-macos-arm64.zip
-macosarm64file=$(echo Dots-$version-macos-arm64.zip)
-export macosarm64file
+ditto -c -k --sequesterRsrc --keepParent Dots.app $macosarm64file

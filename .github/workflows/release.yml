@@ -5,13 +5,6 @@ on:
     tags:
       - '*'
 
-env:
-  macosx64file: Dots-version-macos-x64.zip
-  macosarm64file: Dots-version-macos-arm64.zip
-  windowsx86file: Dots-version-windows-x86.zip
-  windowsx64file: Dots-version-windows-x64.zip
-  windowsarm64file: Dots-version-windows-arm64.zip
-
 jobs:
   build-macos:
     runs-on: macos-13
@@ -63,16 +56,14 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/scripts
         bash build-macos.sh
-        echo "macosx64file=$macosx64file" >> $GITHUB_ENV
-        echo "macosarm64file=$macosarm64file" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v3.1.3
       with:
-        name: ${{ env.macosx64file }}
-        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-x64/publish/${{ env.macosx64file }}
+        name: $macosx64file
+        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-x64/publish/$macosx64file
     - uses: actions/upload-artifact@v3.1.3
       with:
-        name: ${{ env.macosarm64file }}
-        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-arm64/publish/${{ env.macosarm64file }}
+        name: $macosarm64file
+        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-arm64/publish/$macosarm64file
 
   build-windows:
     runs-on: windows-latest
@@ -100,40 +91,46 @@ jobs:
         echo "windowsx86file=$windowsx86file" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v3.1.3
       with:
-        name: ${{ env.windowsx86file }}
-        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-x86/publish/${{ env.windowsx86file }}
+        name: $windowsx86file
+        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-x86/publish/$windowsx86file
     - uses: actions/upload-artifact@v3.1.3
       with:
-        name: ${{ env.windowsx64file }}
-        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-x64/publish/${{ env.windowsx64file }}
+        name: $windowsx64file
+        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-x64/publish/$windowsx64file
     - uses: actions/upload-artifact@v3.1.3
       with:
-        name: ${{ env.windowsarm64file }}
-        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-arm64/publish/${{ env.windowsarm64file }}
+        name: $windowsarm64file
+        path: D:/a/Dots/Dots/src/bin/Release/net8.0/win-arm64/publish/$windowsarm64file
 
   create-release:
     needs: [build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+      - name: run housekeeping scripts
+        run: |
+          cd $GITHUB_WORKSPACE/scripts
+          bash housekeeping.sh
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ env.macosx64file }}
+          name: $macosx64file
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ env.macosarm64file }}
+          name: $macosarm64file
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ env.windowsx86file }}
+          name: $windowsx86file
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ env.windowsx64file }}
+          name: $windowsx64file
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ env.windowsarm64file }}
+          name: $windowsarm64file
           path: $GITHUB_WORKSPACE
 
       - name: Display structure of downloaded files
@@ -145,11 +142,11 @@ jobs:
         uses: ncipollo/release-action@v1.13.0
         with:
             artifacts: |
-              $GITHUB_WORKSPACE/${{ env.macosx64file }}
-              $GITHUB_WORKSPACE/${{ env.macosarm64file }}
-              $GITHUB_WORKSPACE/${{ env.windowsx86file }}
-              $GITHUB_WORKSPACE/${{ env.windowsx64file }}
-              $GITHUB_WORKSPACE/${{ env.windowsarm64file }}
+              $GITHUB_WORKSPACE/$macosx64file
+              $GITHUB_WORKSPACE/$macosarm64file
+              $GITHUB_WORKSPACE/$windowsx86file
+              $GITHUB_WORKSPACE/$windowsx64file
+              $GITHUB_WORKSPACE/$windowsarm64file
             token: ${{ secrets.GITHUB_TOKEN }}
             generateReleaseNotes: true
             draft: true
