@@ -85,6 +85,13 @@ jobs:
         dotnet-version: '8.0.x'
     - name: restore workloads
       run: |
+        echo "list content"
+        ls
+        echo "github workspace"
+        echo $GITHUB_WORKSPACE
+        cd $GITHUB_WORKSPACE
+        echo "list content"
+        ls      
         cd $GITHUB_WORKSPACE/Dots/Dots/src
         dotnet workload restore
     - name: run housekeeping scripts
