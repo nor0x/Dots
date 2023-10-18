@@ -83,7 +83,8 @@ jobs:
       run: |
         cd D:/a/Dots/Dots/
         version=$(cat version.txt)
-        cd src
+        echo "Version is now $version" 
+        cd D:/a/Dots/Dots/src
         sed -i '' "s/CFBundleVersion>.*</CFBundleVersion>$version</" Dots.csproj
         sed -i '' "s/CFBundleShortVersionString>.*</CFBundleShortVersionString>$version</" Dots.csproj
         sed -i '' "s/Version>.*</Version>$version</" Dots.csproj
