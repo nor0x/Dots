@@ -63,8 +63,8 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/scripts
         bash build-macos.sh
-        echo "macosx64file=${{ env.macosx64file }}" >> "$GITHUB_ENV"
-        echo "macosarm64file=${{ env.macosarm64file }}" >> "$GITHUB_ENV"
+        echo "macosx64file=$macosx64file" >> $GITHUB_ENV
+        echo "macosarm64file=$macosarm64file" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v3.1.3
       with:
         name: ${{ env.macosx64file }}
@@ -95,9 +95,9 @@ jobs:
       run: |
         cd D:/a/Dots/Dots/scripts
         bash build-windows.sh
-        echo "windowsx86file=${{ env.windowsx86file }}" >> "$GITHUB_ENV"
-        echo "windowsx64file=${{ env.windowsx64file }}" >> "$GITHUB_ENV"
-        echo "windowsarm64file=${{ env.windowsarm64file }}" >> "$GITHUB_ENV"
+        echo "windowsarm64file=$windowsarm64file" >> $GITHUB_ENV
+        echo "windowsx64file=$windowsx64file" >> $GITHUB_ENV
+        echo "windowsx86file=$windowsx86file" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v3.1.3
       with:
         name: ${{ env.windowsx86file }}
