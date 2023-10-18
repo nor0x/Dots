@@ -80,8 +80,23 @@ jobs:
         dotnet workload restore
     - name: run housekeeping scripts
       run: |
-        cd D:/a/Dots/Dots/scripts
-        bash housekeeping.sh
+        cd D:/a/Dots/Dots/src
+        version=$(cat version.txt)
+
+        sed -i '' "s/CFBundleVersion>.*</CFBundleVersion>$version</" Dots.csproj
+        sed -i '' "s/CFBundleShortVersionString>.*</CFBundleShortVersionString>$version</" Dots.csproj
+        sed -i '' "s/Version>.*</Version>$version</" Dots.csproj
+        
+        echo "Version is now $version"
+        echo "Setting up file names"
+        
+        macosx64file=$(echo Dots-$version-macos-x64.zip)
+        macosarm64file=$(echo Dots-$version-macos-arm64.zip)
+        windowsx86file=$(echo Dots-$version-win-x86.zip)
+        windowsx64file=$(echo Dots-$version-win-x64.zip)
+        windowsarm64file=$(echo Dots-$version-win-arm64.zip)
+        
+        echo "filenames: $macosx64file $macosarm64file $windowsx86file $windowsx64file $windowsarm64file"
     - name: run build scripts
       run: |
         cd D:/a/Dots/Dots/scripts
@@ -114,23 +129,23 @@ jobs:
           bash housekeeping.sh
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: $macosx64file
+          name: ${{ env.macosx64file }}}
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: $macosarm64file
+          name: ${{ env.macosarm64file }}}
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: $windowsx86file
+          name: ${{ env.windowsx86file }}}
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: $windowsx64file
+          name: ${{ env.windowsx64file }}}
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: $windowsarm64file
+          name: ${{ env.windowsarm64file }}}
           path: $GITHUB_WORKSPACE
 
       - name: Display structure of downloaded files
@@ -142,11 +157,7 @@ jobs:
         uses: ncipollo/release-action@v1.13.0
         with:
             artifacts: |
-              $GITHUB_WORKSPACE/$macosx64file
-              $GITHUB_WORKSPACE/$macosarm64file
-              $GITHUB_WORKSPACE/$windowsx86file
-              $GITHUB_WORKSPACE/$windowsx64file
-              $GITHUB_WORKSPACE/$windowsarm64file
+              $GITHUB_WORKSPACE/*.zip
             token: ${{ secrets.GITHUB_TOKEN }}
             generateReleaseNotes: true
             draft: true
