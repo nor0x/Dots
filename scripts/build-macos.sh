@@ -1,5 +1,7 @@
 cd ..
+version=$(cat version.txt)
 cd /Users/runner/work/Dots/Dots/src/
+
 dotnet restore
 echo "Building Dots for macOS arm64"
 dotnet msbuild -t:BundleApp -property:Configuration=Release -p:UseAppHost=true -p:RuntimeIdentifier=osx-arm64
@@ -23,8 +25,10 @@ cp bin/Release/net8.0-macos/osx-x64/Dots.app/Contents/PkgInfo bin/Release/net8.0
 
 echo "dittoing Dots for macOS x64"
 cd /Users/runner/work/Dots/Dots/src/bin/Release/net8.0-macos/osx-x64/publish
+macosx64file=$(echo Dots-$version-macos-x64.zip)
 ditto -c -k --sequesterRsrc --keepParent Dots.app $macosx64file
 
 echo "dittoing Dots for macOS arm64"
 cd /Users/runner/work/Dots/Dots/src/bin/Release/net8.0-macos/osx-arm64/publish
+macosarm64file=$(echo Dots-$version-macos-arm64.zip)
 ditto -c -k --sequesterRsrc --keepParent Dots.app $macosarm64file
