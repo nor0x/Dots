@@ -50,4 +50,9 @@
         <hyper:HyperLinkStyle />
         <StyleInclude Source="/Styles.axaml" />
     </Application.Styles>
+  <NativeMenu.Menu>
+    <NativeMenu>
+      <NativeMenuItem Header="About Dots" Click="NativeMenuItem_Click" />
+    </NativeMenu>
+  </NativeMenu.Menu>
 </Application>

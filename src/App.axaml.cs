@@ -23,5 +23,9 @@ namespace Dots
 
             base.OnFrameworkInitializationCompleted();
         }
+
+        private void NativeMenuItem_Click(object? sender, System.EventArgs e)
+        {
+        }
     }
 }
