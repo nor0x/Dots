@@ -1,4 +1,7 @@
 # Dots - the friendly .NET SDK manager
+[![build and release](https://github.com/nor0x/Dots/actions/workflows/release.yml/badge.svg)](https://github.com/nor0x/Dots/actions/workflows/release.yml)
+
+
 <img src="https://raw.githubusercontent.com/nor0x/Dots/main/Assets/icon.png" width="320px" />
 
 
