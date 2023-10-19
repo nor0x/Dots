@@ -81,6 +81,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4.1.1
     - name: Log GITHUB_WORKSPACE
+      shell: bash
       run: |
         echo "GITHUB_WORKSPACE is $GITHUB_WORKSPACE"
         echo "current directory"
