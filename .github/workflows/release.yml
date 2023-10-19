@@ -85,6 +85,7 @@ jobs:
         cd $GITHUB_WORKSPACE/scripts
         bash housekeeping.sh
     - name: run build scripts
+      shell: bash
       run: |
         cd $GITHUB_WORKSPACE/scripts
         bash build-windows.sh
