@@ -1,4 +1,4 @@
-name: release
+name: build and release
 
 on:
   push:
@@ -7,16 +7,22 @@ on:
 
 jobs:
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
     - name: Checkout
-      uses: actions/checkout@v3.0.0
+      uses: actions/checkout@v4.1.1
     - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v2.0.0
+      uses: actions/setup-dotnet@v3.2.0
       with:
-        # Optional SDK version(s) to use. If not provided, will install global.json version when available. Examples: 2.2.104, 3.1, 3.1.x
-        dotnet-version: '7.0.x'
-        include-prerelease: true
+        dotnet-version: '8.0.x'
+    - name: restore workloads
+      run: |
+        cd $GITHUB_WORKSPACE/src
+        dotnet workload restore
+    - name: run housekeeping scripts
+      run: |
+        cd $GITHUB_WORKSPACE/scripts
+        bash housekeeping.sh
     - name: Install the Apple certificate and provisioning profile
       env:
         BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
@@ -30,8 +36,8 @@ jobs:
         KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
         # import certificate and provisioning profile from secrets
-        echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
-        echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode --output $PP_PATH
+        echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+        echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
 
         # create temporary keychain
         security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
@@ -48,92 +54,107 @@ jobs:
     
     - name: run build scripts
       run: |
+        cd $GITHUB_WORKSPACE/scripts
+        bash build-macos.sh
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: macosx64file
+        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-x64/publish/*.zip
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: macosarm64file
+        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-arm64/publish/*.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4.1.1
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v3.2.0
+      with:
+        dotnet-version: '8.0.x'
+    - name: restore workloads
+      shell: bash
+      run: |
         cd $GITHUB_WORKSPACE/src
         dotnet workload restore
-        dotnet publish -f:net7.0-maccatalyst -c:Release
-        cd $GITHUB_WORKSPACE/src/bin/Release/net7.0-maccatalyst/
-        ditto -c -k --sequesterRsrc --keepParent Dots.app Dots.app.zip 
-      
-    - uses: actions/upload-artifact@v3
+    - name: run housekeeping scripts
+      shell: bash
+      run: |
+        cd $GITHUB_WORKSPACE/scripts
+        bash housekeeping.sh
+    - name: run build scripts
+      shell: bash
+      run: |
+        cd $GITHUB_WORKSPACE/scripts
+        bash build-windows.sh
+        echo "windowsarm64file=$windowsarm64file" >> $GITHUB_ENV
+        echo "windowsx64file=$windowsx64file" >> $GITHUB_ENV
+        echo "windowsx86file=$windowsx86file" >> $GITHUB_ENV
+    - uses: actions/upload-artifact@v3.1.3
       with:
-        name: macOS
-        path: ${{ github.workspace }}/src/bin/Release/net7.0-maccatalyst/Dots.app.zip
-
-  # build-windows:
-  #   runs-on: windows-latest  # For a list of available runner types, refer to
-
-  #   steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v3
-  #     with:
-  #       fetch-depth: 0
-
-  #   # Install the .NET Core workload
-  #   - name: Install .NET Core
-  #     uses: actions/setup-dotnet@v2
-  #     with:
-  #       dotnet-version: 6.0.300-preview.22204.3
-
-  #   # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
-  #   - name: Setup MSBuild.exe
-  #     uses: microsoft/setup-msbuild@v1.0.2
-
-
-  #   # Decode the base 64 encoded pfx and save the Signing_Certificate
-  #   - name: Decode the pfx
-  #     run: |
-  #       cd $env:GITHUB_WORKSPACE
-  #       $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.Base64_Encoded_Pfx }}")
-  #       $certificatePath = Join-Path -Path $env:GITHUB_WORKSPACE\Dots -ChildPath GitHubActionsWorkflow.pfx
-  #       [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
-  #       $SecurePassword = ConvertTo-SecureString ${{ secrets.Pfx_Key }} –asplaintext –force
-  #       Get-ChildItem -Path $env:GITHUB_WORKSPACE\Dots\GitHubActionsWorkflow.pfx | Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -Password $SecurePassword
-
-  #   # Decode the base 64 encoded pfx and save the Signing_Certificate
-  #   - name: Build the app
-  #     run: |
-  #       dotnet workload install maui-windows
-  #       dotnet workload restore
-  #       cd $env:GITHUB_WORKSPACE/Dots
-  #       msbuild /restore /t:Publish /p:TargetFramework=net6.0-windows10.0.19041 /p:configuration=Release
-
-  #   - name: Find and Prepare MSIX
-  #     run: |
-  #       cd $env:GITHUB_WORKSPACE/Dots
-  #       ls
-  #       Get-ChildItem -Path ".\" -Include Dots*.msix -Recurse | Copy-Item -Destination .\
-  #       ls
-  #       get-childitem -Path $dir | where-object { $_.Name -like "Dots*.msix" } | %{ rename-item -LiteralPath $_.FullName -NewName "$d`Dots.msix" }
-  #       ls  
-
-  #   - uses: actions/upload-artifact@v3
-  #     with:
-  #       name: Windows
-  #       path: ${{ github.workspace }}/Dots/Dots.msix
+        name: windowsx86file
+        path: ${{ github.workspace }}\src\*arm64.zip
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: windowsx64file
+        path: ${{ github.workspace }}\src\*x64.zip
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: windowsarm64file
+        path: ${{ github.workspace }}\src\*x86.zip
 
   create-release:
-    #needs: [build-macos, build-windows]
-    needs: [build-macos]
+    needs: [build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+      - name: Log GITHUB_WORKSPACE
+        run: |
+          echo "GITHUB_WORKSPACE is $GITHUB_WORKSPACE"
+          echo "current directory"
+          ls
+          echo "GITHUB_WORKSPACE directory"
+          ls $GITHUB_WORKSPACE
+          echo "src directory"
+          ls $GITHUB_WORKSPACE/src
+      - name: run housekeeping scripts
+        run: |
+          cd $GITHUB_WORKSPACE/scripts
+          bash housekeeping.sh
+      - uses: actions/download-artifact@v3.0.2
         with:
-          name: macOS
+          name: macosx64file
+          path: $GITHUB_WORKSPACE
+      - uses: actions/download-artifact@v3.0.2
+        with:
+          name: macosarm64file
+          path: $GITHUB_WORKSPACE
+      - uses: actions/download-artifact@v3.0.2
+        with:
+          name: windowsx86file
+          path: $GITHUB_WORKSPACE
+      - uses: actions/download-artifact@v3.0.2
+        with:
+          name: windowsx64file
+          path: $GITHUB_WORKSPACE
+      - uses: actions/download-artifact@v3.0.2
+        with:
+          name: windowsarm64file
           path: $GITHUB_WORKSPACE
 
-      # - uses: actions/download-artifact@v3
-      #   with:
-      #     name: Windows
-      #     path: $GITHUB_WORKSPACE
-          
       - name: Display structure of downloaded files
         run: |
           cd $GITHUB_WORKSPACE
           ls
 
-        # You may pin to the exact commit or the version.
-        # uses: ncipollo/release-action@40bb172bd05f266cf9ba4ff965cb61e9ee5f6d01
-      - uses: ncipollo/release-action@v1.9.0
+      - name: Create Release
+        uses: ncipollo/release-action@v1.13.0
         with:
-          artifacts: "$GITHUB_WORKSPACE/Dots.app.zip"
-          token: ${{ secrets.GITHUB_TOKEN }}
+            artifacts: |
+              $GITHUB_WORKSPACE/*.zip
+            token: ${{ secrets.GITHUB_TOKEN }}
+            generateReleaseNotes: true
+            draft: true

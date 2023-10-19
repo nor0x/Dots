@@ -1,6 +1,0 @@
-﻿version="XXXXX"
-rm -rf /usr/local/share/dotnet/sdk/$version
-rm -rf /usr/local/share/dotnet/shared/Microsoft.NETCore.App/$version
-rm -rf /usr/local/share/dotnet/shared/Microsoft.AspNetCore.All/$version
-rm -rf /usr/local/share/dotnet/shared/Microsoft.AspNetCore.App/$version
-rm -rf /usr/local/share/dotnet/host/fxr/$version

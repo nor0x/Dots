@@ -1,10 +1,6 @@
-﻿using Dots.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Avalonia.Media;
+using Dots.Data;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Dots.Models;
 
@@ -22,7 +18,8 @@ public partial class Sdk : ObservableObject
     public string Group => Data.Sdk.Version.First().ToString();
 
     [JsonIgnore]
-    public Color Color => Color.FromRgba(ColorHex);
+    public IBrush Color => SolidColorBrush.Parse(ColorHex);
+
     [JsonIgnore]
     public bool IsSelected { get; set; }
     [JsonIgnore]
