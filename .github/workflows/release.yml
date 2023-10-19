@@ -11,6 +11,16 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4.1.1
+    - name: Log GITHUB_WORKSPACE
+      run: |
+        echo "GITHUB_WORKSPACE is $GITHUB_WORKSPACE"
+        echo "current directory"
+        ls
+        echo "GITHUB_WORKSPACE directory"
+        ls $GITHUB_WORKSPACE
+        echo "src directory"
+        ls $GITHUB_WORKSPACE/src
+
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v3.2.0
       with:
@@ -70,6 +80,15 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4.1.1
+    - name: Log GITHUB_WORKSPACE
+      run: |
+        echo "GITHUB_WORKSPACE is $GITHUB_WORKSPACE"
+        echo "current directory"
+        ls
+        echo "GITHUB_WORKSPACE directory"
+        ls $GITHUB_WORKSPACE
+        echo "src directory"
+        ls $GITHUB_WORKSPACE/src
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v3.2.0
       with:
@@ -125,6 +144,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.1
+      - name: Log GITHUB_WORKSPACE
+        run: |
+          echo "GITHUB_WORKSPACE is $GITHUB_WORKSPACE"
+          echo "current directory"
+          ls
+          echo "GITHUB_WORKSPACE directory"
+          ls $GITHUB_WORKSPACE
+          echo "src directory"
+          ls $GITHUB_WORKSPACE/src
       - name: run housekeeping scripts
         run: |
           cd $GITHUB_WORKSPACE/scripts
