@@ -125,23 +125,23 @@ jobs:
           bash housekeeping.sh
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ env.macosx64file }}}
+          name: ${{ env.macosx64file }}
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ env.macosarm64file }}}
+          name: ${{ env.macosarm64file }}
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ env.windowsx86file }}}
+          name: ${{ env.windowsx86file }}
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ env.windowsx64file }}}
+          name: ${{ env.windowsx64file }}
           path: $GITHUB_WORKSPACE
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ env.windowsarm64file }}}
+          name: ${{ env.windowsarm64file }}
           path: $GITHUB_WORKSPACE
 
       - name: Display structure of downloaded files
