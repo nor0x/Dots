@@ -3,6 +3,7 @@
              xmlns:helpers="using:Dots.Helpers"
              xmlns:hyper="clr-namespace:HyperText.Avalonia;assembly=HyperText.Avalonia"
              x:Class="Dots.App"
+             Name="Dots"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
   <Application.Resources>
@@ -50,4 +51,9 @@
         <hyper:HyperLinkStyle />
         <StyleInclude Source="/Styles.axaml" />
     </Application.Styles>
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="About Dots" Click="AboutMenu_Clicked" />
+        </NativeMenu>
+    </NativeMenu.Menu>
 </Application>

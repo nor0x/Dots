@@ -9,7 +9,7 @@ namespace Dots
 {
     public partial class MainWindow : Window
     {
-        MainViewModel _vm = new MainViewModel(new Services.DotnetService(),new Helpers.ErrorPopupHelper());
+        MainViewModel _vm = new MainViewModel(new Services.DotnetService(), new Helpers.ErrorPopupHelper());
         AboutWindow _aboutWindow = new AboutWindow();
         bool _aboutWindowOpen = false;
 
@@ -29,7 +29,7 @@ namespace Dots
         protected override async void OnInitialized()
         {
             base.OnInitialized();
-            if(!await BlobCache.UserAccount.ContainsKey(Constants.LastCheckedKey))
+            if (!await BlobCache.UserAccount.ContainsKey(Constants.LastCheckedKey))
             {
                 await BlobCache.UserAccount.InsertObject(Constants.LastCheckedKey, DateTime.Now);
             }
@@ -72,8 +72,8 @@ namespace Dots
                 SdkList.SelectedItem = null;
                 SdkList.Selection = null;
             }
-        }       
-       
+        }
+
         private void TextBox_TextChanged(object? sender, Avalonia.Controls.TextChangedEventArgs e)
         {
             _vm.FilterSdksCommand.Execute(MainSearchBar.Text);
@@ -81,7 +81,7 @@ namespace Dots
 
         private void SdkItem_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
         {
-            if(e.Source is Control control && (control.Parent is Button || control.Parent.Parent is Button))
+            if (e.Source is Control control && (control.Parent is Button || control.Parent.Parent is Button))
             {
                 //workaround for button click inside ListBox item
                 return;
@@ -90,7 +90,7 @@ namespace Dots
             paneWidth = paneWidth < 200 ? 200 : paneWidth;
             MainSplitView.OpenPaneLength = Math.Min(paneWidth, 500);
             var unselect = _vm.SetSelectedSdk((Sdk)((Avalonia.Controls.Grid)sender).DataContext);
-            if(unselect)
+            if (unselect)
             {
                 SdkList.SelectedItem = null;
                 SdkList.Selection = null;
