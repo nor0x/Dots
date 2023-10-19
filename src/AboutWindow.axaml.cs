@@ -1,3 +1,4 @@
+using System.Reflection;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
@@ -19,13 +20,15 @@ namespace Dots
         public AboutWindow()
         {
             InitializeComponent();
+            var version = Assembly.GetEntryAssembly().GetName().Version;
+            VersionRun.Text = version.ToString(3);
         }
 
         private void OpenSourceButton_Clicked(object? sender, Avalonia.Input.TappedEventArgs e)
         {
             Constants.GithubUrl.OpenUrl();
-        }       
-        
+        }
+
         private void SupportButton_Clicked(object? sender, Avalonia.Input.TappedEventArgs e)
         {
             Constants.SupportURl.OpenUrl();
