@@ -43,4 +43,9 @@ public class Constants
 
     public const string SupportURl = "https://bento.me/nor0x";
     public const string GithubUrl = "https://github.com/nor0x/Dots";
+
+    public const string DownloadingText = "Downloading...";
+    public const string InstallingText = "Installing...";
+    public const string UninstallingText = "Uninstalling...";
+    public const string OpeningText = "Opening...";
 }

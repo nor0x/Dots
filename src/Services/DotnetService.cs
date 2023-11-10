@@ -1,9 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Threading;
 using Akavache;
 using CliWrap;
 using CliWrap.Buffered;
@@ -191,6 +193,10 @@ public class DotnetService
                 using var client = new HttpClient();
                 var response = await client.GetByteArrayAsync(info.Url);
                 await File.WriteAllBytesAsync(path, response);
+
+                sdk.ProgressTask = 
+
+
                 if (toDesktop)
                 {
                     //copy to desktop
@@ -208,6 +214,48 @@ public class DotnetService
             Debug.WriteLine(ex);
             //Analytics.TrackEvent("Download SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
             return null;
+        }
+    }
+
+    void CreateProgressTask()
+    {
+        try
+        {
+            downloadProgress.DownloadTask = Task.Run(async () =>
+            {
+                using (var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken))
+                using (var fileStream = new FileStream("downloadedFile.txt", FileMode.Create, FileAccess.Write))
+                {
+                    var contentLength = response.Content.Headers.ContentLength;
+                    var buffer = new byte[8192];
+                    var bytesRead = default(int);
+                    var totalBytesRead = default(long);
+
+                    while ((bytesRead = await response.Content.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+                    {
+                        await fileStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+                        totalBytesRead += bytesRead;
+
+                        if (contentLength.HasValue)
+                            downloadProgress.Progress = (int)((double)totalBytesRead / contentLength.Value * 100);
+
+                        Console.WriteLine($"{url} - {downloadProgress.Progress}%");
+                    }
+                }
+            }, cancellationToken);
+
+            await downloadProgress.DownloadTask;
+            downloads.Remove(downloadProgress);
+        }
+        catch (TaskCanceledException)
+        {
+            Console.WriteLine($"{url} download was canceled.");
+            downloads.Remove(downloadProgress);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"{url} download failed: {ex.Message}");
+            downloads.Remove(downloadProgress);
         }
     }
 

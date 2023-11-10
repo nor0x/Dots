@@ -41,7 +41,7 @@ namespace Dots
                 force = true;
                 await BlobCache.UserAccount.InsertObject(Constants.LastCheckedKey, DateTime.Now);
             }
-            await _vm.CheckSdks(force);
+            await _vm.CheckSdks(false);
         }
 
         private void Logo_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)

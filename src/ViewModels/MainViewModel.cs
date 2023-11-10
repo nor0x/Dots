@@ -25,6 +25,7 @@ public partial class MainViewModel : ObservableRecipient
     {
         _dotnet = dotnet;
         _errorHelper = errorHelper;
+        _progressTasks = new ObservableCollection<ProgressTask>();
     }
 
     string _query = "";
@@ -59,6 +60,8 @@ public partial class MainViewModel : ObservableRecipient
     [ObservableProperty]
     bool _showDetails = false;
 
+    [ObservableProperty]
+    ObservableCollection<ProgressTask> _progressTasks;
 
     public bool SetSelectedSdk(Sdk sdk)
     {
@@ -162,10 +165,12 @@ public partial class MainViewModel : ObservableRecipient
             sdk.IsDownloading = true;
             if (sdk.Installed)
             {
+                sdk.StatusMessage = "Opening...";
                 await _dotnet.OpenFolder(sdk);
             }
             else
             {
+                sdk.StatusMessage = "Downloading...";
                 var path = await _dotnet.Download(sdk, true);
                 await _dotnet.OpenFolder(path);
             }
@@ -185,8 +190,10 @@ public partial class MainViewModel : ObservableRecipient
         try
         {
             sdk.IsInstalling = true;
+            
             if (sdk.Installed)
             {
+                sdk.StatusMessage = "Uninstalling...";
                 var result = await _dotnet.Uninstall(sdk);
                 if (result)
                 {
@@ -198,6 +205,7 @@ public partial class MainViewModel : ObservableRecipient
                 var path = await _dotnet.Download(sdk);
                 if (!string.IsNullOrEmpty(path))
                 {
+                    sdk.StatusMessage = "Installing...";
                     var result = await _dotnet.Install(path);
                     if (result)
                     {

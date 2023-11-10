@@ -26,15 +26,31 @@ public partial class Sdk : ObservableObject
     public bool Installed => !string.IsNullOrEmpty(Path);
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsBusy))]
     [JsonIgnore]
     public bool _isDownloading;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsBusy))]
     [JsonIgnore]
     public bool _isInstalling;
 
+    [ObservableProperty]
+    [JsonIgnore]
+    public string _statusMessage;
+
+    [ObservableProperty]
+    [JsonIgnore]
+    public double _progress;
+
+    [JsonIgnore]
+    public bool IsBusy => _isDownloading || _isInstalling;
+
     [JsonIgnore]
     public string VersionDisplay { get; set; }
+
+    [JsonIgnore]
+    public ProgressTask ProgressTask { get; set; }
 }
 
 

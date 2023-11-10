@@ -290,6 +290,31 @@
                         Text="Preview"
                         FontSize="10" />
                     </Border>
+                    <StackPanel>
+                        <StackPanel Width="230" IsVisible="{Binding IsBusy}">
+                          <TextBlock Text="{Binding StatusMessage}" HorizontalAlignment="Center" />
+                          <StackPanel Orientation="Horizontal">
+                          <ProgressBar
+      IsIndeterminate="True"
+      Height="4"
+      Margin="6,0,6,0"
+      Foreground="White"
+      IsVisible="True"
+      HorizontalAlignment="Center" />
+                            <Button
+  Background="Transparent"
+  Foreground="White"
+  Padding="0"
+  Content="{x:Static helpers:LucideIcons.StopCircle}"
+  FontFamily="{StaticResource LucideIcons}"
+  FontSize="15"
+  HorizontalContentAlignment="Center"
+  VerticalContentAlignment="Center"
+  Width="30"
+  Height="30" />
+                            </StackPanel>
+                        </StackPanel>
+                    <StackPanel Orientation="Horizontal" IsVisible="{Binding !IsBusy}">
                     <Button
                       Padding="0"
                       HorizontalContentAlignment="Center"
@@ -304,37 +329,25 @@
                       VerticalAlignment="Center"
                       Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.OpenOrDownloadCommand}"
                       CommandParameter="{Binding .}"
+                      Classes.Installed="{Binding Installed}"
+                      Classes.NotInstalled="{Binding !Installed}"
                       Grid.Column="2">
-                      <Panel>
-                        <TextBlock
-                          IsVisible="{Binding !IsDownloading}"
-                          Classes.Installed="{Binding Installed}"
-                          Classes.NotInstalled="{Binding !Installed}">
-                          <TextBlock.Styles>
-                            <Style Selector="TextBlock.Installed">
-                              <Style.Setters>
-                                <Setter
-                                  Property="Text"
-                                  Value="Open" />
-                              </Style.Setters>
-                            </Style>
-                            <Style Selector="TextBlock.NotInstalled">
-                              <Style.Setters>
-                                <Setter
-                                  Property="Text"
-                                  Value="Download" />
-                              </Style.Setters>
-                            </Style>
-                          </TextBlock.Styles>
-                        </TextBlock>
-                        <ProgressBar
-                          IsIndeterminate="True"
-                          IsVisible="{Binding IsDownloading}"
-                          Width="70"
-                          Foreground="{StaticResource BackgroundSubtle}"
-                          HorizontalAlignment="Center" />
-                      </Panel>
-
+                      <Button.Styles>
+                        <Style Selector="Button.Installed">
+                          <Style.Setters>
+                            <Setter
+                              Property="Content"
+                              Value="Open" />
+                          </Style.Setters>
+                        </Style>
+                        <Style Selector="Button.NotInstalled">
+                          <Style.Setters>
+                            <Setter
+                              Property="Content"
+                              Value="Download" />
+                          </Style.Setters>
+                        </Style>
+                      </Button.Styles>
                     </Button>
                     <Button
                       Height="32"
@@ -367,43 +380,25 @@
                               Value="{StaticResource Accent}" />
                           </Style.Setters>
                         </Style>
+                        <Style Selector="Button.Installed">
+                          <Style.Setters>
+                            <Setter
+                              Property="Content"
+                              Value="Uninstall" />
+                          </Style.Setters>
+                        </Style>
+                        <Style Selector="Button.NotInstalled">
+                          <Style.Setters>
+                            <Setter
+                              Property="Content"
+                              Value="Install" />
+                          </Style.Setters>
+                        </Style>
                       </Button.Styles>
-
-
-                      <Panel>
-                        <TextBlock
-                          IsVisible="{Binding !IsInstalling}"
-                          Classes.Installed="{Binding Installed}"
-                          Classes.NotInstalled="{Binding !Installed}">
-                          <TextBlock.Styles>
-                            <Style Selector="TextBlock.Installed">
-                              <Style.Setters>
-                                <Setter
-                                  Property="Text"
-                                  Value="Uninstall" />
-                              </Style.Setters>
-                            </Style>
-                            <Style Selector="TextBlock.NotInstalled">
-                              <Style.Setters>
-                                <Setter
-                                  Property="Text"
-                                  Value="Install" />
-                              </Style.Setters>
-                            </Style>
-                          </TextBlock.Styles>
-                        </TextBlock>
-                        <ProgressBar
-                          IsIndeterminate="True"
-                          IsVisible="{Binding IsInstalling}"
-                          Width="70"
-                          Foreground="{StaticResource BackgroundSubtle}"
-                          HorizontalAlignment="Center" />
-                      </Panel>
-
                     </Button>
-
-
+                    </StackPanel>
                   </StackPanel>
+                    </StackPanel>
                 </Grid>
               </DataTemplate>
             </ListBox.ItemTemplate>
@@ -510,7 +505,7 @@
                     </Border>
                   </StackPanel>
                   <TextBlock
-                    Margin="0,5,0,0"
+                    Margin="0,5,0,5"
                     Text="{Binding Path}"
                     Tapped="PathTextBlock_Tapped"
                     FontSize="11">
@@ -537,10 +532,35 @@
                       </Style>
                     </TextBlock.Styles>
                   </TextBlock>
+                  <StackPanel HorizontalAlignment="Left" Width="230" Spacing="4" IsVisible="{Binding IsBusy}">
+                    <TextBlock Text="{Binding StatusMessage}" HorizontalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal">
+                    <ProgressBar
+IsIndeterminate="True"
+Height="4"
+Margin="6,0,6,0"
+Foreground="White"
+IsVisible="True"
+HorizontalAlignment="Center" />
+                      <Button
+                        Background="Transparent"
+                        Foreground="White"
+                        Padding="0"
+                        Content="{x:Static helpers:LucideIcons.StopCircle}"
+                        FontFamily="{StaticResource LucideIcons}"
+                        FontSize="15"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Width="30"
+                        Height="30" />
+                          
+                        </StackPanel>
+                  </StackPanel>
                   <StackPanel
                     Orientation="Horizontal"
                     Margin="0,5,0,10"
-                    VerticalAlignment="Center">
+                    VerticalAlignment="Center"
+                     IsVisible="{Binding !IsBusy}">
                     <Button
                       Height="32"
                       Width="100"
@@ -556,35 +576,22 @@
                       Classes.Installed="{Binding Installed}"
                       Classes.NotInstalled="{Binding !Installed}"
                       Grid.Column="2">
-                      <Panel>
-                        <TextBlock
-                          IsVisible="{Binding !IsDownloading}"
-                          Classes.Installed="{Binding Installed}"
-                          Classes.NotInstalled="{Binding !Installed}">
-                          <TextBlock.Styles>
-                            <Style Selector="TextBlock.Installed">
+                          <Button.Styles>
+                            <Style Selector="Button.Installed">
                               <Style.Setters>
                                 <Setter
-                                  Property="Text"
+                                  Property="Content"
                                   Value="Open" />
                               </Style.Setters>
                             </Style>
-                            <Style Selector="TextBlock.NotInstalled">
+                            <Style Selector="Button.NotInstalled">
                               <Style.Setters>
                                 <Setter
-                                  Property="Text"
+                                  Property="Content"
                                   Value="Download" />
                               </Style.Setters>
                             </Style>
-                          </TextBlock.Styles>
-                        </TextBlock>
-                        <ProgressBar
-                          IsIndeterminate="True"
-                          IsVisible="{Binding IsDownloading}"
-                          Width="70"
-                          Foreground="{StaticResource BackgroundSubtle}"
-                          HorizontalAlignment="Center" />
-                      </Panel>
+                          </Button.Styles>
 
                     </Button>
                     <Button
@@ -617,39 +624,22 @@
                               Value="{StaticResource Accent}" />
                           </Style.Setters>
                         </Style>
-                      </Button.Styles>
 
-
-                      <Panel>
-                        <TextBlock
-                          IsVisible="{Binding !IsInstalling}"
-                          Classes.Installed="{Binding Installed}"
-                          Classes.NotInstalled="{Binding !Installed}">
-                          <TextBlock.Styles>
-                            <Style Selector="TextBlock.Installed">
+                            <Style Selector="Button.Installed">
                               <Style.Setters>
                                 <Setter
-                                  Property="Text"
+                                  Property="Content"
                                   Value="Uninstall" />
                               </Style.Setters>
                             </Style>
-                            <Style Selector="TextBlock.NotInstalled">
+                            <Style Selector="Button.NotInstalled">
                               <Style.Setters>
                                 <Setter
-                                  Property="Text"
+                                  Property="Content"
                                   Value="Install" />
                               </Style.Setters>
                             </Style>
-                          </TextBlock.Styles>
-                        </TextBlock>
-                        <ProgressBar
-                          IsIndeterminate="True"
-                          IsVisible="{Binding IsInstalling}"
-                          Width="70"
-                          Foreground="{StaticResource BackgroundSubtle}"
-                          HorizontalAlignment="Center" />
-                      </Panel>
-
+                          </Button.Styles>
                     </Button>
                   </StackPanel>
                   <TextBlock
