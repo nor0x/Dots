@@ -123,6 +123,7 @@
                 Width="30"
                 Height="30" />
         <Button Background="Transparent"
+                IsVisible="False"
                 Foreground="White"
                 Padding="0"
                 Content="{x:Static helpers:LucideIcons.Wrench}"
@@ -440,7 +441,7 @@
                     <Border Width="70"
                             Height="70"
                             Background="{Binding Color}"
-                            CornerRadius="16"
+                            CornerRadius="35"
                             Margin="0,0,0,6">
                       <TextBlock Text="{Binding Group}"
                                  FontFamily="{StaticResource SpaceGroteskBold}"
@@ -494,7 +495,7 @@
                     <Border Width="70"
                             Height="70"
                             Background="{Binding Color}"
-                            CornerRadius="16"
+                            CornerRadius="35"
                             Margin="0,0,0,6">
                       <TextBlock Text="{Binding Group}"
                                  FontFamily="{StaticResource SpaceGroteskBold}"

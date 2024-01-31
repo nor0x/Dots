@@ -37,12 +37,12 @@ namespace Dots
             var lastChecked = await BlobCache.UserAccount.GetObject<DateTime>(Constants.LastCheckedKey);
 
             bool force = false;
-            if (DateTime.Now.Subtract(lastChecked).TotalDays > 15)
+            if (DateTime.Now.Subtract(lastChecked).TotalDays > 10)
             {
                 force = true;
                 await BlobCache.UserAccount.InsertObject(Constants.LastCheckedKey, DateTime.Now);
             }
-            await _vm.CheckSdks(false);
+            await _vm.CheckSdks(force);
         }
 
         private void Logo_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
