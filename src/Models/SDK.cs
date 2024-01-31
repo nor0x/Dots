@@ -15,7 +15,7 @@ public partial class Sdk : ObservableObject
 
     //UI
     public string ColorHex { get; set; }
-    public string Group => Data.Sdk.Version.First().ToString();
+    public string Group => VersionDisplay.First().ToString();
 
     [JsonIgnore]
     public IBrush Color => SolidColorBrush.Parse(ColorHex);

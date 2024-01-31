@@ -25,18 +25,21 @@ public class DotnetService
     ReleaseIndex[] _releaseIndex;
     Dictionary<string, Release[]> _releases = new();
 
+    public DotnetService()
+    {
+    }
+
     public async Task<List<Sdk>> GetSdks(bool force = false)
     {
         var result = new List<Sdk>();
         var index = await GetReleaseIndex(force);
         var releaseInfos = new List<Release>();
-        var installed = GetInstalledSdks(force);
+        await GetInstalledSdks(force);
         foreach (var item in index)
         {
             var infos = await GetReleaseInfos(item.ChannelVersion, force);
             releaseInfos.AddRange(infos);
         }
-        int i = 0;
         foreach (var release in releaseInfos)
         {
             var sdk = new Sdk()
@@ -46,10 +49,46 @@ public class DotnetService
                 Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty,
                 VersionDisplay = release.Sdk.Version,
             };
-            i++;
             result.Add(sdk);
+
+            if (release.Sdks is not null)
+            {
+                foreach (var subSdk in release.Sdks)
+                {
+                    var sub = new Sdk()
+                    {
+                        Data = release,
+                        ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
+                        Path = _installedSdks.FirstOrDefault(x => x.Version == subSdk.Version)?.Path ?? string.Empty,
+                        VersionDisplay = subSdk.Version,
+                    };
+
+                    if (result.FirstOrDefault(s => s.VersionDisplay == subSdk.VersionDisplay) is null)
+                    {
+                        result.Add(sub);
+                    }
+
+                }
+            }
         }
-        return result;
+
+        foreach(var installed in _installedSdks)
+        {
+            if(result.FirstOrDefault(x => x.VersionDisplay == installed.Version) is null)
+            {
+                result.Add(
+                    new Sdk() 
+                    {
+                        Data = null,
+                        VersionDisplay = installed.Version, 
+                        Path = installed.Path ,
+                        ColorHex = ColorHelper.GenerateHexColor(installed.Version.First().ToString()),
+                    }
+                );
+            }
+        }
+
+        return result.OrderByDescending(x => x.VersionDisplay).ToList();
     }
 
     async Task<ReleaseIndex[]> GetReleaseIndex(bool force = false)
@@ -108,7 +147,7 @@ public class DotnetService
     }
 
 
-    public async ValueTask<List<InstalledSdk>> GetInstalledSdks(bool force = false)
+    async ValueTask<List<InstalledSdk>> GetInstalledSdks(bool force = false)
     {
         try
         {
@@ -151,7 +190,7 @@ public class DotnetService
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            ////Analytics.TrackEvent("GetInstalledSdks", new Dictionary<string, string>() { { "Error", ex.Message } });
+            //Analytics.TrackEvent("GetInstalledSdks", new Dictionary<string, string>() { { "Error", ex.Message } });
             return null;
         }
 
@@ -190,29 +229,35 @@ public class DotnetService
                     }
                     return path;
                 }
-                using var client = new HttpClient();
-                var response = client.GetByteArrayAsync(info.Url);
-                //progress
+
                 var progress = new ProgressTask();
-                progress.Progress = 0;
                 progress.Title = $"Downloading {sdk.Data.Sdk.Version}";
                 progress.Url = info.Url.ToString();
                 progress.CancellationTokenSource = new CancellationTokenSource();
-                progress.DownloadTask = response;
 
-                await File.WriteAllBytesAsync(path, response);
+                var p = new Progress<float>();
+                p.ProgressChanged += (s, e) =>
+                {
+                    progress.Value = e;
+                };
+                progress.Progress = p;
 
-                sdk.ProgressTask = new ProgressTask
 
+                sdk.ProgressTask = progress;
+
+                // Use the provided extension method
+                using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                using var client = new HttpClient();
+                await client.DownloadDataAsync(info.Url.ToString(), file, p);
 
                 if (toDesktop)
                 {
-                    //copy to desktop
                     var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                     var filename = Path.Combine(desktop, sdkFile);
-                    await File.WriteAllBytesAsync(filename, response);
-                    return desktop;
+                    await File.WriteAllBytesAsync(Path.Combine(desktop, sdkFile), await File.ReadAllBytesAsync(path));
+                    path = desktop;
                 }
+
                 return path;
             }
             return null;
@@ -222,48 +267,6 @@ public class DotnetService
             Debug.WriteLine(ex);
             //Analytics.TrackEvent("Download SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
             return null;
-        }
-    }
-
-    void CreateProgressTask()
-    {
-        try
-        {
-            downloadProgress.DownloadTask = Task.Run(async () =>
-            {
-                using (var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken))
-                using (var fileStream = new FileStream("downloadedFile.txt", FileMode.Create, FileAccess.Write))
-                {
-                    var contentLength = response.Content.Headers.ContentLength;
-                    var buffer = new byte[8192];
-                    var bytesRead = default(int);
-                    var totalBytesRead = default(long);
-
-                    while ((bytesRead = await response.Content.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
-                    {
-                        await fileStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
-                        totalBytesRead += bytesRead;
-
-                        if (contentLength.HasValue)
-                            downloadProgress.Progress = (int)((double)totalBytesRead / contentLength.Value * 100);
-
-                        Console.WriteLine($"{url} - {downloadProgress.Progress}%");
-                    }
-                }
-            }, cancellationToken);
-
-            await downloadProgress.DownloadTask;
-            downloads.Remove(downloadProgress);
-        }
-        catch (TaskCanceledException)
-        {
-            Console.WriteLine($"{url} download was canceled.");
-            downloads.Remove(downloadProgress);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"{url} download failed: {ex.Message}");
-            downloads.Remove(downloadProgress);
         }
     }
 

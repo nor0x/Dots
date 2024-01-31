@@ -1,62 +1,68 @@
-<Window
-  xmlns="https://github.com/avaloniaui"
-  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  xmlns:i="using:Avalonia.Xaml.Interactivity"
-  xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
-  xmlns:hyper="clr-namespace:HyperText.Avalonia.Controls;assembly=HyperText.Avalonia"
-  xmlns:anim="https://github.com/whistyun/AnimatedImage.Avalonia"
-  mc:Ignorable="d"
-  d:DesignWidth="800"
-  d:DesignHeight="450"
-  xmlns:vm="using:Dots.ViewModels"
-  xmlns:models="using:Dots.Models"
-  xmlns:helpers="using:Dots.Helpers"
-  xmlns:data="using:Dots.Data"
-  x:Class="Dots.MainWindow"
-  x:DataType="vm:MainViewModel"
-  Icon="/Assets/iconlogo.png"
-  x:Name="PageSelf"
-  Title="Dots">
-  <Grid
-    RowDefinitions="64,*"
-    Background="{StaticResource Background}">
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="using:Avalonia.Xaml.Interactivity"
+        xmlns:ia="using:Avalonia.Xaml.Interactions.Core"
+        xmlns:hyper="clr-namespace:HyperText.Avalonia.Controls;assembly=HyperText.Avalonia"
+        xmlns:anim="https://github.com/whistyun/AnimatedImage.Avalonia"
+        mc:Ignorable="d"
+        d:DesignWidth="800"
+        d:DesignHeight="450"
+        xmlns:vm="using:Dots.ViewModels"
+        xmlns:models="using:Dots.Models"
+        xmlns:helpers="using:Dots.Helpers"
+        xmlns:data="using:Dots.Data"
+        x:Class="Dots.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/iconlogo.png"
+        x:Name="PageSelf"
+        Title="Dots">
+  <Window.Styles>
+    <Style Selector="FlyoutPresenter.DotsFlyout">
+      <Setter Property="Background"
+              Value="{StaticResource Background}" />
+      <Setter Property="BorderThickness"
+              Value="0" />
+      <Setter Property="Margin"
+              Value="0,4,4,0" />
+      <Setter Property="Width"
+              Value="200" />
+    </Style>
+
+  </Window.Styles>
+  <Grid RowDefinitions="64,*"
+        Background="{StaticResource Background}">
     <Grid Grid.Row="0">
-      <StackPanel
-        Orientation="Horizontal"
-        Margin="12,4,0,0"
-        Spacing="12">
-        <Image
-          x:Name="img"
-          ZIndex="99999"
-          Source="/Assets/logo.png"
-          Height="50"
-          Margin="0,-5,0,0"
-          Tapped="Logo_Tapped">
+      <StackPanel Orientation="Horizontal"
+                  Margin="12,4,0,0"
+                  Spacing="12">
+        <Image x:Name="img"
+               ZIndex="99999"
+               Source="/Assets/logo.png"
+               Height="50"
+               Margin="0,-5,0,0"
+               Tapped="Logo_Tapped">
           <Image.Styles>
             <Style Selector="Image">
               <Setter Property="Transitions">
                 <Transitions>
-                  <TransformOperationsTransition
-                    Property="RenderTransform"
-                    Duration="0:0:0.15"
-                    Easing="CircularEaseInOut" />
+                  <TransformOperationsTransition Property="RenderTransform"
+                                                 Duration="0:0:0.15"
+                                                 Easing="CircularEaseInOut" />
                 </Transitions>
               </Setter>
             </Style>
             <Style Selector="Image:pointerover">
               <Style.Setters>
-                <Setter
-                  Property="RenderTransform"
-                  Value="scale(0.9)" />
+                <Setter Property="RenderTransform"
+                        Value="scale(0.9)" />
               </Style.Setters>
             </Style>
             <Style Selector="Image">
               <Style.Setters>
-                <Setter
-                  Property="RenderTransform"
-                  Value="scale(1.0)" />
+                <Setter Property="RenderTransform"
+                        Value="scale(1.0)" />
 
               </Style.Setters>
             </Style>
@@ -64,679 +70,671 @@
           </Image.Styles>
         </Image>
         <StackPanel Orientation="Vertical">
-          <TextBlock
-            Text="Dots"
-            FontFamily="{StaticResource SpaceGroteskBold}"
-            TextAlignment="Left"
-            Margin="-1.7,0,0,0"
-            FontSize="22" />
-          <TextBlock
-            FontSize="14"
-            TextAlignment="Left"
-            FontFamily="{StaticResource SpaceGrotesk}">
+          <TextBlock Text="Dots"
+                     FontFamily="{StaticResource SpaceGroteskBold}"
+                     TextAlignment="Left"
+                     Margin="-1.7,0,0,0"
+                     FontSize="22" />
+          <TextBlock FontSize="14"
+                     TextAlignment="Left"
+                     FontFamily="{StaticResource SpaceGrotesk}">
             <Run Text="Updated at" />
             <Run Text="{Binding LastUpdated}" />
           </TextBlock>
         </StackPanel>
       </StackPanel>
-      <TextBox
-        x:Name="MainSearchBar"
-        Background="{StaticResource BackgroundDarker}"
-        BorderThickness="0"
-        TextChanged="TextBox_TextChanged"
-        FontFamily="{StaticResource SpaceGrotesk}"
-        Width="320"
-        FontSize="12"
-        Height="32"
-        Margin="0,8,0,0"
-        VerticalContentAlignment="Center"
-        VerticalAlignment="Center"
-        Watermark="Search..." />
-      <StackPanel
-        Orientation="Horizontal"
-        IsVisible="true"
-        HorizontalAlignment="Right"
-        Margin="0,18,0,0">
-        <Button
-          Background="Transparent"
-          Foreground="White"
-          Padding="0"
-          Content="{x:Static helpers:LucideIcons.Cloudy}"
-          FontFamily="{StaticResource LucideIcons}"
-          FontSize="15"
-          Command="{Binding ToggleOnlineCommand}"
-          Classes.Installed="{Binding ShowOnline}"
-          Classes.NotInstalled="{Binding !ShowOnline}"
-          HorizontalContentAlignment="Center"
-          VerticalContentAlignment="Center"
-          Width="30"
-          Height="30">
-          <Button.Styles>
-            <Style Selector="Button.Installed">
-              <Style.Setters>
-                <Setter
-                  Property="Opacity"
-                  Value="1.0" />
-              </Style.Setters>
-            </Style>
-            <Style Selector="Button.NotInstalled">
-              <Style.Setters>
-                <Setter
-                  Property="Opacity"
-                  Value="0.3" />
-              </Style.Setters>
-            </Style>
-          </Button.Styles>
-        </Button>
-        <Button
-          Background="Transparent"
-          Foreground="White"
-          Padding="0"
-          Content="{x:Static helpers:LucideIcons.HardDrive}"
-          FontFamily="{StaticResource LucideIcons}"
-          FontSize="15"
-          Command="{Binding ToggleInstalledCommand}"
-          HorizontalContentAlignment="Center"
-          VerticalContentAlignment="Center"
-          Classes.Installed="{Binding ShowInstalled}"
-          Classes.NotInstalled="{Binding !ShowInstalled}"
-          Width="30"
-          Height="30">
-          <Button.Styles>
-            <Style Selector="Button.Installed">
-              <Style.Setters>
-                <Setter
-                  Property="Opacity"
-                  Value="1.0" />
-              </Style.Setters>
-            </Style>
-            <Style Selector="Button.NotInstalled">
-              <Style.Setters>
-                <Setter
-                  Property="Opacity"
-                  Value="0.3" />
-              </Style.Setters>
-            </Style>
-          </Button.Styles>
-        </Button>
-        <Button
-          IsVisible="false"
-          Background="Transparent"
-          Foreground="White"
-          Padding="0"
-          Content="{x:Static helpers:LucideIcons.SquareDot}"
-          FontFamily="{StaticResource LucideIcons}"
-          FontSize="15"
-          Command="{Binding ToggleSelectionCommand}"
-          HorizontalContentAlignment="Center"
-          VerticalContentAlignment="Center"
-          Width="30"
-          Height="30" />
-        <Button
-          Background="Transparent"
-          Foreground="White"
-          Padding="0"
-          Content="{x:Static helpers:LucideIcons.RefreshCcw}"
-          FontFamily="{StaticResource LucideIcons}"
-          FontSize="15"
-          Command="{Binding ListSdksCommand}"
-          HorizontalContentAlignment="Center"
-          VerticalContentAlignment="Center"
-          Width="30"
-          Height="30" />
-        <Button
-          Background="Transparent"
-          Foreground="White"
-          IsVisible="False"
-          Padding="0"
-          Content="{x:Static helpers:LucideIcons.Wrench}"
-          FontFamily="{StaticResource LucideIcons}"
-          FontSize="15"
-          Command="{Binding OpenSettingsCommand}"
-          HorizontalContentAlignment="Center"
-          VerticalContentAlignment="Center"
-          Width="30"
-          Height="30" />
+      <TextBox x:Name="MainSearchBar"
+               Background="{StaticResource BackgroundDarker}"
+               BorderThickness="0"
+               TextChanged="TextBox_TextChanged"
+               FontFamily="{StaticResource SpaceGrotesk}"
+               Width="320"
+               FontSize="12"
+               Height="32"
+               Margin="0,8,0,0"
+               VerticalContentAlignment="Center"
+               VerticalAlignment="Center"
+               Watermark="Search..." />
+      <StackPanel Orientation="Horizontal"
+                  IsVisible="true"
+                  HorizontalAlignment="Right"
+                  Margin="0,18,0,0">
+        <Button IsVisible="false"
+                Background="Transparent"
+                Foreground="White"
+                Padding="0"
+                Content="{x:Static helpers:LucideIcons.SquareDot}"
+                FontFamily="{StaticResource LucideIcons}"
+                FontSize="15"
+                Command="{Binding ToggleSelectionCommand}"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Width="30"
+                Height="30" />
+        <Button Background="Transparent"
+                Foreground="White"
+                Padding="0"
+                Content="{x:Static helpers:LucideIcons.RefreshCcw}"
+                FontFamily="{StaticResource LucideIcons}"
+                FontSize="15"
+                Command="{Binding ListSdksCommand}"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Width="30"
+                Height="30" />
+        <Button Background="Transparent"
+                Foreground="White"
+                Padding="0"
+                Content="{x:Static helpers:LucideIcons.Wrench}"
+                FontFamily="{StaticResource LucideIcons}"
+                FontSize="15"
+                Command="{Binding OpenSettingsCommand}"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Width="30"
+                Height="30" />
       </StackPanel>
     </Grid>
-    <Grid
-      Grid.Row="1"
-      ColumnDefinitions="*,Auto"
-      Background="{StaticResource BackgroundSubtle}">
-      <SplitView
-        x:Name="MainSplitView"
-        IsPaneOpen="{Binding ShowDetails}"
-        PanePlacement="Right"
-        CompactPaneLength="30"
-        DisplayMode="CompactInline"
-        OpenPaneLength="200">
+    <Grid Grid.Row="1"
+          ColumnDefinitions="*,Auto"
+          Background="{StaticResource BackgroundSubtle}">
+      <SplitView x:Name="MainSplitView"
+                 IsPaneOpen="{Binding ShowDetails}"
+                 PanePlacement="Right"
+                 CompactPaneLength="30"
+                 DisplayMode="CompactInline"
+                 OpenPaneLength="200">
         <SplitView.Content>
-          <ListBox
-            x:Name="SdkList"
-            ItemsSource="{Binding Sdks.View}"
-            Background="Transparent">
+          <ListBox x:Name="SdkList"
+                   ItemsSource="{Binding Sdks.View}"
+                   Background="Transparent">
             <ListBox.Styles>
               <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-                <Setter
-                  Property="Background"
-                  Value="{StaticResource Background}" />
+                <Setter Property="Background"
+                        Value="{StaticResource Background}" />
               </Style>
               <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter">
-                <Setter
-                  Property="Background"
-                  Value="{StaticResource BackgroundLighter}" />
+                <Setter Property="Background"
+                        Value="{StaticResource BackgroundLighter}" />
               </Style>
             </ListBox.Styles>
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="models:Sdk">
-                <Grid
-                  Tapped="SdkItem_Tapped"
-                  Height="43"
-                  Background="Transparent"
-                  ColumnDefinitions="Auto,*,Auto"
-                  Margin="0,0,4,0">
-                  <Border
-                    Width="43"
-                    Height="43"
-                    Background="{Binding Color}"
-                    BorderThickness="0"
-                    CornerRadius="10">
-                    <TextBlock
-                      Text="{Binding Group}"
-                      FontFamily="{StaticResource SpaceGroteskBold}"
-                      FontSize="16"
-                      HorizontalAlignment="Center"
-                      VerticalAlignment="Center" />
+                <Grid Tapped="SdkItem_Tapped"
+                      Height="43"
+                      Background="Transparent"
+                      ColumnDefinitions="Auto,*,Auto"
+                      Margin="0,0,4,0">
+                  <Border Width="44"
+                          Height="44"
+                          Background="{Binding Color}"
+                          BorderThickness="0"
+                          CornerRadius="22">
+                    <TextBlock Text="{Binding Group}"
+                               FontFamily="{StaticResource SpaceGroteskBold}"
+                               FontSize="25"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
                   </Border>
-                  <StackPanel
-                    Orientation="Vertical"
-                    VerticalAlignment="Center"
-                    Grid.Column="1"
-                    Margin="8,0,0,0">
+                  <StackPanel Orientation="Vertical"
+                              VerticalAlignment="Center"
+                              Grid.Column="1"
+                              Margin="8,0,0,0">
                     <TextBlock Text="{Binding VersionDisplay}" />
-                    <TextBlock
-                      Text="{Binding Path}"
-                      IsVisible="{Binding Path, Converter={StaticResource StringIsNullOrEmptyConverter}}"
-                      FontSize="11" />
+                    <TextBlock Text="{Binding Path}"
+                               IsVisible="{Binding Path, Converter={StaticResource StringIsNullOrEmptyConverter}}"
+                               FontSize="11" />
                   </StackPanel>
-                  <StackPanel
-                    Orientation="Horizontal"
-                    Grid.Column="2"
-                    VerticalAlignment="Center">
-                    <Border
-                      Height="20"
-                      Padding="6,0"
-                      Margin="0,0,6,0"
-                      Background="{StaticResource Danger}"
-                      VerticalAlignment="Center"
-                      IsVisible="{Binding Data.Security}"
-                      CornerRadius="10">
+                  <StackPanel Orientation="Horizontal"
+                              Grid.Column="2"
+                              VerticalAlignment="Center">
+                    <Border Height="20"
+                            Padding="6,0"
+                            Margin="0,0,6,0"
+                            Background="{StaticResource Danger}"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding Data.Security}"
+                            CornerRadius="10">
 
-                      <TextBlock
-                        VerticalAlignment="Center"
-                        Text="Security Patch"
-                        FontSize="10" />
+                      <TextBlock VerticalAlignment="Center"
+                                 Text="Security Patch"
+                                 FontSize="10" />
                     </Border>
-                    <Border
-                      Height="20"
-                      IsVisible="{Binding Data.Preview}"
-                      Padding="6,0"
-                      Margin="0,0,6,0"
-                      Background="{StaticResource Attention}"
-                      VerticalAlignment="Center"
-                      CornerRadius="10">
-                      <TextBlock
-                        VerticalAlignment="Center"
-                        Text="Preview"
-                        FontSize="10" />
+                    <Border Height="20"
+                            IsVisible="{Binding Data.Preview}"
+                            Padding="6,0"
+                            Margin="0,0,6,0"
+                            Background="{StaticResource Attention}"
+                            VerticalAlignment="Center"
+                            CornerRadius="10">
+                      <TextBlock VerticalAlignment="Center"
+                                 Text="Preview"
+                                 FontSize="10" />
                     </Border>
                     <StackPanel>
-                        <StackPanel Width="230" IsVisible="{Binding IsBusy}">
-                          <TextBlock Text="{Binding StatusMessage}" HorizontalAlignment="Center" />
-                          <StackPanel Orientation="Horizontal">
+                      <StackPanel Width="230"
+                                  IsVisible="{Binding IsBusy}">
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   HorizontalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal">
                           <ProgressBar IsIndeterminate="false"
                                        Minimum="0"
                                        Maximum="100"
                                        ShowProgressText="true"
                                        Value="{Binding ProgressTask.Value}"
                                        Height="20"
-      Margin="6,0,6,0"
-      Foreground="White"
-      IsVisible="True"
-      HorizontalAlignment="Center" />
-                            <Button
-  Background="Transparent"
-  Foreground="White"
-  Padding="0"
-  Content="{x:Static helpers:LucideIcons.StopCircle}"
-  FontFamily="{StaticResource LucideIcons}"
-  FontSize="15"
-  HorizontalContentAlignment="Center"
-  VerticalContentAlignment="Center"
-  Width="30"
-  Height="30" />
-                            </StackPanel>
+                                       Margin="6,0,6,0"
+                                       Foreground="White"
+                                       IsVisible="True"
+                                       HorizontalAlignment="Center" />
+                          <Button Background="Transparent"
+                                  Foreground="White"
+                                  Padding="0"
+                                  Content="{x:Static helpers:LucideIcons.StopCircle}"
+                                  FontFamily="{StaticResource LucideIcons}"
+                                  FontSize="15"
+                                  HorizontalContentAlignment="Center"
+                                  VerticalContentAlignment="Center"
+                                  Width="30"
+                                  Height="30" />
                         </StackPanel>
-                    <StackPanel Orientation="Horizontal" IsVisible="{Binding !IsBusy}">
-                    <Button
-                      Padding="0"
-                      HorizontalContentAlignment="Center"
-                      VerticalContentAlignment="Center"
-                      Height="32"
-                      Width="100"
-                      FontSize="12"
-                      Background="DarkGray"
-                      Foreground="White"
-                      Margin="12,0,6,0"
-                      FontFamily="Default"
-                      VerticalAlignment="Center"
-                      Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.OpenOrDownloadCommand}"
-                      CommandParameter="{Binding .}"
-                      Classes.Installed="{Binding Installed}"
-                      Classes.NotInstalled="{Binding !Installed}"
-                      Grid.Column="2">
-                      <Button.Styles>
-                        <Style Selector="Button.Installed">
-                          <Style.Setters>
-                            <Setter
-                              Property="Content"
-                              Value="Open" />
-                          </Style.Setters>
-                        </Style>
-                        <Style Selector="Button.NotInstalled">
-                          <Style.Setters>
-                            <Setter
-                              Property="Content"
-                              Value="Download" />
-                          </Style.Setters>
-                        </Style>
-                      </Button.Styles>
-                    </Button>
-                    <Button
-                      Height="32"
-                      Width="100"
-                      FontSize="12"
-                      Foreground="White"
-                      Margin="0,0,12,0"
-                      Padding="0"
-                      HorizontalContentAlignment="Center"
-                      VerticalContentAlignment="Center"
-                      FontFamily="Default"
-                      VerticalAlignment="Center"
-                      Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.InstallOrUninstallCommand}"
-                      CommandParameter="{Binding .}"
-                      Classes.Installed="{Binding Installed}"
-                      Classes.NotInstalled="{Binding !Installed}"
-                      Grid.Column="2">
-                      <Button.Styles>
-                        <Style Selector="Button.Installed">
-                          <Style.Setters>
-                            <Setter
-                              Property="Background"
-                              Value="{StaticResource Danger}" />
-                          </Style.Setters>
-                        </Style>
-                        <Style Selector="Button.NotInstalled">
-                          <Style.Setters>
-                            <Setter
-                              Property="Background"
-                              Value="{StaticResource Accent}" />
-                          </Style.Setters>
-                        </Style>
-                        <Style Selector="Button.Installed">
-                          <Style.Setters>
-                            <Setter
-                              Property="Content"
-                              Value="Uninstall" />
-                          </Style.Setters>
-                        </Style>
-                        <Style Selector="Button.NotInstalled">
-                          <Style.Setters>
-                            <Setter
-                              Property="Content"
-                              Value="Install" />
-                          </Style.Setters>
-                        </Style>
-                      </Button.Styles>
-                    </Button>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal"
+                                  IsVisible="{Binding !IsBusy}">
+                        <Button Padding="0"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Height="32"
+                                Width="100"
+                                FontSize="12"
+                                Background="DarkGray"
+                                Foreground="White"
+                                Margin="12,0,6,0"
+                                FontFamily="Default"
+                                VerticalAlignment="Center"
+                                Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.OpenOrDownloadCommand}"
+                                CommandParameter="{Binding .}"
+                                Classes.Installed="{Binding Installed}"
+                                Classes.NotInstalled="{Binding !Installed}"
+                                Grid.Column="2">
+                          <Button.Styles>
+                            <Style Selector="Button.Installed">
+                              <Style.Setters>
+                                <Setter Property="Content"
+                                        Value="Open" />
+                              </Style.Setters>
+                            </Style>
+                            <Style Selector="Button.NotInstalled">
+                              <Style.Setters>
+                                <Setter Property="Content"
+                                        Value="Download" />
+                              </Style.Setters>
+                            </Style>
+                          </Button.Styles>
+                        </Button>
+                        <Button Height="32"
+                                Width="100"
+                                FontSize="12"
+                                Foreground="White"
+                                Margin="0,0,12,0"
+                                Padding="0"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                FontFamily="Default"
+                                VerticalAlignment="Center"
+                                Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.InstallOrUninstallCommand}"
+                                CommandParameter="{Binding .}"
+                                Classes.Installed="{Binding Installed}"
+                                Classes.NotInstalled="{Binding !Installed}"
+                                Grid.Column="2">
+                          <Button.Styles>
+                            <Style Selector="Button.Installed">
+                              <Style.Setters>
+                                <Setter Property="Background"
+                                        Value="{StaticResource Danger}" />
+                              </Style.Setters>
+                            </Style>
+                            <Style Selector="Button.NotInstalled">
+                              <Style.Setters>
+                                <Setter Property="Background"
+                                        Value="{StaticResource Accent}" />
+                              </Style.Setters>
+                            </Style>
+                            <Style Selector="Button.Installed">
+                              <Style.Setters>
+                                <Setter Property="Content"
+                                        Value="Uninstall" />
+                              </Style.Setters>
+                            </Style>
+                            <Style Selector="Button.NotInstalled">
+                              <Style.Setters>
+                                <Setter Property="Content"
+                                        Value="Install" />
+                              </Style.Setters>
+                            </Style>
+                          </Button.Styles>
+                        </Button>
+                      </StackPanel>
                     </StackPanel>
                   </StackPanel>
-                    </StackPanel>
                 </Grid>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
         </SplitView.Content>
         <SplitView.Pane>
-          <Grid
-            ColumnDefinitions="30,*"
-            Background="{StaticResource BackgroundSubtle}">
+          <Grid ColumnDefinitions="30,*"
+                Background="{StaticResource BackgroundSubtle}">
 
-            <Button
-              Grid.Column="0"
-              Background="{StaticResource Background}"
-              Foreground="White"
-              Content="{x:Static helpers:LucideIcons.ChevronsLeft}"
-              FontFamily="{StaticResource LucideIcons}"
-              FontSize="15"
-              HorizontalContentAlignment="Center"
-              VerticalContentAlignment="Center"
-              VerticalAlignment="Bottom"
-              HorizontalAlignment="Left"
-              Width="36"
-              Height="40"
-              CornerRadius="20,0,0,20"
-              Padding="0"
-              Margin="0,0,0,-1"
-              x:Name="ToggleDetailsButton"
-              Tapped="ToggleDetails_Tapped" />
+            <Button x:Name="FilterButton"
+                    Grid.Column="0"
+                    Background="{StaticResource Background}"
+                    Foreground="White"
+                    Content="{Binding SelectedFilterIcon}"
+                    FontFamily="{StaticResource LucideIcons}"
+                    FontSize="15"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Left"
+                    Width="36"
+                    Height="40"
+                    CornerRadius="0,0,0,8"
+                    Padding="0"
+                    Margin="0,-1,0,-1">
+              <Button.Flyout>
+                <Flyout Placement="LeftEdgeAlignedTop"
+                        FlyoutPresenterClasses="DotsFlyout">
+                  <StackPanel Background="{StaticResource Background}">
+                    <Button HorizontalAlignment="Stretch"
+                            Command="{Binding ApplyFilterCommand}"
+                            CommandParameter="0"
+                            Tapped="Filter_Tapped">
+                      <StackPanel Orientation="Horizontal"
+                                  Height="20"
+                                  Margin="4">
+                        <TextBlock Text="{x:Static helpers:LucideIcons.ListFilter}"
+                                   FontFamily="{StaticResource LucideIcons}"
+                                   FontSize="15"
+                                   Margin="0,0,8,0" />
+                        <TextBlock Text="All" />
+                      </StackPanel>
+                    </Button>
+                    <Button HorizontalAlignment="Stretch"
+                            Command="{Binding ApplyFilterCommand}"
+                            CommandParameter="1"
+                            Tapped="Filter_Tapped">
+                      <StackPanel Orientation="Horizontal"
+                                  Height="20"
+                                  Margin="4">
+                        <TextBlock Text="{x:Static helpers:LucideIcons.Cloudy}"
+                                   FontFamily="{StaticResource LucideIcons}"
+                                   FontSize="15"
+                                   Margin="0,0,8,0" />
+                        <TextBlock Text="Online" />
+                      </StackPanel>
+                    </Button>
+                    <Button HorizontalAlignment="Stretch"
+                            Command="{Binding ApplyFilterCommand}"
+                            CommandParameter="2"
+                            Tapped="Filter_Tapped">
+                      <StackPanel Orientation="Horizontal"
+                                  Height="20"
+                                  Margin="4">
+                        <TextBlock Text="{x:Static helpers:LucideIcons.HardDrive}"
+                                   FontFamily="{StaticResource LucideIcons}"
+                                   FontSize="15"
+                                   Margin="0,0,8,0" />
+                        <TextBlock Text="Installed" />
 
-            <Grid
-              x:Name="DetailsPanel"
-              Grid.Column="1"
-              Background="{StaticResource Background}"
-              DataContext="{Binding SelectedSdk}">
-              <!--<BoxView
-                Background="{StaticResource Background}"
-                Width="2"
-                HorizontalAlignment="Start"
-                VerticalAlignment="FillAndExpand" />-->
-              <StackPanel
-                Margin="20"
-                VerticalAlignment="Center"
-                IsVisible="{ReflectionBinding ElementName=PageSelf, Path=DataContext.SelectedSdk, Converter={x:Static ObjectConverters.IsNull}}">
-                <Image
-                  Source="/Assets/logo_nothing.png"
-                  Stretch="UniformToFill"
-                  Margin="20,0,20,20" />
-                <TextBlock
-                  Text="It's empty here"
-                  HorizontalAlignment="Center"
-                  FontFamily="{StaticResource SpaceGroteskBold}" />
-                <TextBlock
-                  Text="Select an SDK to view details"
-                  HorizontalAlignment="Center" />
+                      </StackPanel>
+                    </Button>
+
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Grid.Column="0"
+                    Background="{StaticResource Background}"
+                    Foreground="White"
+                    Content="{x:Static helpers:LucideIcons.ChevronsLeft}"
+                    FontFamily="{StaticResource LucideIcons}"
+                    FontSize="15"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Left"
+                    Width="36"
+                    Height="40"
+                    CornerRadius="8,0,0,0"
+                    Padding="0"
+                    Margin="0,0,0,-1"
+                    x:Name="ToggleDetailsButton"
+                    Tapped="ToggleDetails_Tapped" />
+
+            <Grid x:Name="DetailsPanel"
+                  Grid.Column="1"
+                  Background="{StaticResource Background}"
+                  DataContext="{Binding SelectedSdk}">
+              <!-- EMPTY -->
+              <StackPanel Margin="20"
+                          VerticalAlignment="Center"
+                          IsVisible="{ReflectionBinding ElementName=PageSelf, Path=DataContext.SelectedSdk, Converter={x:Static ObjectConverters.IsNull}}">
+                <Image Source="/Assets/logo_nothing.png"
+                       Stretch="UniformToFill"
+                       Margin="20,0,20,20" />
+                <TextBlock Text="It's empty here"
+                           HorizontalAlignment="Center"
+                           FontFamily="{StaticResource SpaceGroteskBold}" />
+                <TextBlock Text="Select an SDK to view details"
+                           HorizontalAlignment="Center" />
 
               </StackPanel>
 
               <ScrollViewer IsVisible="{ReflectionBinding ElementName=PageSelf, Path=DataContext.SelectedSdk, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <StackPanel
-                  x:DataType="models:Sdk"
-                  Margin="12,0,0,0">
-                  <Border
-                    Width="70"
-                    Height="70"
-                    Background="{Binding Color}"
-                    CornerRadius="16"
-                    Margin="0,0,0,6">
-                    <TextBlock
-                      Text="{Binding Group}"
-                      FontFamily="{StaticResource SpaceGroteskBold}"
-                      FontSize="32"
-                      HorizontalAlignment="Center"
-                      VerticalAlignment="Center" />
-                  </Border>
-                  <TextBlock
-                    Text="{Binding Data.Sdk.Version}"
-                    FontSize="20" />
-                  <StackPanel Orientation="Horizontal">
-                    <Border
-                      Height="20"
-                      Padding="6,0"
-                      Margin="0,0,6,0"
-                      Background="{StaticResource Danger}"
-                      VerticalAlignment="Center"
-                      CornerRadius="10"
-                      IsVisible="{Binding Data.Security}">
-                      <TextBlock
-                        VerticalAlignment="Center"
-                        Text="Security Patch"
-                        FontSize="10" />
+                <StackPanel>
+                  <!-- DATA IS NULL -->
+                  <StackPanel IsVisible="{ReflectionBinding ElementName=PageSelf, Path=DataContext.SelectedSdk.Data, Converter={x:Static ObjectConverters.IsNull}}"
+                              Margin="12,0,0,0">
+                    <Border Width="70"
+                            Height="70"
+                            Background="{Binding Color}"
+                            CornerRadius="16"
+                            Margin="0,0,0,6">
+                      <TextBlock Text="{Binding Group}"
+                                 FontFamily="{StaticResource SpaceGroteskBold}"
+                                 FontSize="32"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center" />
                     </Border>
-                    <Border
-                      Height="20"
-                      IsVisible="{Binding Data.Preview}"
-                      Padding="6,0"
-                      Margin="0,0,6,0"
-                      Background="{StaticResource Attention}"
-                      CornerRadius="10"
-                      VerticalAlignment="Center">
-                      <TextBlock
-                        VerticalAlignment="Center"
-                        Text="Preview"
-                        FontSize="10" />
-                    </Border>
+                    <TextBlock Text="{Binding VersionDisplay}"
+                               FontSize="20" />
+
+                    <TextBlock Margin="0,5,0,5"
+                               Text="{Binding Path}"
+                               Tapped="PathTextBlock_Tapped"
+                               FontSize="11">
+                      <TextBlock.Styles>
+                        <Style Selector="TextBlock">
+                          <Style.Setters>
+                            <Setter Property="Foreground"
+                                    Value="{StaticResource Link}" />
+                          </Style.Setters>
+                        </Style>
+                        <Style Selector="TextBlock:pointerover">
+                          <Style.Setters>
+                            <Setter Property="Foreground"
+                                    Value="{StaticResource LinkHover}" />
+                            <Setter Property="TextDecorations"
+                                    Value="Underline" />
+                            <Setter Property="Cursor"
+                                    Value="Hand" />
+                          </Style.Setters>
+                        </Style>
+                      </TextBlock.Styles>
+                    </TextBlock>
+                    <StackPanel Margin="0,50,0,0"
+                                VerticalAlignment="Bottom">
+                      <Image Source="/Assets/logo_nothing.png"
+                             Stretch="UniformToFill"
+                             Margin="20,0,20,20" />
+                      <TextBlock Text="It's empty here"
+                                 HorizontalAlignment="Center"
+                                 FontFamily="{StaticResource SpaceGroteskBold}" />
+                      <TextBlock Text="there is not much information about this SDK"
+                                 HorizontalAlignment="Center" />
+                    </StackPanel>
                   </StackPanel>
-                  <TextBlock
-                    Margin="0,5,0,5"
-                    Text="{Binding Path}"
-                    Tapped="PathTextBlock_Tapped"
-                    FontSize="11">
-                    <TextBlock.Styles>
-                      <Style Selector="TextBlock">
-                        <Style.Setters>
-                          <Setter
-                            Property="Foreground"
-                            Value="{StaticResource Link}" />
-                        </Style.Setters>
-                      </Style>
-                      <Style Selector="TextBlock:pointerover">
-                        <Style.Setters>
-                          <Setter
-                            Property="Foreground"
-                            Value="{StaticResource LinkHover}" />
-                          <Setter
-                            Property="TextDecorations"
-                            Value="Underline" />
-                          <Setter
-                            Property="Cursor"
-                            Value="Hand" />
-                        </Style.Setters>
-                      </Style>
-                    </TextBlock.Styles>
-                  </TextBlock>
-                  <StackPanel HorizontalAlignment="Left" Width="230" Spacing="4" IsVisible="{Binding IsBusy}">
-                    <TextBlock Text="{Binding StatusMessage}" HorizontalAlignment="Center" />
+
+                  <!-- DATA -->
+                  <StackPanel x:DataType="models:Sdk"
+                              Margin="12,0,0,0"
+                              IsVisible="{ReflectionBinding ElementName=PageSelf, Path=DataContext.SelectedSdk.Data, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Border Width="70"
+                            Height="70"
+                            Background="{Binding Color}"
+                            CornerRadius="16"
+                            Margin="0,0,0,6">
+                      <TextBlock Text="{Binding Group}"
+                                 FontFamily="{StaticResource SpaceGroteskBold}"
+                                 FontSize="62"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="{Binding Data.Sdk.Version}"
+                               FontSize="20" />
                     <StackPanel Orientation="Horizontal">
-                    <ProgressBar
-IsIndeterminate="True"
-Height="4"
-Margin="6,0,6,0"
-Foreground="White"
-IsVisible="True"
-HorizontalAlignment="Center" />
-                      <Button
-                        Background="Transparent"
-                        Foreground="White"
-                        Padding="0"
-                        Content="{x:Static helpers:LucideIcons.StopCircle}"
-                        FontFamily="{StaticResource LucideIcons}"
-                        FontSize="15"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Center"
-                        Width="30"
-                        Height="30" />
-                          
-                        </StackPanel>
-                  </StackPanel>
-                  <StackPanel
-                    Orientation="Horizontal"
-                    Margin="0,5,0,10"
-                    VerticalAlignment="Center"
-                     IsVisible="{Binding !IsBusy}">
-                    <Button
-                      Height="32"
-                      Width="100"
-                      Background="DarkGray"
-                      Padding="0"
-                      FontSize="12"
-                      HorizontalContentAlignment="Center"
-                      VerticalContentAlignment="Center"
-                      Margin="0,0,12,0"
-                      VerticalAlignment="Center"
-                      Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.OpenOrDownloadCommand}"
-                      CommandParameter="{Binding .}"
-                      Classes.Installed="{Binding Installed}"
-                      Classes.NotInstalled="{Binding !Installed}"
-                      Grid.Column="2">
-                          <Button.Styles>
-                            <Style Selector="Button.Installed">
-                              <Style.Setters>
-                                <Setter
-                                  Property="Content"
-                                  Value="Open" />
-                              </Style.Setters>
-                            </Style>
-                            <Style Selector="Button.NotInstalled">
-                              <Style.Setters>
-                                <Setter
-                                  Property="Content"
-                                  Value="Download" />
-                              </Style.Setters>
-                            </Style>
-                          </Button.Styles>
-
-                    </Button>
-                    <Button
-                      Content="Uninstall"
-                      Height="32"
-                      Width="100"
-                      Margin="0,0,12,0"
-                      FontSize="12"
-                      Padding="0"
-                      HorizontalContentAlignment="Center"
-                      VerticalContentAlignment="Center"
-                      VerticalAlignment="Center"
-                      Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.InstallOrUninstallCommand}"
-                      CommandParameter="{Binding .}"
-                      Classes.Installed="{Binding Installed}"
-                      Classes.NotInstalled="{Binding !Installed}"
-                      Grid.Column="2">
-                      <Button.Styles>
-                        <Style Selector="Button.Installed">
+                      <Border Height="20"
+                              Padding="6,0"
+                              Margin="0,0,6,0"
+                              Background="{StaticResource Danger}"
+                              VerticalAlignment="Center"
+                              CornerRadius="10"
+                              IsVisible="{Binding Data.Security}">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="Security Patch"
+                                   FontSize="10" />
+                      </Border>
+                      <Border Height="20"
+                              IsVisible="{Binding Data.Preview}"
+                              Padding="6,0"
+                              Margin="0,0,6,0"
+                              Background="{StaticResource Attention}"
+                              CornerRadius="10"
+                              VerticalAlignment="Center">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="Preview"
+                                   FontSize="10" />
+                      </Border>
+                    </StackPanel>
+                    <TextBlock Margin="0,5,0,5"
+                               Text="{Binding Path}"
+                               Tapped="PathTextBlock_Tapped"
+                               FontSize="11">
+                      <TextBlock.Styles>
+                        <Style Selector="TextBlock">
                           <Style.Setters>
-                            <Setter
-                              Property="Background"
-                              Value="{StaticResource Danger}" />
+                            <Setter Property="Foreground"
+                                    Value="{StaticResource Link}" />
                           </Style.Setters>
                         </Style>
-                        <Style Selector="Button.NotInstalled">
+                        <Style Selector="TextBlock:pointerover">
                           <Style.Setters>
-                            <Setter
-                              Property="Background"
-                              Value="{StaticResource Accent}" />
+                            <Setter Property="Foreground"
+                                    Value="{StaticResource LinkHover}" />
+                            <Setter Property="TextDecorations"
+                                    Value="Underline" />
+                            <Setter Property="Cursor"
+                                    Value="Hand" />
                           </Style.Setters>
                         </Style>
+                      </TextBlock.Styles>
+                    </TextBlock>
+                    <StackPanel HorizontalAlignment="Left"
+                                Margin="0,0,0,8"
+                                Width="230"
+                                Spacing="4"
+                                IsVisible="{Binding IsBusy}">
+                      <TextBlock Text="{Binding StatusMessage}"
+                                 HorizontalAlignment="Center" />
+                      <StackPanel Orientation="Horizontal">
+                        <ProgressBar IsIndeterminate="false"
+                                     Value="{Binding ProgressTask.Value}"
+                                     Minimum="0"
+                                     Maximum="100"
+                                     ShowProgressText="True"
+                                     Height="20"
+                                     Margin="6,0,6,0"
+                                     Foreground="White"
+                                     IsVisible="True"
+                                     HorizontalAlignment="Center" />
+                        <Button Background="Transparent"
+                                Foreground="White"
+                                Padding="0"
+                                Content="{x:Static helpers:LucideIcons.StopCircle}"
+                                FontFamily="{StaticResource LucideIcons}"
+                                FontSize="15"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Width="30"
+                                Height="30" />
 
-                            <Style Selector="Button.Installed">
-                              <Style.Setters>
-                                <Setter
-                                  Property="Content"
-                                  Value="Uninstall" />
-                              </Style.Setters>
-                            </Style>
-                            <Style Selector="Button.NotInstalled">
-                              <Style.Setters>
-                                <Setter
-                                  Property="Content"
-                                  Value="Install" />
-                              </Style.Setters>
-                            </Style>
-                          </Button.Styles>
-                    </Button>
-                  </StackPanel>
-                  <TextBlock
-                    Text="Release Notes"
-                    FontWeight="Bold" />
-
-                  <hyper:Hyperlink
-                    x:Name="ReleaseNotesText"
-                    Alias="{Binding Data.ReleaseNotes}"
-                    TextWrapping="Wrap"
-                    Margin="0,0,12,0"
-                    HorizontalAlignment="Left"
-                    Url="{Binding Data.ReleaseNotes}" />
-
-                  <TextBlock
-                    Text="Release Date"
-                    FontWeight="Bold"
-                    Margin="0,12,0,0" />
-                  <TextBlock Text="{Binding Data.ReleaseDate}" />
-                  <TextBlock
-                    Text="Runtime Version"
-                    FontWeight="Bold"
-                    Margin="0,12,0,0" />
-                  <TextBlock Text="{Binding Data.Sdk.RuntimeVersion}" />
-                  <TextBlock
-                    Text="C# Version"
-                    FontWeight="Bold"
-                    Margin="0,12,0,0" />
-                  <TextBlock Text="{Binding Data.Sdk.CsharpVersion}" />
-                  <TextBlock
-                    Text="F# Version"
-                    FontWeight="Bold"
-                    Margin="0,12,0,0" />
-                  <TextBlock Text="{Binding Data.Sdk.FsharpVersion}" />
-                  <TextBlock
-                    Text="VB Version"
-                    FontWeight="Bold"
-                    Margin="0,12,0,0" />
-                  <TextBlock Text="{Binding Data.Sdk.VbVersion}" />
-                  <TextBlock
-                    Text="Visual Studio Support"
-                    FontWeight="Bold"
-                    Margin="0,12,0,0" />
-                  <TextBlock Text="{Binding Data.Sdk.VsSupport}" />
-                  <TextBlock Text="{Binding Data.Sdk.VsVersion}" />
-                  <TextBlock
-                    Text="Visual Studio Mac Support"
-                    FontWeight="Bold"
-                    Margin="0,12,0,0" />
-                  <TextBlock Text="{Binding Data.Sdk.VsMacSupport}" />
-                  <TextBlock Text="{Binding Data.Sdk.VsMacVersion}" />
-                  <TextBlock
-                    Text="Download Files"
-                    FontWeight="Bold"
-                    Margin="0,12,0,0" />
-                  <ItemsControl
-                    ItemsSource="{Binding Data.Sdk.Files}"
-                    Background="Transparent">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate x:DataType="data:FileInfo">
-                        <StackPanel
-                          Height="50"
-                          Orientation="Horizontal"
-                          Spacing="8"
-                          Margin="8">
-                          <Border
-                            Background="#5effffff"
-                            Height="50"
-                            Width="50"
-                            CornerRadius="25"
-                            Padding="2">
-                            <TextBlock
+                      </StackPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal"
+                                Margin="0,5,0,10"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding !IsBusy}">
+                      <Button Height="32"
+                              Width="100"
+                              Background="DarkGray"
+                              Padding="0"
+                              FontSize="12"
+                              HorizontalContentAlignment="Center"
+                              VerticalContentAlignment="Center"
+                              Margin="0,0,12,0"
                               VerticalAlignment="Center"
-                              HorizontalAlignment="Center"
-                              TextAlignment="Center"
-                              Width="50"
-                              FontSize="30"
-                              Text="{Binding Rid, Converter={StaticResource RidToIconConverter}}" />
-                          </Border>
-                          <StackPanel
-                            Spacing="2"
-                            VerticalAlignment="Center">
-                            <TextBlock
+                              Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.OpenOrDownloadCommand}"
+                              CommandParameter="{Binding .}"
+                              Classes.Installed="{Binding Installed}"
+                              Classes.NotInstalled="{Binding !Installed}"
+                              Grid.Column="2">
+                        <Button.Styles>
+                          <Style Selector="Button.Installed">
+                            <Style.Setters>
+                              <Setter Property="Content"
+                                      Value="Open" />
+                            </Style.Setters>
+                          </Style>
+                          <Style Selector="Button.NotInstalled">
+                            <Style.Setters>
+                              <Setter Property="Content"
+                                      Value="Download" />
+                            </Style.Setters>
+                          </Style>
+                        </Button.Styles>
+
+                      </Button>
+                      <Button Content="Uninstall"
+                              Height="32"
+                              Width="100"
+                              Margin="0,0,12,0"
+                              FontSize="12"
+                              Padding="0"
+                              HorizontalContentAlignment="Center"
+                              VerticalContentAlignment="Center"
                               VerticalAlignment="Center"
-                              Text="{Binding Rid}" />
-                            <hyper:Hyperlink
-                              Alias="{Binding Name}"
-                              Url="{Binding Url}" />
+                              Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.InstallOrUninstallCommand}"
+                              CommandParameter="{Binding .}"
+                              Classes.Installed="{Binding Installed}"
+                              Classes.NotInstalled="{Binding !Installed}"
+                              Grid.Column="2">
+                        <Button.Styles>
+                          <Style Selector="Button.Installed">
+                            <Style.Setters>
+                              <Setter Property="Background"
+                                      Value="{StaticResource Danger}" />
+                            </Style.Setters>
+                          </Style>
+                          <Style Selector="Button.NotInstalled">
+                            <Style.Setters>
+                              <Setter Property="Background"
+                                      Value="{StaticResource Accent}" />
+                            </Style.Setters>
+                          </Style>
+
+                          <Style Selector="Button.Installed">
+                            <Style.Setters>
+                              <Setter Property="Content"
+                                      Value="Uninstall" />
+                            </Style.Setters>
+                          </Style>
+                          <Style Selector="Button.NotInstalled">
+                            <Style.Setters>
+                              <Setter Property="Content"
+                                      Value="Install" />
+                            </Style.Setters>
+                          </Style>
+                        </Button.Styles>
+                      </Button>
+                    </StackPanel>
+                    <TextBlock Text="Release Notes"
+                               FontWeight="Bold" />
+
+                    <hyper:Hyperlink x:Name="ReleaseNotesText"
+                                     Alias="{Binding Data.ReleaseNotes}"
+                                     TextWrapping="Wrap"
+                                     Margin="0,0,12,0"
+                                     HorizontalAlignment="Left"
+                                     Url="{Binding Data.ReleaseNotes}" />
+
+                    <TextBlock Text="Release Date"
+                               FontWeight="Bold"
+                               Margin="0,12,0,0" />
+                    <TextBlock Text="{Binding Data.ReleaseDate}" />
+                    <TextBlock Text="Runtime Version"
+                               FontWeight="Bold"
+                               Margin="0,12,0,0" />
+                    <TextBlock Text="{Binding Data.Sdk.RuntimeVersion}" />
+                    <TextBlock Text="C# Version"
+                               FontWeight="Bold"
+                               Margin="0,12,0,0" />
+                    <TextBlock Text="{Binding Data.Sdk.CsharpVersion}" />
+                    <TextBlock Text="F# Version"
+                               FontWeight="Bold"
+                               Margin="0,12,0,0" />
+                    <TextBlock Text="{Binding Data.Sdk.FsharpVersion}" />
+                    <TextBlock Text="VB Version"
+                               FontWeight="Bold"
+                               Margin="0,12,0,0" />
+                    <TextBlock Text="{Binding Data.Sdk.VbVersion}" />
+                    <TextBlock Text="Visual Studio Support"
+                               FontWeight="Bold"
+                               Margin="0,12,0,0" />
+                    <TextBlock Text="{Binding Data.Sdk.VsSupport}" />
+                    <TextBlock Text="{Binding Data.Sdk.VsVersion}" />
+                    <TextBlock Text="Visual Studio Mac Support"
+                               FontWeight="Bold"
+                               Margin="0,12,0,0" />
+                    <TextBlock Text="{Binding Data.Sdk.VsMacSupport}" />
+                    <TextBlock Text="{Binding Data.Sdk.VsMacVersion}" />
+                    <TextBlock Text="Download Files"
+                               FontWeight="Bold"
+                               Margin="0,12,0,0" />
+                    <ItemsControl ItemsSource="{Binding Data.Sdk.Files}"
+                                  Background="Transparent">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="data:FileInfo">
+                          <StackPanel Height="50"
+                                      Orientation="Horizontal"
+                                      Spacing="8"
+                                      Margin="8">
+                            <Border Background="#5effffff"
+                                    Height="50"
+                                    Width="50"
+                                    CornerRadius="25"
+                                    Padding="2">
+                              <TextBlock VerticalAlignment="Center"
+                                         HorizontalAlignment="Center"
+                                         TextAlignment="Center"
+                                         Width="50"
+                                         FontSize="30"
+                                         Text="{Binding Rid, Converter={StaticResource RidToIconConverter}}" />
+                            </Border>
+                            <StackPanel Spacing="2"
+                                        VerticalAlignment="Center">
+                              <TextBlock VerticalAlignment="Center"
+                                         Text="{Binding Rid}" />
+                              <hyper:Hyperlink Alias="{Binding Name}"
+                                               Url="{Binding Url}" />
+                            </StackPanel>
                           </StackPanel>
-                        </StackPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
+                  </StackPanel>
                 </StackPanel>
               </ScrollViewer>
             </Grid>
@@ -745,24 +743,20 @@ HorizontalAlignment="Center" />
         </SplitView.Pane>
       </SplitView>
     </Grid>
-    <Border
-      IsVisible="{Binding IsBusy}"
-      Grid.Row="1"
-      Background="#cc605d64"
-      VerticalAlignment="Stretch"
-      HorizontalAlignment="Stretch">
-      <StackPanel
-        VerticalAlignment="Center"
-        HorizontalAlignment="Center">
-        <Image
-          Width="170"
-          Height="170"
-          anim:ImageBehavior.AnimatedSource="avares://Dots/Assets/Loading.gif" />
-        <TextBlock
-          Text="Loading..."
-          FontSize="18"
-          FontFamily="{StaticResource SpaceGroteskBold}"
-          HorizontalAlignment="Center" />
+    <Border IsVisible="{Binding IsBusy}"
+            Grid.Row="1"
+            Background="#cc605d64"
+            VerticalAlignment="Stretch"
+            HorizontalAlignment="Stretch">
+      <StackPanel VerticalAlignment="Center"
+                  HorizontalAlignment="Center">
+        <Image Width="170"
+               Height="170"
+               anim:ImageBehavior.AnimatedSource="avares://Dots/Assets/Loading.gif" />
+        <TextBlock Text="Loading..."
+                   FontSize="18"
+                   FontFamily="{StaticResource SpaceGroteskBold}"
+                   HorizontalAlignment="Center" />
       </StackPanel>
     </Border>
   </Grid>
