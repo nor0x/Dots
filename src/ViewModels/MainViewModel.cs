@@ -25,6 +25,8 @@ public partial class MainViewModel : ObservableRecipient
     {
         _dotnet = dotnet;
         _errorHelper = errorHelper;
+        _progressTasks = new ObservableCollection<ProgressTask>();
+        SelectedFilterIcon = LucideIcons.ListFilter;
     }
 
     string _query = "";
@@ -46,19 +48,23 @@ public partial class MainViewModel : ObservableRecipient
     [ObservableProperty]
     ObservableView<Sdk> _sdks;
 
-
     [ObservableProperty]
     string _lastUpdated;
 
     [ObservableProperty]
-    bool _showOnline = true;
+    bool _showDetails = false;
 
     [ObservableProperty]
+    ObservableCollection<ProgressTask> _progressTasks;
+
+    [ObservableProperty]
+    string _selectedFilterIcon;
+
+    bool _showOnline = true;
     bool _showInstalled = true;
 
     [ObservableProperty]
-    bool _showDetails = false;
-
+    bool _emptyData;
 
     public bool SetSelectedSdk(Sdk sdk)
     {
@@ -67,15 +73,17 @@ public partial class MainViewModel : ObservableRecipient
         {
             showDetails = false;
         }
-        else if(SelectedSdk is null)
+        else if (SelectedSdk is null)
         {
             showDetails = true;
         }
-        else if (sdk is not null && sdk.Data.Sdk.Version == SelectedSdk.Data.Sdk.Version)
+        else if (sdk is not null && sdk.VersionDisplay == SelectedSdk.VersionDisplay)
         {
             showDetails = !ShowDetails;
         }
         ShowDetails = showDetails;
+        EmptyData = sdk?.Data is null;
+
         if (sdk?.VersionDisplay == SelectedSdk?.VersionDisplay)
         {
             SelectedSdk = null;
@@ -128,7 +136,7 @@ public partial class MainViewModel : ObservableRecipient
     {
         _query = query;
         Sdks.Search(_query);
-        
+
         var filteredCollection = _baseSdks.Where(s =>
         s.Data.Sdk.Version.ToLowerInvariant().Contains(query.ToLowerInvariant()) ||
         s.Path.ToLowerInvariant().Contains(query.ToLowerInvariant())).ToList();
@@ -148,8 +156,40 @@ public partial class MainViewModel : ObservableRecipient
 
     [RelayCommand]
     void ToggleSelection()
+    { }
+
+    [RelayCommand]
+    void ApplyFilter(string f)
     {
-        SelectionEnabled = !SelectionEnabled;
+        int filter = int.Parse(f);
+        //0 all
+        //1 online
+        //2 installed
+        if(filter == 0)
+        {
+            _showOnline = true;
+            _showInstalled = true;
+            SelectedFilterIcon = LucideIcons.ListFilter;
+        }
+        else if (filter == 1)
+        {
+            _showInstalled = false;
+            _showOnline = true;
+            SelectedFilterIcon = LucideIcons.Cloudy;
+        }
+        else if(filter == 2)
+        {
+            _showOnline = false;
+            _showInstalled = true;
+            SelectedFilterIcon = LucideIcons.HardDrive;
+        }
+        Sdks.Search(" ");
+        Sdks.Search(_query);
+
+        if (!Sdks.View.Contains(SelectedSdk))
+        {
+            SelectedSdk = null;
+        }
     }
 
     public ICommand MyTestCommand { get; set; }
@@ -162,10 +202,12 @@ public partial class MainViewModel : ObservableRecipient
             sdk.IsDownloading = true;
             if (sdk.Installed)
             {
+                sdk.StatusMessage = Constants.OpeningText;
                 await _dotnet.OpenFolder(sdk);
             }
             else
             {
+                sdk.StatusMessage = Constants.DownloadingText;
                 var path = await _dotnet.Download(sdk, true);
                 await _dotnet.OpenFolder(path);
             }
@@ -185,8 +227,10 @@ public partial class MainViewModel : ObservableRecipient
         try
         {
             sdk.IsInstalling = true;
+
             if (sdk.Installed)
             {
+                sdk.StatusMessage = Constants.UninstallingText;
                 var result = await _dotnet.Uninstall(sdk);
                 if (result)
                 {
@@ -195,9 +239,11 @@ public partial class MainViewModel : ObservableRecipient
             }
             else
             {
+                sdk.StatusMessage = Constants.DownloadingText;
                 var path = await _dotnet.Download(sdk);
                 if (!string.IsNullOrEmpty(path))
                 {
+                    sdk.StatusMessage = Constants.InstallingText;
                     var result = await _dotnet.Install(path);
                     if (result)
                     {
@@ -220,35 +266,6 @@ public partial class MainViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-    void ToggleOnline()
-    {
-        ShowOnline = !ShowOnline;
-        Sdks.Search(" ");
-        Sdks.Search(_query);
-        IsBusy = (!ShowOnline && !ShowInstalled);
-
-        if(!Sdks.View.Contains(SelectedSdk))
-        {
-            SelectedSdk = null;
-        }
-    }
-
-    [RelayCommand]
-    void ToggleInstalled()
-    {
-        ShowInstalled = !ShowInstalled;
-        Sdks.Search(" ");
-        Sdks.Search(_query);
-        IsBusy = (!ShowOnline && !ShowInstalled);
-        if (!Sdks.View.Contains(SelectedSdk))
-        {
-            SelectedSdk = null;
-        }
-    }
-
-
-
-    [RelayCommand]
     void ToggleMultiSelection()
     {
 
@@ -260,15 +277,15 @@ public partial class MainViewModel : ObservableRecipient
 
     void Sdks_FilterHandler(object sender, ObservableView.Filtering.FilterEventArgs<Sdk> e)
     {
-        if (ShowOnline && ShowInstalled)
+        if (_showOnline && _showInstalled)
         {
             e.IsAllowed = true;
         }
-        else if (ShowOnline && !ShowInstalled)
+        else if (_showOnline && !_showInstalled)
         {
             e.IsAllowed = !e.Item.Installed;
         }
-        else if (!ShowOnline && ShowInstalled)
+        else if (!_showOnline && _showInstalled)
         {
             e.IsAllowed = e.Item.Installed;
         }

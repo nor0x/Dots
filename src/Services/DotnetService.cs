@@ -1,9 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Threading;
 using Akavache;
 using CliWrap;
 using CliWrap.Buffered;
@@ -23,18 +25,21 @@ public class DotnetService
     ReleaseIndex[] _releaseIndex;
     Dictionary<string, Release[]> _releases = new();
 
+    public DotnetService()
+    {
+    }
+
     public async Task<List<Sdk>> GetSdks(bool force = false)
     {
         var result = new List<Sdk>();
         var index = await GetReleaseIndex(force);
         var releaseInfos = new List<Release>();
-        var installed = GetInstalledSdks(force);
+        await GetInstalledSdks(force);
         foreach (var item in index)
         {
             var infos = await GetReleaseInfos(item.ChannelVersion, force);
             releaseInfos.AddRange(infos);
         }
-        int i = 0;
         foreach (var release in releaseInfos)
         {
             var sdk = new Sdk()
@@ -44,10 +49,46 @@ public class DotnetService
                 Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty,
                 VersionDisplay = release.Sdk.Version,
             };
-            i++;
             result.Add(sdk);
+
+            if (release.Sdks is not null)
+            {
+                foreach (var subSdk in release.Sdks)
+                {
+                    var sub = new Sdk()
+                    {
+                        Data = release,
+                        ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
+                        Path = _installedSdks.FirstOrDefault(x => x.Version == subSdk.Version)?.Path ?? string.Empty,
+                        VersionDisplay = subSdk.Version,
+                    };
+
+                    if (result.FirstOrDefault(s => s.VersionDisplay == subSdk.VersionDisplay) is null)
+                    {
+                        result.Add(sub);
+                    }
+
+                }
+            }
         }
-        return result;
+
+        foreach(var installed in _installedSdks)
+        {
+            if(result.FirstOrDefault(x => x.VersionDisplay == installed.Version) is null)
+            {
+                result.Add(
+                    new Sdk() 
+                    {
+                        Data = null,
+                        VersionDisplay = installed.Version, 
+                        Path = installed.Path ,
+                        ColorHex = ColorHelper.GenerateHexColor(installed.Version.First().ToString()),
+                    }
+                );
+            }
+        }
+
+        return result.OrderByDescending(x => x.VersionDisplay).ToList();
     }
 
     async Task<ReleaseIndex[]> GetReleaseIndex(bool force = false)
@@ -106,7 +147,7 @@ public class DotnetService
     }
 
 
-    public async ValueTask<List<InstalledSdk>> GetInstalledSdks(bool force = false)
+    async ValueTask<List<InstalledSdk>> GetInstalledSdks(bool force = false)
     {
         try
         {
@@ -149,7 +190,7 @@ public class DotnetService
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            ////Analytics.TrackEvent("GetInstalledSdks", new Dictionary<string, string>() { { "Error", ex.Message } });
+            //Analytics.TrackEvent("GetInstalledSdks", new Dictionary<string, string>() { { "Error", ex.Message } });
             return null;
         }
 
@@ -188,17 +229,35 @@ public class DotnetService
                     }
                     return path;
                 }
+
+                var progress = new ProgressTask();
+                progress.Title = $"Downloading {sdk.Data.Sdk.Version}";
+                progress.Url = info.Url.ToString();
+                progress.CancellationTokenSource = new CancellationTokenSource();
+
+                var p = new Progress<float>();
+                p.ProgressChanged += (s, e) =>
+                {
+                    progress.Value = e;
+                };
+                progress.Progress = p;
+
+
+                sdk.ProgressTask = progress;
+
+                // Use the provided extension method
+                using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
                 using var client = new HttpClient();
-                var response = await client.GetByteArrayAsync(info.Url);
-                await File.WriteAllBytesAsync(path, response);
+                await client.DownloadDataAsync(info.Url.ToString(), file, p);
+
                 if (toDesktop)
                 {
-                    //copy to desktop
                     var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                     var filename = Path.Combine(desktop, sdkFile);
-                    await File.WriteAllBytesAsync(filename, response);
-                    return desktop;
+                    await File.WriteAllBytesAsync(Path.Combine(desktop, sdkFile), await File.ReadAllBytesAsync(path));
+                    path = desktop;
                 }
+
                 return path;
             }
             return null;
@@ -277,14 +336,14 @@ public class DotnetService
 
             string[] files = Directory.GetFiles(path, filename, SearchOption.AllDirectories);
 
-            if(!files.IsNullOrEmpty())
+            if (!files.IsNullOrEmpty())
             {
                 var result = await Cli.Wrap(files.First()).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
                 return result.ExitCode == 0;
             }
             else
             {
-                
+
                 var setupInLocalDirectory = Path.Combine(Constants.AppDataPath, filename);
                 if (!string.IsNullOrEmpty(setupPath))
                 {

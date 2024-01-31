@@ -3,13 +3,14 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Dots.Helpers;
 using Dots.Models;
+using Dots.Services;
 using System.Reactive.Linq;
 
 namespace Dots
 {
     public partial class MainWindow : Window
     {
-        MainViewModel _vm = new MainViewModel(new Services.DotnetService(), new Helpers.ErrorPopupHelper());
+        MainViewModel _vm = new MainViewModel(new DotnetService(), new ErrorPopupHelper());
         AboutWindow _aboutWindow = new AboutWindow();
         bool _aboutWindowOpen = false;
 
@@ -36,7 +37,7 @@ namespace Dots
             var lastChecked = await BlobCache.UserAccount.GetObject<DateTime>(Constants.LastCheckedKey);
 
             bool force = false;
-            if (DateTime.Now.Subtract(lastChecked).TotalDays > 15)
+            if (DateTime.Now.Subtract(lastChecked).TotalDays > 10)
             {
                 force = true;
                 await BlobCache.UserAccount.InsertObject(Constants.LastCheckedKey, DateTime.Now);
@@ -108,6 +109,11 @@ namespace Dots
         {
             var path = ((TextBlock)sender).Text;
             path.OpenFilePath();
+        }
+
+        private void Filter_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
+        {
+            FilterButton.Flyout.Hide();
         }
     }
 }

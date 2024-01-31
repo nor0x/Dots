@@ -15,7 +15,7 @@ public partial class Sdk : ObservableObject
 
     //UI
     public string ColorHex { get; set; }
-    public string Group => Data.Sdk.Version.First().ToString();
+    public string Group => VersionDisplay.First().ToString();
 
     [JsonIgnore]
     public IBrush Color => SolidColorBrush.Parse(ColorHex);
@@ -26,15 +26,32 @@ public partial class Sdk : ObservableObject
     public bool Installed => !string.IsNullOrEmpty(Path);
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsBusy))]
     [JsonIgnore]
     public bool _isDownloading;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsBusy))]
     [JsonIgnore]
     public bool _isInstalling;
 
+    [ObservableProperty]
+    [JsonIgnore]
+    public string _statusMessage;
+
+    [ObservableProperty]
+    [JsonIgnore]
+    double _progress;
+
+    [JsonIgnore]
+    public bool IsBusy => _isDownloading || _isInstalling;
+
     [JsonIgnore]
     public string VersionDisplay { get; set; }
+
+    [ObservableProperty]
+    [JsonIgnore]
+    ProgressTask _progressTask;
 }
 
 
