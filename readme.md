@@ -5,7 +5,7 @@
 <img src="https://raw.githubusercontent.com/nor0x/Dots/main/Assets/icon.png" width="320px" />
 
 
-Dots is a .NET SDK manager that allows you to install, uninstall, and switch between .NET SDKs with ease. It is a cross-platform tool that works on Windows and macOS with Linux support coming soon. It is written in C# and uses the .NET with Avalonia as the UI framework.
+Dots is a .NET SDK manager that allows you to install, uninstall, and switch between .NET SDKs with ease. It is a cross-platform tool that works on Windows and macOS with Linux support coming soon. It is written in C# and uses .NET with Avalonia as the UI framework.
 
 ## Features
 - Search for SDKs
