@@ -294,9 +294,12 @@
                         <StackPanel Width="230" IsVisible="{Binding IsBusy}">
                           <TextBlock Text="{Binding StatusMessage}" HorizontalAlignment="Center" />
                           <StackPanel Orientation="Horizontal">
-                          <ProgressBar
-      IsIndeterminate="True"
-      Height="4"
+                          <ProgressBar IsIndeterminate="false"
+                                       Minimum="0"
+                                       Maximum="100"
+                                       ShowProgressText="true"
+                                       Value="{Binding ProgressTask.Value}"
+                                       Height="20"
       Margin="6,0,6,0"
       Foreground="White"
       IsVisible="True"

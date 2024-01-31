@@ -202,6 +202,7 @@ public partial class MainViewModel : ObservableRecipient
             }
             else
             {
+                sdk.StatusMessage = Constants.DownloadingText;
                 var path = await _dotnet.Download(sdk);
                 if (!string.IsNullOrEmpty(path))
                 {

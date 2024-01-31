@@ -41,7 +41,7 @@ public partial class Sdk : ObservableObject
 
     [ObservableProperty]
     [JsonIgnore]
-    public double _progress;
+    double _progress;
 
     [JsonIgnore]
     public bool IsBusy => _isDownloading || _isInstalling;
@@ -49,8 +49,9 @@ public partial class Sdk : ObservableObject
     [JsonIgnore]
     public string VersionDisplay { get; set; }
 
+    [ObservableProperty]
     [JsonIgnore]
-    public ProgressTask ProgressTask { get; set; }
+    ProgressTask _progressTask;
 }
 
 

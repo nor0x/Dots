@@ -7,10 +7,13 @@ using System.Threading.Tasks;
 
 namespace Dots.Models;
 
-public class ProgressTask
+public partial class ProgressTask : ObservableObject
 {
     public string Title { get; set; }
     public string Url { get; set; }
     public CancellationTokenSource CancellationTokenSource { get; set; }
-    public IProgress<int> Progress { get; set; }
+    public IProgress<float> Progress { get; set; }
+
+    [ObservableProperty]
+    float _value;
 }
