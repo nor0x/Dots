@@ -191,10 +191,18 @@ public class DotnetService
                     return path;
                 }
                 using var client = new HttpClient();
-                var response = await client.GetByteArrayAsync(info.Url);
+                var response = client.GetByteArrayAsync(info.Url);
+                //progress
+                var progress = new ProgressTask();
+                progress.Progress = 0;
+                progress.Title = $"Downloading {sdk.Data.Sdk.Version}";
+                progress.Url = info.Url.ToString();
+                progress.CancellationTokenSource = new CancellationTokenSource();
+                progress.DownloadTask = response;
+
                 await File.WriteAllBytesAsync(path, response);
 
-                sdk.ProgressTask = 
+                sdk.ProgressTask = new ProgressTask
 
 
                 if (toDesktop)
@@ -325,14 +333,14 @@ public class DotnetService
 
             string[] files = Directory.GetFiles(path, filename, SearchOption.AllDirectories);
 
-            if(!files.IsNullOrEmpty())
+            if (!files.IsNullOrEmpty())
             {
                 var result = await Cli.Wrap(files.First()).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
                 return result.ExitCode == 0;
             }
             else
             {
-                
+
                 var setupInLocalDirectory = Path.Combine(Constants.AppDataPath, filename);
                 if (!string.IsNullOrEmpty(setupPath))
                 {

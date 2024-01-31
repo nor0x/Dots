@@ -70,7 +70,7 @@ public partial class MainViewModel : ObservableRecipient
         {
             showDetails = false;
         }
-        else if(SelectedSdk is null)
+        else if (SelectedSdk is null)
         {
             showDetails = true;
         }
@@ -131,7 +131,7 @@ public partial class MainViewModel : ObservableRecipient
     {
         _query = query;
         Sdks.Search(_query);
-        
+
         var filteredCollection = _baseSdks.Where(s =>
         s.Data.Sdk.Version.ToLowerInvariant().Contains(query.ToLowerInvariant()) ||
         s.Path.ToLowerInvariant().Contains(query.ToLowerInvariant())).ToList();
@@ -165,12 +165,12 @@ public partial class MainViewModel : ObservableRecipient
             sdk.IsDownloading = true;
             if (sdk.Installed)
             {
-                sdk.StatusMessage = "Opening...";
+                sdk.StatusMessage = Constants.OpeningText;
                 await _dotnet.OpenFolder(sdk);
             }
             else
             {
-                sdk.StatusMessage = "Downloading...";
+                sdk.StatusMessage = Constants.DownloadingText;
                 var path = await _dotnet.Download(sdk, true);
                 await _dotnet.OpenFolder(path);
             }
@@ -190,10 +190,10 @@ public partial class MainViewModel : ObservableRecipient
         try
         {
             sdk.IsInstalling = true;
-            
+
             if (sdk.Installed)
             {
-                sdk.StatusMessage = "Uninstalling...";
+                sdk.StatusMessage = Constants.UninstallingText;
                 var result = await _dotnet.Uninstall(sdk);
                 if (result)
                 {
@@ -205,7 +205,7 @@ public partial class MainViewModel : ObservableRecipient
                 var path = await _dotnet.Download(sdk);
                 if (!string.IsNullOrEmpty(path))
                 {
-                    sdk.StatusMessage = "Installing...";
+                    sdk.StatusMessage = Constants.InstallingText;
                     var result = await _dotnet.Install(path);
                     if (result)
                     {
@@ -235,7 +235,7 @@ public partial class MainViewModel : ObservableRecipient
         Sdks.Search(_query);
         IsBusy = (!ShowOnline && !ShowInstalled);
 
-        if(!Sdks.View.Contains(SelectedSdk))
+        if (!Sdks.View.Contains(SelectedSdk))
         {
             SelectedSdk = null;
         }

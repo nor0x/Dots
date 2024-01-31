@@ -9,8 +9,8 @@ namespace Dots.Models;
 
 public class ProgressTask
 {
+    public string Title { get; set; }
     public string Url { get; set; }
-    public int Progress { get; set; }
     public CancellationTokenSource CancellationTokenSource { get; set; }
-    public Task DownloadTask { get; set; }
+    public IProgress<int> Progress { get; set; }
 }
