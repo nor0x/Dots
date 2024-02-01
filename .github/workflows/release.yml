@@ -5,6 +5,12 @@ on:
     tags:
       - '*'
 
+env:
+  APPLE_ID: ${{ secrets.APPLE_ID }}
+  TEAM_ID: ${{ secrets.TEAM_ID }}
+  APP_SPECIFIC_PWD: ${{ secrets.APP_SPECIFIC_PWD }}
+  SIGNING_IDENTITY: ${{ secrets.SIGNING_IDENTITY }}
+
 jobs:
   build-macos:
     runs-on: macos-14
