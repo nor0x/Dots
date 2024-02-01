@@ -1,7 +1,6 @@
 cd ..
-ls
 version=$(cat version.txt)
-
+cd src
 echo "setting <Version> in Dots.csproj to $version"
 sed -i '' "s/Version>.*</Version>$version</g" Dots.csproj
 
