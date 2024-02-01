@@ -1,7 +1,10 @@
 cd ..
 version=$(cat version.txt)
-
 cd src
+echo "setting <Version> in Dots.csproj to $version"
+sed -i '' "s/Version>.*</Version>$version</g" Dots.csproj
+
+
 dotnet restore
 
 echo "Building Dots for Windows x64"
