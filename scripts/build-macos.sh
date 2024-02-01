@@ -41,17 +41,12 @@ echo "[INFO]______________[INFO] Signing app file"
 
 codesign --force --timestamp --options=runtime --entitlements "$ENTITLEMENTS" --sign "$SIGNING_IDENTITY" "$APP_NAME"
 
-echo "[INFO]______________dittoing Dots for macOS x64"
-cd /Users/runner/work/Dots/Dots/src/bin/Release/net8.0-macos/osx-x64/publish
-macosx64file=$(echo Dots-$version-macos-x64.zip)
-ditto -c -k --sequesterRsrc --keepParent Dots.app $macosx64file
-
-
 echo "dittoing Dots for macOS arm64"
 cd /Users/runner/work/Dots/Dots/src/bin/Release/net8.0-macos/osx-arm64/publish
 macosarm64file=$(echo Dots-$version-macos-arm64.zip)
 ditto -c -k --sequesterRsrc --keepParent Dots.app $macosarm64file
 xcrun notarytool submit $macosarm64file --apple-id $APPLE_ID --team-id $TEAM_ID --password $APP_SPECIFIC_PWD --verbose
+
 
 echo "Building Dots for macOS x64"
 dotnet msbuild -t:BundleApp -property:Configuration=Release -p:UseAppHost=true -p:RuntimeIdentifier=osx-x64
@@ -62,7 +57,6 @@ cp Assets/AppIcon.icns bin/Release/net8.0-macos/osx-x64/publish/Dots.app/Content
 cp -Rf bin/Release/net8.0-macos/osx-x64/Dots.app/Contents/MacOS bin/Release/net8.0-macos/osx-x64/publish/Dots.app/Contents
 cp -Rf bin/Release/net8.0-macos/osx-x64/Dots.app/Contents/MonoBundle bin/Release/net8.0-macos/osx-x64/publish/Dots.app/Contents
 cp bin/Release/net8.0-macos/osx-x64/Dots.app/Contents/PkgInfo bin/Release/net8.0-macos/osx-x64/publish/Dots.app/Contents/
-
 
 echo "codesign Dots for macOS x64"
 APP_NAME="/Users/runner/work/Dots/Dots/src/bin/Release/ne8.0-macos/osx-x64/publish/Dots.app"
@@ -87,12 +81,6 @@ done
 echo "[INFO]______________[INFO] Signing app file"
 
 codesign --force --timestamp --options=runtime --entitlements "$ENTITLEMENTS" --sign "$SIGNING_IDENTITY" "$APP_NAME"
-
-echo "[INFO]______________dittoing Dots for macOS x64"
-cd /Users/runner/work/Dots/Dots/src/bin/Release/net8.0-macos/osx-x64/publish
-macosx64file=$(echo Dots-$version-macos-x64.zip)
-ditto -c -k --sequesterRsrc --keepParent Dots.app $macosx64file
-
 
 echo "dittoing Dots for macOS x64"
 cd /Users/runner/work/Dots/Dots/src/bin/Release/net8.0-macos/osx-x64/publish
