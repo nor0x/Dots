@@ -1,6 +1,10 @@
 cd ..
 version=$(cat version.txt)
 cd /Users/runner/work/Dots/Dots/src/
+echo "setting <CFBundleVersion> and <CFBundleShortVersionString> in Dots.csproj to $version"
+sed -i '' "s/CFBundleVersion>.*</CFBundleVersion>$version</g" Dots.csproj
+sed -i '' "s/CFBundleShortVersionString>.*</CFBundleShortVersionString>$version</g" Dots.csproj
+
 
 dotnet restore
 echo "Building Dots for macOS arm64"
