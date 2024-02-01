@@ -47,7 +47,7 @@ macosarm64file=$(echo Dots-$version-macos-arm64.zip)
 ditto -c -k --sequesterRsrc --keepParent Dots.app $macosarm64file
 xcrun notarytool submit $macosarm64file --apple-id $APPLE_ID --team-id $TEAM_ID --password $APP_SPECIFIC_PWD --verbose
 
-
+cd /Users/runner/work/Dots/Dots/src/
 echo "Building Dots for macOS x64"
 dotnet msbuild -t:BundleApp -property:Configuration=Release -p:UseAppHost=true -p:RuntimeIdentifier=osx-x64
 
