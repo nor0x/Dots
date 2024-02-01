@@ -1,4 +1,5 @@
 cd ..
+ls
 version=$(cat version.txt)
 
 echo "setting <Version> in Dots.csproj to $version"
