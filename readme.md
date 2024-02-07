@@ -15,7 +15,7 @@ Dots is a .NET SDK manager that allows you to install, uninstall, and switch bet
 - Show Metadata
 - ...and more!
 
-<img src="https://raw.githubusercontent.com/nor0x/Dots/main/Assets/screenshot.jpg" width="600px" />
+<img src="https://raw.githubusercontent.com/nor0x/Dots/main/Assets/screenshot.png" width="650px" />
 
 ## Building
 Make sure to have .NET 8.0 and Avalonia installed. Then, clone the repository and run `dotnet build` in the src directory. You can also use Visual Studio, Rider or Visual Studio Code to build the project. Also make sure to check out the [release.yml](https://github.com/nor0x/Dots/actions/workflows/release.yml) workflow file for more information on how to build the project.
