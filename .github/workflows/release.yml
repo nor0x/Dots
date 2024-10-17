@@ -1,9 +1,8 @@
 name: build and release
 
 on:
-  push:
-    tags:
-      - '*'
+  workflow_dispatch:
+
 
 env:
   APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -118,15 +117,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.1
-      - name: Log GITHUB_WORKSPACE
+      - name: Get Version via powershell
+        id: get_version
         run: |
-          echo "GITHUB_WORKSPACE is $GITHUB_WORKSPACE"
-          echo "current directory"
-          ls
-          echo "GITHUB_WORKSPACE directory"
-          ls $GITHUB_WORKSPACE
-          echo "src directory"
-          ls $GITHUB_WORKSPACE/src
+          $version = Get-Content -Path $env:GITHUB_WORKSPACE/version.txt
+          $env:CURRENT_VERSION = $version.ToString()
+          echo "::set-output name=CURRENT_VERSION::$env:CURRENT_VERSION"
       - name: run housekeeping scripts
         run: |
           cd $GITHUB_WORKSPACE/scripts
@@ -156,9 +152,15 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           ls
-
+      - name: Create GitHub Tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: false
+          custom_tag: ${{ steps.get_version.outputs.CURRENT_VERSION }}
       - name: Create Release
-        uses: ncipollo/release-action@v1.13.0
+        uses: ncipollo/release-action@v1
         with:
             artifacts: |
               $GITHUB_WORKSPACE/*.zip
