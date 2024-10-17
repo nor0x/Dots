@@ -118,6 +118,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.1
       - name: Get Version via powershell
+        shell: pwsh
         id: get_version
         run: |
           $version = Get-Content -Path $env:GITHUB_WORKSPACE/version.txt
