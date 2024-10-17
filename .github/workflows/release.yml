@@ -163,6 +163,8 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
+            tag: ${{ steps.tag_version.outputs.new_tag }}
+            name: Release ${{ steps.get_version.outputs.CURRENT_VERSION }}
             artifacts: |
               $GITHUB_WORKSPACE/*.zip
             token: ${{ secrets.GITHUB_TOKEN }}
