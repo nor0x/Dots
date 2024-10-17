@@ -304,7 +304,7 @@ public partial class MainViewModel : ObservableRecipient
             if (Sdks is not null) Sdks.FilterHandler -= Sdks_FilterHandler;
             IsBusy = true;
             var sdkList = await _dotnet.GetSdks(force);
-            Sdks = new ObservableView<Sdk>(sdkList);
+            Sdks = new ObservableView<Sdk>(sdkList.DistinctBy(s => s.VersionDisplay));
             Sdks.SearchSpecification.Add(x => x.VersionDisplay, BinaryOperator.Contains);
             Sdks.SearchSpecification.Add(x => x.Path, BinaryOperator.Contains);
             Sdks.FilterHandler += Sdks_FilterHandler;
