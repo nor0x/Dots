@@ -1,4 +1,4 @@
-using Akavache;
+﻿using Akavache;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Dots.Helpers;
@@ -66,7 +66,7 @@ namespace Dots
             paneWidth = paneWidth < 200 ? 200 : paneWidth;
             MainSplitView.OpenPaneLength = Math.Min(paneWidth, 500);
             MainSplitView.IsPaneOpen = !MainSplitView.IsPaneOpen;
-            ToggleDetailsButton.Content = MainSplitView.IsPaneOpen ? LucideIcons.ChevronsRight : LucideIcons.ChevronsLeft;
+            ToggleDetailsButton.Content = MainSplitView.IsPaneOpen ? LucideIcons.ChevronRight : LucideIcons.ChevronLeft;
             if (!MainSplitView.IsPaneOpen)
             {
                 _vm.SetSelectedSdk(null);
@@ -101,7 +101,7 @@ namespace Dots
             {
                 MainSplitView.IsPaneOpen = true;
             }
-            ToggleDetailsButton.Content = MainSplitView.IsPaneOpen ? LucideIcons.ChevronsRight : LucideIcons.ChevronsLeft;
+            ToggleDetailsButton.Content = MainSplitView.IsPaneOpen ? LucideIcons.ChevronRight : LucideIcons.ChevronLeft;
 
         }
 

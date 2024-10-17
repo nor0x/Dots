@@ -21,302 +21,317 @@ namespace Dots.ViewModels;
 
 public partial class MainViewModel : ObservableRecipient
 {
-    public MainViewModel(DotnetService dotnet, ErrorPopupHelper errorHelper)
-    {
-        _dotnet = dotnet;
-        _errorHelper = errorHelper;
-        _progressTasks = new ObservableCollection<ProgressTask>();
-        SelectedFilterIcon = LucideIcons.ListFilter;
-    }
+	public MainViewModel(DotnetService dotnet, ErrorPopupHelper errorHelper)
+	{
+		_dotnet = dotnet;
+		_errorHelper = errorHelper;
+		_progressTasks = new ObservableCollection<ProgressTask>();
+		SelectedFilterIcon = LucideIcons.ListFilter;
+		CurrentStatusIcon = LucideIcons.Info;
+	}
 
-    string _query = "";
-    bool _isLoading = false;
+	string _query = "";
+	bool _isLoading = false;
 
-    DotnetService _dotnet;
-    ErrorPopupHelper _errorHelper;
-    List<Sdk> _baseSdks;
+	DotnetService _dotnet;
+	ErrorPopupHelper _errorHelper;
+	List<Sdk> _baseSdks;
 
-    [ObservableProperty]
-    bool _selectionEnabled;
+	[ObservableProperty]
+	bool _selectionEnabled;
 
-    [ObservableProperty]
-    bool _isBusy;
+	[ObservableProperty]
+	bool _isBusy;
 
-    [ObservableProperty]
-    Sdk _selectedSdk;
+	[ObservableProperty]
+	Sdk _selectedSdk;
 
-    [ObservableProperty]
-    ObservableView<Sdk> _sdks;
+	[ObservableProperty]
+	ObservableView<Sdk> _sdks;
 
-    [ObservableProperty]
-    string _lastUpdated;
+	[ObservableProperty]
+	string _lastUpdated;
 
-    [ObservableProperty]
-    bool _showDetails = false;
+	[ObservableProperty]
+	bool _showDetails = false;
 
-    [ObservableProperty]
-    ObservableCollection<ProgressTask> _progressTasks;
+	[ObservableProperty]
+	ObservableCollection<ProgressTask> _progressTasks;
 
-    [ObservableProperty]
-    string _selectedFilterIcon;
+	[ObservableProperty]
+	string _selectedFilterIcon;
 
-    bool _showOnline = true;
-    bool _showInstalled = true;
+	[ObservableProperty]
+	string _currentStatusIcon;
+	[ObservableProperty]
+	string _currentStatusText;
 
-    [ObservableProperty]
-    bool _emptyData;
+	bool _showOnline = true;
+	bool _showInstalled = true;
 
-    public bool SetSelectedSdk(Sdk sdk)
-    {
-        var showDetails = true;
-        if (sdk is null)
-        {
-            showDetails = false;
-        }
-        else if (SelectedSdk is null)
-        {
-            showDetails = true;
-        }
-        else if (sdk is not null && sdk.VersionDisplay == SelectedSdk.VersionDisplay)
-        {
-            showDetails = !ShowDetails;
-        }
-        ShowDetails = showDetails;
-        EmptyData = sdk?.Data is null;
+	[ObservableProperty]
+	bool _emptyData;
 
-        if (sdk?.VersionDisplay == SelectedSdk?.VersionDisplay)
-        {
-            SelectedSdk = null;
-            return true;
-        }
-        else
-        {
-            SelectedSdk = sdk;
-            return false;
-        }
-    }
+	public bool SetSelectedSdk(Sdk sdk)
+	{
+		var showDetails = true;
+		if (sdk is null)
+		{
+			showDetails = false;
+		}
+		else if (SelectedSdk is null)
+		{
+			showDetails = true;
+		}
+		else if (sdk is not null && sdk.VersionDisplay == SelectedSdk.VersionDisplay)
+		{
+			showDetails = !ShowDetails;
+		}
+		ShowDetails = showDetails;
+		EmptyData = sdk?.Data is null;
 
-
-    [RelayCommand]
-    async Task DownloadScript()
-    {
-        try
-        {
-            using var client = new HttpClient();
-            var response = await client.GetAsync(Constants.InstallerScript);
-            var content = await response.Content.ReadAsStringAsync();
-            //save file to disk
-            var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            if (!Directory.Exists(folder))
-            {
-                Directory.CreateDirectory(folder);
-            }
+		if (sdk?.VersionDisplay == SelectedSdk?.VersionDisplay)
+		{
+			SelectedSdk = null;
+			return true;
+		}
+		else
+		{
+			SelectedSdk = sdk;
+			return false;
+		}
+	}
 
 
-            var filename = Path.Combine(folder, "dotnet-install.ps1");
-            await File.WriteAllTextAsync(filename, content);
-            Debug.WriteLine("done - " + filename);
+	[RelayCommand]
+	async Task DownloadScript()
+	{
+		try
+		{
+			using var client = new HttpClient();
+			var response = await client.GetAsync(Constants.InstallerScript);
+			var content = await response.Content.ReadAsStringAsync();
+			//save file to disk
+			var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+			if (!Directory.Exists(folder))
+			{
+				Directory.CreateDirectory(folder);
+			}
 
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-        }
-    }
 
-    [RelayCommand(AllowConcurrentExecutions = true)]
-    async Task ListSdks()
-    {
-        LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
-        await CheckSdks(true);
-    }
+			var filename = Path.Combine(folder, "dotnet-install.ps1");
+			await File.WriteAllTextAsync(filename, content);
+			Debug.WriteLine("done - " + filename);
 
-    [RelayCommand]
-    void FilterSdks(string query)
-    {
-        _query = query;
-        Sdks.Search(_query);
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex);
+		}
+	}
 
-        var filteredCollection = _baseSdks.Where(s =>
-        s.Data.Sdk.Version.ToLowerInvariant().Contains(query.ToLowerInvariant()) ||
-        s.Path.ToLowerInvariant().Contains(query.ToLowerInvariant())).ToList();
+	[RelayCommand(AllowConcurrentExecutions = true)]
+	async Task CleanupSdks()
+	{ }
 
-        foreach (var s in _baseSdks)
-        {
-            if (!filteredCollection.Contains(s))
-            {
-                Sdks.View.Remove(s);
-            }
-            else if (!Sdks.View.Contains(s))
-            {
-                Sdks.View.Add(s);
-            }
-        }
-    }
+	[RelayCommand(AllowConcurrentExecutions = true)]
+	async Task CleanupAndUpdateSdks()
+	{ }
 
-    [RelayCommand]
-    void ToggleSelection()
-    { }
 
-    [RelayCommand]
-    void ApplyFilter(string f)
-    {
-        int filter = int.Parse(f);
-        //0 all
-        //1 online
-        //2 installed
-        if(filter == 0)
-        {
-            _showOnline = true;
-            _showInstalled = true;
-            SelectedFilterIcon = LucideIcons.ListFilter;
-        }
-        else if (filter == 1)
-        {
-            _showInstalled = false;
-            _showOnline = true;
-            SelectedFilterIcon = LucideIcons.Cloudy;
-        }
-        else if(filter == 2)
-        {
-            _showOnline = false;
-            _showInstalled = true;
-            SelectedFilterIcon = LucideIcons.HardDrive;
-        }
-        Sdks.Search(" ");
-        Sdks.Search(_query);
+	[RelayCommand(AllowConcurrentExecutions = true)]
+	async Task ListSdks()
+	{
+		LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
+		await CheckSdks(true);
+	}
 
-        if (!Sdks.View.Contains(SelectedSdk))
-        {
-            SelectedSdk = null;
-        }
-    }
+	[RelayCommand]
+	void FilterSdks(string query)
+	{
+		_query = query;
+		Sdks.Search(_query);
 
-    public ICommand MyTestCommand { get; set; }
+		var filteredCollection = _baseSdks.Where(s =>
+		s.Data.Sdk.Version.ToLowerInvariant().Contains(query.ToLowerInvariant()) ||
+		s.Path.ToLowerInvariant().Contains(query.ToLowerInvariant())).ToList();
 
-    [RelayCommand(AllowConcurrentExecutions = true)]
-    async Task OpenOrDownload(Sdk sdk)
-    {
-        try
-        {
-            sdk.IsDownloading = true;
-            if (sdk.Installed)
-            {
-                sdk.StatusMessage = Constants.OpeningText;
-                await _dotnet.OpenFolder(sdk);
-            }
-            else
-            {
-                sdk.StatusMessage = Constants.DownloadingText;
-                var path = await _dotnet.Download(sdk, true);
-                await _dotnet.OpenFolder(path);
-            }
-            sdk.IsDownloading = false;
+		foreach (var s in _baseSdks)
+		{
+			if (!filteredCollection.Contains(s))
+			{
+				Sdks.View.Remove(s);
+			}
+			else if (!Sdks.View.Contains(s))
+			{
+				Sdks.View.Add(s);
+			}
+		}
+	}
 
-        }
-        catch (Exception ex)
-        {
-            sdk.IsDownloading = false;
-            await _errorHelper.ShowPopup(ex);
-        }
-    }
+	[RelayCommand]
+	void ToggleSelection()
+	{ }
 
-    [RelayCommand(AllowConcurrentExecutions = true)]
-    async Task InstallOrUninstall(Sdk sdk)
-    {
-        try
-        {
-            sdk.IsInstalling = true;
+	[RelayCommand]
+	void ApplyFilter(string f)
+	{
+		int filter = int.Parse(f);
+		//0 all
+		//1 online
+		//2 installed
+		if (filter == 0)
+		{
+			_showOnline = true;
+			_showInstalled = true;
+			SelectedFilterIcon = LucideIcons.ListFilter;
+		}
+		else if (filter == 1)
+		{
+			_showInstalled = false;
+			_showOnline = true;
+			SelectedFilterIcon = LucideIcons.Cloudy;
+		}
+		else if (filter == 2)
+		{
+			_showOnline = false;
+			_showInstalled = true;
+			SelectedFilterIcon = LucideIcons.HardDrive;
+		}
+		Sdks.Search(" ");
+		Sdks.Search(_query);
 
-            if (sdk.Installed)
-            {
-                sdk.StatusMessage = Constants.UninstallingText;
-                var result = await _dotnet.Uninstall(sdk);
-                if (result)
-                {
-                    sdk.Path = string.Empty;
-                }
-            }
-            else
-            {
-                sdk.StatusMessage = Constants.DownloadingText;
-                var path = await _dotnet.Download(sdk);
-                if (!string.IsNullOrEmpty(path))
-                {
-                    sdk.StatusMessage = Constants.InstallingText;
-                    var result = await _dotnet.Install(path);
-                    if (result)
-                    {
-                        sdk.Path = await _dotnet.GetInstallationPath(sdk);
-                    }
-                    else
-                    {
-                        //show popup and prompt to manually install
-                    }
-                }
-            }
-            sdk.IsInstalling = false;
-        }
+		if (!Sdks.View.Contains(SelectedSdk))
+		{
+			SelectedSdk = null;
+		}
+	}
 
-        catch (Exception ex)
-        {
-            sdk.IsInstalling = false;
-            await _errorHelper.ShowPopup(ex);
-        }
-    }
+	[RelayCommand(AllowConcurrentExecutions = true)]
+	async Task OpenOrDownload(Sdk sdk)
+	{
+		try
+		{
+			sdk.IsDownloading = true;
+			if (sdk.Installed)
+			{
+				sdk.StatusMessage = Constants.OpeningText;
+				await _dotnet.OpenFolder(sdk);
+			}
+			else
+			{
+				sdk.StatusMessage = Constants.DownloadingText;
+				var path = await _dotnet.Download(sdk, true);
+				await _dotnet.OpenFolder(path);
+			}
+			sdk.IsDownloading = false;
 
-    [RelayCommand]
-    void ToggleMultiSelection()
-    {
+		}
+		catch (Exception ex)
+		{
+			sdk.IsDownloading = false;
+			await _errorHelper.ShowPopup(ex);
+		}
+	}
 
-    }
+	[RelayCommand(AllowConcurrentExecutions = true)]
+	async Task InstallOrUninstall(Sdk sdk)
+	{
+		try
+		{
+			sdk.IsInstalling = true;
 
-    [RelayCommand]
-    void OpenSettings()
-    { }
+			if (sdk.Installed)
+			{
+				sdk.StatusMessage = Constants.UninstallingText;
+				var result = await _dotnet.Uninstall(sdk);
+				if (result)
+				{
+					sdk.Path = string.Empty;
+				}
+			}
+			else
+			{
+				sdk.StatusMessage = Constants.DownloadingText;
+				var path = await _dotnet.Download(sdk);
+				if (!string.IsNullOrEmpty(path))
+				{
+					sdk.StatusMessage = Constants.InstallingText;
+					var result = await _dotnet.Install(path);
+					if (result)
+					{
+						sdk.Path = await _dotnet.GetInstallationPath(sdk);
+					}
+					else
+					{
+						//show popup and prompt to manually install
+					}
+				}
+			}
+			sdk.IsInstalling = false;
+		}
 
-    void Sdks_FilterHandler(object sender, ObservableView.Filtering.FilterEventArgs<Sdk> e)
-    {
-        if (_showOnline && _showInstalled)
-        {
-            e.IsAllowed = true;
-        }
-        else if (_showOnline && !_showInstalled)
-        {
-            e.IsAllowed = !e.Item.Installed;
-        }
-        else if (!_showOnline && _showInstalled)
-        {
-            e.IsAllowed = e.Item.Installed;
-        }
-        else
-        {
-            e.IsAllowed = false;
-        }
-    }
+		catch (Exception ex)
+		{
+			sdk.IsInstalling = false;
+			await _errorHelper.ShowPopup(ex);
+		}
+	}
 
-    public async Task CheckSdks(bool force = false)
-    {
-        try
-        {
-            if (_isLoading) return;
-            _isLoading = true;
-            if (Sdks is not null) Sdks.FilterHandler -= Sdks_FilterHandler;
-            IsBusy = true;
-            var sdkList = await _dotnet.GetSdks(force);
-            Sdks = new ObservableView<Sdk>(sdkList.DistinctBy(s => s.VersionDisplay));
-            Sdks.SearchSpecification.Add(x => x.VersionDisplay, BinaryOperator.Contains);
-            Sdks.SearchSpecification.Add(x => x.Path, BinaryOperator.Contains);
-            Sdks.FilterHandler += Sdks_FilterHandler;
+	[RelayCommand]
+	void ToggleMultiSelection()
+	{
 
-            _baseSdks = sdkList;
-            LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
-            IsBusy = false;
-            _isLoading = false;
-        }
-        catch (Exception ex)
-        {
-            await _errorHelper.ShowPopup(ex);
-        }
-    }
+	}
+
+	[RelayCommand]
+	void OpenSettings()
+	{ }
+
+	void Sdks_FilterHandler(object sender, ObservableView.Filtering.FilterEventArgs<Sdk> e)
+	{
+		if (_showOnline && _showInstalled)
+		{
+			e.IsAllowed = true;
+		}
+		else if (_showOnline && !_showInstalled)
+		{
+			e.IsAllowed = !e.Item.Installed;
+		}
+		else if (!_showOnline && _showInstalled)
+		{
+			e.IsAllowed = e.Item.Installed;
+		}
+		else
+		{
+			e.IsAllowed = false;
+		}
+	}
+
+	public async Task CheckSdks(bool force = false)
+	{
+		try
+		{
+			if (_isLoading) return;
+			_isLoading = true;
+			if (Sdks is not null) Sdks.FilterHandler -= Sdks_FilterHandler;
+			IsBusy = true;
+			var sdkList = await _dotnet.GetSdks(force);
+			sdkList = sdkList.DistinctBy(s => s.VersionDisplay).ToList();
+			Sdks = new ObservableView<Sdk>(sdkList);
+			Sdks.SearchSpecification.Add(x => x.VersionDisplay, BinaryOperator.Contains);
+			Sdks.SearchSpecification.Add(x => x.Path, BinaryOperator.Contains);
+			Sdks.FilterHandler += Sdks_FilterHandler;
+
+			_baseSdks = sdkList;
+			LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
+			CurrentStatusText = $"{sdkList.Count()} SDKs found - {sdkList.Count(s => s.Installed)} installed";
+			IsBusy = false;
+			_isLoading = false;
+		}
+		catch (Exception ex)
+		{
+			await _errorHelper.ShowPopup(ex);
+		}
+	}
 }
