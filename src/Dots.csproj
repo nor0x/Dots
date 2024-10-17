@@ -67,26 +67,26 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.0.7" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.0.7" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.7" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.7" />
-    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.6" />
+    <PackageReference Include="Avalonia" Version="11.1.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.4" />
+    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.1.0.4" />
     <!--Condition
     below is needed to remove Avalonia.Diagnostics package from build output in Release
     configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.7" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.1.4" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="System.Reactive" Version="6.0.1-preview.1" />
+    <PackageReference Include="System.Reactive" Version="6.0.1" />
     <PackageReference Include="M.BindableProperty.Generator" Version="0.11.1" />
     <PackageReference Include="CliWrap" Version="3.6.6" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-    <PackageReference Include="akavache" Version="9.1.20" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="akavache" Version="10.1.6" />
     <PackageReference Include="HyperText.Avalonia" Version="11.0.0-rc1" />
-    <PackageReference Include="AnimatedImage.Avalonia" Version="1.0.3" />
+    <PackageReference Include="AnimatedImage.Avalonia" Version="1.0.7" />
     <PackageReference Include="Dotnet.Bundle" Version="*" />
   </ItemGroup>
 
