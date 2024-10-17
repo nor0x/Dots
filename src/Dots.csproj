@@ -67,6 +67,7 @@
 
 
   <ItemGroup>
+    <PackageReference Include="AsyncAwaitBestPractices" Version="8.0.0" />
     <PackageReference Include="Avalonia" Version="11.1.4" />
     <PackageReference Include="Avalonia.Desktop" Version="11.1.4" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.4" />

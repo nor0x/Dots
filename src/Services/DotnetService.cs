@@ -196,8 +196,8 @@ public class DotnetService
 
     }
 
-    public async ValueTask<string> Download(Sdk sdk, bool toDesktop = false)
-    {
+    public async ValueTask<string> Download(Sdk sdk, bool toDesktop = false, IProgress<(float progress, string task)>? status = null)
+	{
         try
         {
             Rid rid = GetRid();
@@ -212,18 +212,21 @@ public class DotnetService
                 var path = Path.Combine(Constants.AppDataPath, sdkFile);
                 if (File.Exists(path))
                 {
-                    if (toDesktop)
+					status?.Report((0.5f, "Already downloaded"));
+					if (toDesktop)
                     {
                         //if file exists on desktop, return desktop path otherwise copy and return desktop path
                         var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                         var filename = Path.Combine(desktop, sdkFile);
                         if (File.Exists(Path.Combine(desktop, filename)))
                         {
-                            return desktop;
+							status?.Report((1f, "Already downloaded"));
+							return desktop;
                         }
                         else
                         {
-                            await File.WriteAllBytesAsync(Path.Combine(desktop, sdkFile), await File.ReadAllBytesAsync(path));
+							var bytes = await File.ReadAllBytesAsync(path);
+							await bytes.WriteAllBytesAsync(Path.Combine(desktop, sdkFile), status, CancellationToken.None);
                             return desktop;
                         }
                     }
@@ -235,11 +238,13 @@ public class DotnetService
                 progress.Url = info.Url.ToString();
                 progress.CancellationTokenSource = new CancellationTokenSource();
 
-                var p = new Progress<float>();
+                var p = new Progress<(float progress, string task)>();
                 p.ProgressChanged += (s, e) =>
                 {
-                    progress.Value = e;
-                };
+                    progress.Value = e.progress * 100;
+					progress.Task = e.task;
+					status?.Report(e);
+				};
                 progress.Progress = p;
 
 

@@ -15,6 +15,8 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using AsyncAwaitBestPractices;
+using Avalonia.Threading;
 
 
 namespace Dots.ViewModels;
@@ -216,12 +218,26 @@ public partial class MainViewModel : ObservableRecipient
 			if (sdk.Installed)
 			{
 				sdk.StatusMessage = Constants.OpeningText;
+				CurrentStatusText = $"Opening {Path.Combine(sdk.Path, sdk.Data.Sdk.Version)}";
+				CurrentStatusIcon = LucideIcons.Folder;
+				ResetStatusInfo().SafeFireAndForget();
 				await _dotnet.OpenFolder(sdk);
 			}
 			else
 			{
 				sdk.StatusMessage = Constants.DownloadingText;
-				var path = await _dotnet.Download(sdk, true);
+				var path = await _dotnet.Download(sdk, true, status: new Progress<(float progress, string task)>(p =>
+				{
+					sdk.Progress = p.progress;
+					CurrentStatusText = $"{sdk.VersionDisplay} - {p.task} {p.progress:P0}";
+					CurrentStatusIcon = LucideIcons.Download;
+					if (p.progress == 1)
+					{
+						CurrentStatusText = "Downloaded to Desktop - opening...";
+						CurrentStatusIcon = LucideIcons.Folder;
+						ResetStatusInfo().SafeFireAndForget();
+					}
+				}));
 				await _dotnet.OpenFolder(path);
 			}
 			sdk.IsDownloading = false;
@@ -240,10 +256,10 @@ public partial class MainViewModel : ObservableRecipient
 		try
 		{
 			sdk.IsInstalling = true;
-
 			if (sdk.Installed)
 			{
 				sdk.StatusMessage = Constants.UninstallingText;
+				CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage}";
 				var result = await _dotnet.Uninstall(sdk);
 				if (result)
 				{
@@ -253,7 +269,17 @@ public partial class MainViewModel : ObservableRecipient
 			else
 			{
 				sdk.StatusMessage = Constants.DownloadingText;
-				var path = await _dotnet.Download(sdk);
+				CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage}";
+				var path = await _dotnet.Download(sdk, status: new Progress<(float progress, string task)>(p =>
+				{
+					sdk.Progress = p.progress;
+					CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage} - {p.task} {p.progress:P0}";
+					CurrentStatusIcon = LucideIcons.Download;
+					if (p.progress == 1)
+					{
+						ResetStatusInfo().SafeFireAndForget();
+					}
+				}));
 				if (!string.IsNullOrEmpty(path))
 				{
 					sdk.StatusMessage = Constants.InstallingText;
@@ -276,6 +302,16 @@ public partial class MainViewModel : ObservableRecipient
 			sdk.IsInstalling = false;
 			await _errorHelper.ShowPopup(ex);
 		}
+	}
+
+	async ValueTask ResetStatusInfo(bool delay = true)
+	{
+		if (delay)
+		{
+			await Task.Delay(1500);
+		}
+		CurrentStatusText = $"{Sdks.Source.Count()} SDKs found - {Sdks.Source.Count(s => s.Installed)} installed";
+		CurrentStatusIcon = LucideIcons.Info;
 	}
 
 	[RelayCommand]
@@ -325,7 +361,7 @@ public partial class MainViewModel : ObservableRecipient
 
 			_baseSdks = sdkList;
 			LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
-			CurrentStatusText = $"{sdkList.Count()} SDKs found - {sdkList.Count(s => s.Installed)} installed";
+			ResetStatusInfo(false).SafeFireAndForget();
 			IsBusy = false;
 			_isLoading = false;
 		}
