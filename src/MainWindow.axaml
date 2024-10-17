@@ -137,6 +137,72 @@
 					  Background="{StaticResource BackgroundLighter}"
 					  Opacity="0.5"
 					  Height="42" />
+				<Button x:Name="FilterButton"
+								Grid.Column="0"
+								Background="{StaticResource Background}"
+								Foreground="White"
+							HorizontalContentAlignment="Center"
+						VerticalContentAlignment="Center"
+						VerticalAlignment="Center"
+						ToolTip.Tip="Update and remove"
+						Width="42"
+						Height="42">
+					<StackPanel>
+						<TextBlock Text="{Binding SelectedFilterIcon}" FontFamily="{StaticResource LucideIcons}" HorizontalAlignment="Center" FontSize="15"  />
+						<TextBlock Text="Filter" FontSize="9" HorizontalAlignment="Center" />
+					</StackPanel>
+					<Button.Flyout>
+						<Flyout Placement="BottomEdgeAlignedRight"
+								FlyoutPresenterClasses="DotsFlyout">
+							<StackPanel Background="{StaticResource Background}">
+								<Button HorizontalAlignment="Stretch"
+										Command="{Binding ApplyFilterCommand}"
+										CommandParameter="0"
+										Tapped="Filter_Tapped">
+									<StackPanel Orientation="Horizontal"
+												Height="20"
+												Margin="4">
+										<TextBlock Text="{x:Static helpers:LucideIcons.ListFilter}"
+												   FontFamily="{StaticResource LucideIcons}"
+												   FontSize="15"
+												   Margin="0,0,8,0" />
+										<TextBlock Text="All" />
+									</StackPanel>
+								</Button>
+								<Button HorizontalAlignment="Stretch"
+										Command="{Binding ApplyFilterCommand}"
+										CommandParameter="1"
+										Tapped="Filter_Tapped">
+									<StackPanel Orientation="Horizontal"
+												Height="20"
+												Margin="4">
+										<TextBlock Text="{x:Static helpers:LucideIcons.Cloudy}"
+												   FontFamily="{StaticResource LucideIcons}"
+												   FontSize="15"
+												   Margin="0,0,8,0" />
+										<TextBlock Text="Online" />
+									</StackPanel>
+								</Button>
+								<Button HorizontalAlignment="Stretch"
+										Command="{Binding ApplyFilterCommand}"
+										CommandParameter="2"
+										Tapped="Filter_Tapped">
+									<StackPanel Orientation="Horizontal"
+												Height="20"
+												Margin="4">
+										<TextBlock Text="{x:Static helpers:LucideIcons.HardDrive}"
+												   FontFamily="{StaticResource LucideIcons}"
+												   FontSize="15"
+												   Margin="0,0,8,0" />
+										<TextBlock Text="Installed" />
+
+									</StackPanel>
+								</Button>
+
+							</StackPanel>
+						</Flyout>
+					</Button.Flyout>
+				</Button>
 				<Button Background="Transparent"
 						Foreground="White"
 						Padding="0"
@@ -240,13 +306,39 @@
 													IsVisible="{Binding Data.Preview}"
 													Padding="6,0"
 													Margin="0,0,6,0"
-													Background="{StaticResource Attention}"
 													VerticalAlignment="Center"
 													CornerRadius="10">
+												<Border.Background>
+													<SolidColorBrush Color="{Binding Data.Sdk.Version, Converter={StaticResource PreviewTypeToColorConverter}}" />
+												</Border.Background>
 												<TextBlock VerticalAlignment="Center"
-														   Text="Preview"
+														   Text="{Binding Data.Sdk.Version, Converter={StaticResource PreviewTypeToStringConverter}}"
 														   FontSize="10" />
 											</Border>
+											<Border Height="20"
+													Padding="6,0"
+													Margin="0,0,6,0"
+													VerticalAlignment="Center"
+													CornerRadius="10">
+												<Border.Background>
+													<SolidColorBrush Color="{Binding Data.SupportPhase, Converter={StaticResource SupportPhaseToColorConverter}}" />
+												</Border.Background>
+												<TextBlock VerticalAlignment="Center"
+														   Text="{Binding Data.SupportPhase}"
+														   FontSize="10" />
+											</Border>
+											<Border Height="20"
+											Padding="6,0"
+											Margin="0,0,6,0"
+											VerticalAlignment="Center"
+											CornerRadius="10">
+												<Border.Background>
+													<SolidColorBrush Color="{Binding Data.ReleaseType, Converter={StaticResource ReleaseTypeToColorConverter}}" />
+												</Border.Background>
+										<TextBlock VerticalAlignment="Center"
+												   Text="{Binding Data.ReleaseType}"
+												   FontSize="10" />
+									</Border>
 											<StackPanel>
 												<StackPanel Width="230"
 															IsVisible="{Binding IsBusy}">
@@ -358,11 +450,11 @@
 							</ListBox.ItemTemplate>
 						</ListBox>
 						<Grid ColumnDefinitions="20,*" Background="{StaticResource Background}" Height="20" VerticalAlignment="Bottom">
-						<TextBlock FontFamily="{StaticResource LucideIcons}" Grid.Column="0"
-								   VerticalAlignment="Center"
-								   Margin="8,0,8,0"
-							   Text="{Binding CurrentStatusIcon}"
-								   Foreground="White" FontSize="10" />
+							<TextBlock FontFamily="{StaticResource LucideIcons}" Grid.Column="0"
+									   VerticalAlignment="Center"
+									   Margin="8,0,8,0"
+								   Text="{Binding CurrentStatusIcon}"
+									   Foreground="White" FontSize="10" />
 							<TextBlock Text="{Binding CurrentStatusText}" Foreground="White" Grid.Column="1" FontSize="9" VerticalAlignment="Center" />
 						</Grid>
 					</Grid>
@@ -370,76 +462,7 @@
 				<SplitView.Pane>
 					<Grid ColumnDefinitions="30,*"
 						  Background="{StaticResource BackgroundSubtle}">
-
-						<Button x:Name="FilterButton"
-								Grid.Column="0"
-								Background="{StaticResource Background}"
-								Foreground="White"
-								Content="{Binding SelectedFilterIcon}"
-								FontFamily="{StaticResource LucideIcons}"
-								FontSize="15"
-								HorizontalContentAlignment="Center"
-								VerticalContentAlignment="Center"
-								VerticalAlignment="Top"
-								HorizontalAlignment="Left"
-								Width="36"
-								Height="40"
-								CornerRadius="0,0,0,8"
-								Padding="0"
-								Margin="0,-1,0,-1">
-							<Button.Flyout>
-								<Flyout Placement="LeftEdgeAlignedTop"
-										FlyoutPresenterClasses="DotsFlyout">
-									<StackPanel Background="{StaticResource Background}">
-										<Button HorizontalAlignment="Stretch"
-												Command="{Binding ApplyFilterCommand}"
-												CommandParameter="0"
-												Tapped="Filter_Tapped">
-											<StackPanel Orientation="Horizontal"
-														Height="20"
-														Margin="4">
-												<TextBlock Text="{x:Static helpers:LucideIcons.ListFilter}"
-														   FontFamily="{StaticResource LucideIcons}"
-														   FontSize="15"
-														   Margin="0,0,8,0" />
-												<TextBlock Text="All" />
-											</StackPanel>
-										</Button>
-										<Button HorizontalAlignment="Stretch"
-												Command="{Binding ApplyFilterCommand}"
-												CommandParameter="1"
-												Tapped="Filter_Tapped">
-											<StackPanel Orientation="Horizontal"
-														Height="20"
-														Margin="4">
-												<TextBlock Text="{x:Static helpers:LucideIcons.Cloudy}"
-														   FontFamily="{StaticResource LucideIcons}"
-														   FontSize="15"
-														   Margin="0,0,8,0" />
-												<TextBlock Text="Online" />
-											</StackPanel>
-										</Button>
-										<Button HorizontalAlignment="Stretch"
-												Command="{Binding ApplyFilterCommand}"
-												CommandParameter="2"
-												Tapped="Filter_Tapped">
-											<StackPanel Orientation="Horizontal"
-														Height="20"
-														Margin="4">
-												<TextBlock Text="{x:Static helpers:LucideIcons.HardDrive}"
-														   FontFamily="{StaticResource LucideIcons}"
-														   FontSize="15"
-														   Margin="0,0,8,0" />
-												<TextBlock Text="Installed" />
-
-											</StackPanel>
-										</Button>
-
-									</StackPanel>
-								</Flyout>
-							</Button.Flyout>
-						</Button>
-
+					
 						<Button Grid.Column="0"
 								Background="{StaticResource Background}"
 								Foreground="White"
@@ -449,12 +472,13 @@
 								HorizontalContentAlignment="Center"
 								VerticalContentAlignment="Center"
 								VerticalAlignment="Bottom"
+								BorderThickness="0"
 								HorizontalAlignment="Left"
 								Width="36"
 								Height="40"
 								CornerRadius="8,0,0,0"
 								Padding="0"
-								Margin="0,0,0,0"
+								Margin="0,0,0,-1"
 								x:Name="ToggleDetailsButton"
 								Tapped="ToggleDetails_Tapped" />
 
@@ -547,8 +571,10 @@
 													   HorizontalAlignment="Center"
 													   VerticalAlignment="Center" />
 										</Border>
-										<TextBlock Text="{Binding Data.Sdk.Version}"
-												   FontSize="20" />
+										<TextBlock FontSize="20">
+													<Run Text=".NET" />
+													<Run Text="{Binding Data.Sdk.Version}" />
+										</TextBlock>
 										<StackPanel Orientation="Horizontal">
 											<Border Height="20"
 													Padding="6,0"
@@ -565,11 +591,37 @@
 													IsVisible="{Binding Data.Preview}"
 													Padding="6,0"
 													Margin="0,0,6,0"
-													Background="{StaticResource Attention}"
 													CornerRadius="10"
 													VerticalAlignment="Center">
+												<Border.Background>
+													<SolidColorBrush Color="{Binding Data.Sdk.Version, Converter={StaticResource PreviewTypeToColorConverter}}" />
+												</Border.Background>
 												<TextBlock VerticalAlignment="Center"
-														   Text="Preview"
+														   Text="{Binding Data.Sdk.Version, Converter={StaticResource PreviewTypeToStringConverter}}"
+														   FontSize="10" />
+											</Border>
+											<Border Height="20"
+													Padding="6,0"
+													Margin="0,0,6,0"
+													VerticalAlignment="Center"
+													CornerRadius="10">
+												<Border.Background>
+													<SolidColorBrush Color="{Binding Data.SupportPhase, Converter={StaticResource SupportPhaseToColorConverter}}" />
+												</Border.Background>
+												<TextBlock VerticalAlignment="Center"
+														   Text="{Binding Data.SupportPhase}"
+														   FontSize="10" />
+											</Border>
+											<Border Height="20"
+											Padding="6,0"
+											Margin="0,0,6,0"
+											VerticalAlignment="Center"
+											CornerRadius="10">
+												<Border.Background>
+													<SolidColorBrush Color="{Binding Data.ReleaseType, Converter={StaticResource ReleaseTypeToColorConverter}}" />
+												</Border.Background>
+												<TextBlock VerticalAlignment="Center"
+														   Text="{Binding Data.ReleaseType}"
 														   FontSize="10" />
 											</Border>
 										</StackPanel>

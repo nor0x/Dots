@@ -15,8 +15,8 @@ public partial class ProgressTask : ObservableObject
     public IProgress<(float progress, string task)> Progress { get; set; }
 
     [ObservableProperty]
-    float _value;
+    float? _value;
 
 	[ObservableProperty]
-	string _task;
+	string? _task;
 }

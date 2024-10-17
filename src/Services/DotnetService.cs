@@ -38,7 +38,9 @@ public class DotnetService
         foreach (var item in index)
         {
             var infos = await GetReleaseInfos(item.ChannelVersion, force);
-            releaseInfos.AddRange(infos);
+			infos.ToList().ForEach(r => r.SupportPhase = item.SupportPhase);
+			infos.ToList().ForEach(r => r.ReleaseType = item.ReleaseType);
+			releaseInfos.AddRange(infos);
         }
         foreach (var release in releaseInfos)
         {
@@ -48,7 +50,13 @@ public class DotnetService
                 ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
                 Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty,
                 VersionDisplay = release.Sdk.Version,
+				
+
             };
+
+			sdk.Data.ReleaseType = release.ReleaseType;
+			sdk.Data.SupportPhase = release.SupportPhase;
+
             result.Add(sdk);
 
             if (release.Sdks is not null)

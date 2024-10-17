@@ -12,8 +12,15 @@
     <Color x:Key="Success">#2da44e</Color>
     <Color x:Key="Attention">#bf8700</Color>
     <Color x:Key="Danger">#cf222e</Color>
+	<Color x:Key="Warning">#e16f24</Color>
+	<Color x:Key="Info">#eac54f</Color>
     <Color x:Key="Link">#3483eb</Color>
     <Color x:Key="LinkHover">#3496eb</Color>
+	
+	<Color x:Key="Purple">#a475f9</Color>
+	<Color x:Key="Pink">#e85aad</Color>
+	<Color x:Key="Green">#116329</Color>
+	<Color x:Key="Brown">#7d4e00</Color>
 
     <Color x:Key="Background">#38343d</Color>
     <Color x:Key="BackgroundLighter">#4B4552</Color>
@@ -44,7 +51,11 @@
         Color="{StaticResource Danger}" />
     
     <helpers:RidToIconConverter x:Key="RidToIconConverter" />
+    <helpers:SupportPhaseToColorConverter x:Key="SupportPhaseToColorConverter" />
+    <helpers:ReleaseTypeToColorConverter x:Key="ReleaseTypeToColorConverter" />
     <helpers:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmptyConverter" />
+    <helpers:PreviewTypeToStringConverter x:Key="PreviewTypeToStringConverter" />
+    <helpers:PreviewTypeToColorConverter x:Key="PreviewTypeToColorConverter" />
   </Application.Resources>
     <Application.Styles>
         <FluentTheme />
