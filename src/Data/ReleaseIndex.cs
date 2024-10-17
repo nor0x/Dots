@@ -49,7 +49,7 @@ public enum Product { Net, NetCore, Undefined };
 
 public enum ReleaseType { Lts, Sts, Undefined };
 
-public enum SupportPhase { Active, Eol, Preview, Undefined };
+public enum SupportPhase { Active, Eol, Preview, GoLive, Maintenance, Undefined };
 
 
 public class ProductEnumConverter : JsonConverter<Product>
@@ -107,7 +107,9 @@ public class SupportPhaseEnumConverter : JsonConverter<SupportPhase>
             "preview" => SupportPhase.Preview,
             "active" => SupportPhase.Active,
             "eol" => SupportPhase.Eol,
-            _ => SupportPhase.Undefined
+			"go-live" => SupportPhase.GoLive,
+			"maintenance" => SupportPhase.Maintenance,
+			_ => SupportPhase.Undefined
         };
     }
 
@@ -118,7 +120,9 @@ public class SupportPhaseEnumConverter : JsonConverter<SupportPhase>
             SupportPhase.Preview => "preview",
             SupportPhase.Active => "active",
             SupportPhase.Eol => "eol",
-            _ => ""
+			SupportPhase.GoLive => "go-live",
+			SupportPhase.Maintenance => "maintenance",
+			_ => ""
         });
     }
 }

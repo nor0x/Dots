@@ -71,10 +71,14 @@ public partial class Release
     public Windowsdesktop Windowsdesktop { get; set; }
 
     [JsonIgnore]
-    public bool Preview => Sdk.Version.Contains("-");
+    public bool Preview => Sdk.Version.Contains("-");    
+	
 
     [JsonIgnore]
-    public bool SupportPhase { get; set; }
+    public SupportPhase SupportPhase { get; set; }
+
+	[JsonIgnore]
+	public ReleaseType ReleaseType { get; set; }
 }
 
 public partial class AspnetcoreRuntime
