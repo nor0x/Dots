@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
 using Akavache;
+using AsyncAwaitBestPractices;
 using CliWrap;
 using CliWrap.Buffered;
 using Dots.Data;
@@ -20,7 +21,6 @@ namespace Dots.Services;
 
 public class DotnetService
 {
-    List<Sdk> _sdks;
     List<InstalledSdk> _installedSdks = new();
     ReleaseIndex[] _releaseIndex;
     Dictionary<string, Release[]> _releases = new();
@@ -50,9 +50,8 @@ public class DotnetService
                 ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
                 Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty,
                 VersionDisplay = release.Sdk.Version,
-				
-
-            };
+				SdkData = release.Sdk,
+			};
 
 			sdk.Data.ReleaseType = release.ReleaseType;
 			sdk.Data.SupportPhase = release.SupportPhase;
@@ -69,6 +68,7 @@ public class DotnetService
                         ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
                         Path = _installedSdks.FirstOrDefault(x => x.Version == subSdk.Version)?.Path ?? string.Empty,
                         VersionDisplay = subSdk.Version,
+						SdkData = subSdk,
                     };
 
                     if (result.FirstOrDefault(s => s.VersionDisplay == subSdk.VersionDisplay) is null)
@@ -283,13 +283,21 @@ public class DotnetService
         }
     }
 
-    public async ValueTask<bool> Install(string exe)
-    {
+    public async ValueTask<bool> Install(string exe, IProgress<(float progress, string task)>? status = null)
+	{
         try
         {
 #if WINDOWS
             var result = await Cli.Wrap(exe).WithArguments(" /install /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
-            return result.ExitCode == 0;
+			if(result.ExitCode == 1638)
+			{
+				status?.Report((1f, "Another version is already installed"));
+			}
+			else if (result.ExitCode == 0)
+			{
+				status?.Report((1f, "Installed"));
+			}
+			return result.ExitCode == 0;
 #endif
 #if MACOS
 
@@ -302,7 +310,11 @@ public class DotnetService
             //Analytics.TrackEvent("Install SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "Exe", exe } });
             return false;
         }
-        return false;
+		finally
+		{
+			GetInstalledSdks(true).SafeFireAndForget();
+		}
+		return false;
     }
 
     public async Task<string> GetInstallationPath(Sdk sdk)
@@ -372,6 +384,7 @@ public class DotnetService
 				if (result.ExitCode == 0)
 				{
 					sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
+					GetInstalledSdks(true).SafeFireAndForget();
 				}
 				return result.ExitCode == 0;
             }
@@ -386,6 +399,7 @@ public class DotnetService
 					if (result.ExitCode == 0)
 					{
 						sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
+						GetInstalledSdks(true).SafeFireAndForget();
 					}
 					return result.ExitCode == 0;
                 }
@@ -396,6 +410,7 @@ public class DotnetService
 					if (result.ExitCode == 0)
 					{
 						sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
+						GetInstalledSdks(true).SafeFireAndForget();
 					}
 					return result.ExitCode == 0;
                 }
