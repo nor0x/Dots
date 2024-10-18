@@ -137,6 +137,7 @@ public partial class MainViewModel : ObservableRecipient
 		var installedGrouped = installed.GroupBy(s => s.VersionDisplay.Substring(0, 3)).ToList();
 		installed = installedGrouped.SelectMany(g => g.OrderByDescending(s => s.VersionDisplay).Skip(1)).ToList();
 		toCleanup.AddRange(installed);
+		toCleanup = toCleanup.Distinct().ToList();
 
 		int current = 0;
 		foreach (var sdk in toCleanup)
