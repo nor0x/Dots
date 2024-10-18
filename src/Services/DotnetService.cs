@@ -261,13 +261,13 @@ public class DotnetService
                 // Use the provided extension method
                 using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
                 using var client = new HttpClient();
-                await client.DownloadDataAsync(info.Url.ToString(), file, p);
+                await client.DownloadDataAsync(info.Url.ToString(), file, p, sdk.ProgressTask.CancellationTokenSource.Token);
 
                 if (toDesktop)
                 {
                     var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                     var filename = Path.Combine(desktop, sdkFile);
-                    await File.WriteAllBytesAsync(Path.Combine(desktop, sdkFile), await File.ReadAllBytesAsync(path));
+                    await File.WriteAllBytesAsync(Path.Combine(desktop, sdkFile), await File.ReadAllBytesAsync(path), sdk.ProgressTask.CancellationTokenSource.Token);
                     path = desktop;
                 }
 
@@ -339,20 +339,41 @@ public class DotnetService
     }
 
 
-    public async Task<bool> Uninstall(Sdk sdk, string setupPath = "")
-    {
+    public async Task<bool> Uninstall(Sdk sdk, string setupPath = "", IProgress<(float progress, string task)>? status = null)
+	{
         try
         {
+			var progress = new ProgressTask();
+			progress.Title = $"Uninstalling {sdk.Data.Sdk.Version}";
+			progress.CancellationTokenSource = new CancellationTokenSource();
+
+			var p = new Progress<(float progress, string task)>();
+			p.ProgressChanged += (s, e) =>
+			{
+				progress.Value = e.progress * 100;
+				progress.Task = e.task;
+				status?.Report(e);
+			};
+			progress.Progress = p;
+
+
+			sdk.ProgressTask = progress;
+
 #if WINDOWS
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), Constants.UninstallerPath);
+			var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), Constants.UninstallerPath);
             var filename = GetSetupName(sdk);
 
             string[] files = Directory.GetFiles(path, filename, SearchOption.AllDirectories);
 
             if (!files.IsNullOrEmpty())
             {
-                var result = await Cli.Wrap(files.First()).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
-                return result.ExitCode == 0;
+				sdk.ProgressTask.Progress?.Report((0.5f, "Found uninstaller"));
+				var result = await Cli.Wrap(files.First()).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
+				if (result.ExitCode == 0)
+				{
+					sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
+				}
+				return result.ExitCode == 0;
             }
             else
             {
@@ -360,20 +381,33 @@ public class DotnetService
                 var setupInLocalDirectory = Path.Combine(Constants.AppDataPath, filename);
                 if (!string.IsNullOrEmpty(setupPath))
                 {
-                    var result = await Cli.Wrap(setupPath).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
-                    return result.ExitCode == 0;
+					sdk.ProgressTask.Progress?.Report((0.5f, "Found Uninstaller"));
+					var result = await Cli.Wrap(setupPath).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
+					if (result.ExitCode == 0)
+					{
+						sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
+					}
+					return result.ExitCode == 0;
                 }
                 else if (File.Exists(setupInLocalDirectory))
                 {
-                    var result = await Cli.Wrap(setupInLocalDirectory).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
-                    return result.ExitCode == 0;
+					sdk.ProgressTask.Progress?.Report((0.5f, "Found Uninstaller"));
+					var result = await Cli.Wrap(setupInLocalDirectory).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
+					if (result.ExitCode == 0)
+					{
+						sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
+					}
+					return result.ExitCode == 0;
                 }
                 else
                 {
-                    var exe = await Download(sdk);
-                    if (!string.IsNullOrEmpty(exe))
+                    sdk.ProgressTask.Progress?.Report((0.3f, "Fetching Uninstaller"));
+					var exe = await Download(sdk, status: status);
+
+					if (!string.IsNullOrEmpty(exe))
                     {
-                        return await Uninstall(sdk, exe);
+						sdk.ProgressTask.Progress?.Report((0.4f, "Found Uninstaller"));
+						return await Uninstall(sdk, exe);
                     }
                 }
             }
@@ -390,11 +424,19 @@ public class DotnetService
             script = script.Replace("XXXXX", sdk.Data.Sdk.Version);
             var filename = "uninstall-" + sdk.Data.Sdk.Version.Replace(".", "-") + ".sh";
             var path = Path.Combine(Constants.AppDataPath, filename);
+			sdk.ProgressTask.Progress?.Report((0.5f, "Writing Uninstaller"));
             await File.WriteAllTextAsync(path, script);
-            return RunAsRoot("/bin/sh", new[] { path, null });
+			sdk.ProgressTask.Progress?.Report((0.6f, "Uninstalling"));
+			var result = RunAsRoot("/bin/sh", new[] { path, null });
+			if (result)
+			{
+				sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
+				return true;
+			}
+			return false;
 #endif
-        }
-        catch (Exception ex)
+		}
+		catch (Exception ex)
         {
             Debug.WriteLine(ex);
             //Analytics.TrackEvent("Uninstall SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
@@ -482,7 +524,27 @@ public class DotnetService
 
 #endif
 
-    string GetExtension()
+	Sdk GetMostRecentSdk(List<Sdk> sdks, bool withPreview = false)
+	{
+		try
+		{
+			sdks = sdks.OrderByDescending(x => x.VersionDisplay).ToList();
+			if (withPreview)
+			{
+				return sdks.FirstOrDefault(x => x.Data.Preview);
+			}
+			return sdks.FirstOrDefault(x => !x.Data.Preview);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine(ex);
+			//Analytics.TrackEvent("GetMostRecentSdk", new Dictionary<string, string>() { { "Error", ex.Message } });
+			return null;
+		}
+	}
+
+
+	string GetExtension()
     {
         var ext = ".tar.gz";
         //if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) doesn't work on mac-catalyst

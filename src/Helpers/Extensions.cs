@@ -153,7 +153,16 @@ public static class Extensions
     //credits https://gist.github.com/dalexsoto/9fd3c5bdbe9f61a717d47c5843384d11
     public static async Task DownloadDataAsync(this HttpClient client, string requestUrl, Stream destination, IProgress<(float progress, string task)>? progress = null, CancellationToken cancellationToken = default(CancellationToken))
     {
-        using (var response = await client.GetAsync(requestUrl, HttpCompletionOption.ResponseHeadersRead))
+		//if cancellation is requested, delete the file
+		cancellationToken.Register(() =>
+		{
+			if (destination is FileStream fs)
+			{
+				fs.Close();
+				File.Delete(fs.Name);
+			}
+		});
+		using (var response = await client.GetAsync(requestUrl, HttpCompletionOption.ResponseHeadersRead))
         {
             var contentLength = response.Content.Headers.ContentLength;
             using (var download = await response.Content.ReadAsStreamAsync())
