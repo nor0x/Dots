@@ -115,6 +115,9 @@ public partial class FileInfo
 
     [JsonPropertyName("akams")]
     public Uri Akams { get; set; }
+
+	[JsonIgnore]
+	public string FileName => Url.ToString().Split('/').Last();
 }
 
 public partial class CveList

@@ -1,15 +1,20 @@
 ﻿using Avalonia.Media;
 using Dots.Data;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 
 namespace Dots.Models;
 
+[DebuggerDisplay("{VersionDisplay}")]
 public partial class Sdk : ObservableObject
 {
     [ObservableProperty]
     Release _data;
 
-    [ObservableProperty]
+	[ObservableProperty]
+	SdkInfo _sdkData;
+
+	[ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Installed))]
     string _path = "";
 
