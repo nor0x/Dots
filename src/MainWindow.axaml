@@ -309,10 +309,10 @@
 													VerticalAlignment="Center"
 													CornerRadius="10">
 												<Border.Background>
-													<SolidColorBrush Color="{Binding Data.Sdk.Version, Converter={StaticResource PreviewTypeToColorConverter}}" />
+													<SolidColorBrush Color="{Binding SdkData.Version, Converter={StaticResource PreviewTypeToColorConverter}}" />
 												</Border.Background>
 												<TextBlock VerticalAlignment="Center"
-														   Text="{Binding Data.Sdk.Version, Converter={StaticResource PreviewTypeToStringConverter}}"
+														   Text="{Binding SdkData.Version, Converter={StaticResource PreviewTypeToStringConverter}}"
 														   FontSize="10" />
 											</Border>
 											<Border Height="20"
@@ -575,7 +575,7 @@
 										</Border>
 										<TextBlock FontSize="20">
 													<Run Text=".NET" />
-													<Run Text="{Binding Data.Sdk.Version}" />
+													<Run Text="{Binding VersionDisplay}" />
 										</TextBlock>
 										<StackPanel Orientation="Horizontal">
 											<Border Height="20"
@@ -596,10 +596,10 @@
 													CornerRadius="10"
 													VerticalAlignment="Center">
 												<Border.Background>
-													<SolidColorBrush Color="{Binding Data.Sdk.Version, Converter={StaticResource PreviewTypeToColorConverter}}" />
+													<SolidColorBrush Color="{Binding SdkData.Version, Converter={StaticResource PreviewTypeToColorConverter}}" />
 												</Border.Background>
 												<TextBlock VerticalAlignment="Center"
-														   Text="{Binding Data.Sdk.Version, Converter={StaticResource PreviewTypeToStringConverter}}"
+														   Text="{Binding SdkData.Version, Converter={StaticResource PreviewTypeToStringConverter}}"
 														   FontSize="10" />
 											</Border>
 											<Border Height="20"
@@ -777,33 +777,34 @@
 										<TextBlock Text="Runtime Version"
 												   FontWeight="Bold"
 												   Margin="0,12,0,0" />
-										<TextBlock Text="{Binding Data.Sdk.RuntimeVersion}" />
+										<TextBlock Text="{Binding SdkData.RuntimeVersion}" />
 										<TextBlock Text="C# Version"
 												   FontWeight="Bold"
 												   Margin="0,12,0,0" />
-										<TextBlock Text="{Binding Data.Sdk.CsharpVersion}" />
+										<TextBlock Text="{Binding SdkData.CsharpVersion}" />
 										<TextBlock Text="F# Version"
 												   FontWeight="Bold"
 												   Margin="0,12,0,0" />
-										<TextBlock Text="{Binding Data.Sdk.FsharpVersion}" />
+										<TextBlock Text="{Binding SdkData.FsharpVersion}" />
 										<TextBlock Text="VB Version"
 												   FontWeight="Bold"
 												   Margin="0,12,0,0" />
-										<TextBlock Text="{Binding Data.Sdk.VbVersion}" />
+										<TextBlock Text="{Binding SdkData.VbVersion}" />
 										<TextBlock Text="Visual Studio Support"
 												   FontWeight="Bold"
 												   Margin="0,12,0,0" />
-										<TextBlock Text="{Binding Data.Sdk.VsSupport}" />
-										<TextBlock Text="{Binding Data.Sdk.VsVersion}" />
+										<TextBlock Text="{Binding SdkData.VsSupport}" />
+										<TextBlock Text="{Binding SdkData.VsVersion}" />
 										<TextBlock Text="Visual Studio Mac Support"
 												   FontWeight="Bold"
 												   Margin="0,12,0,0" />
-										<TextBlock Text="{Binding Data.Sdk.VsMacSupport}" />
-										<TextBlock Text="{Binding Data.Sdk.VsMacVersion}" />
+										<TextBlock Text="{Binding SdkData.VsMacSupport}" />
+										<TextBlock Text="{Binding SdkData.VsMacVersion}" />
 										<TextBlock Text="Download Files"
 												   FontWeight="Bold"
 												   Margin="0,12,0,0" />
-										<ItemsControl ItemsSource="{Binding Data.Sdk.Files}"
+										<ItemsControl ItemsSource="{Binding SdkData.Files}"
+													  HorizontalAlignment="Stretch"
 													  Background="Transparent">
 											<ItemsControl.ItemTemplate>
 												<DataTemplate x:DataType="data:FileInfo">

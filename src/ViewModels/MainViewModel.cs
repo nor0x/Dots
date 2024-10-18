@@ -1,22 +1,15 @@
-﻿
-using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.Input;
 using Dots.Models;
 using Dots.Services;
-using System.Reactive;
 using Dots.Data;
 using Dots.Helpers;
 using ObservableView;
 using ObservableView.Searching.Operators;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Threading.Tasks;
-using System.Windows.Input;
 using AsyncAwaitBestPractices;
-using Avalonia.Threading;
 
 
 namespace Dots.ViewModels;
@@ -134,11 +127,54 @@ public partial class MainViewModel : ObservableRecipient
 
 	[RelayCommand(AllowConcurrentExecutions = true)]
 	async Task CleanupSdks()
-	{ }
+	{
+		await CheckSdks(true);
+		var toCleanup = Sdks.Source.Where(s => s.Installed && s.Data.SupportPhase is SupportPhase.Eol).ToList();
+		var installed = Sdks.Source.Where(s => s.Installed).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
+		var latests = Sdks.Source.Where(s => !s.Data.Preview).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.VersionDisplay).First()).ToList();
+
+		installed = installed.Except(latests).ToList();
+		var installedGrouped = installed.GroupBy(s => s.VersionDisplay.Substring(0, 3)).ToList();
+		installed = installedGrouped.SelectMany(g => g.OrderByDescending(s => s.VersionDisplay).Skip(1)).ToList();
+		toCleanup.AddRange(installed);
+
+		int current = 0;
+		foreach (var sdk in toCleanup)
+		{
+			CurrentStatusText = $"Uninstalling {sdk.VersionDisplay} - Cleanup {current + 1} | {toCleanup.Count}";
+			CurrentStatusIcon = LucideIcons.Trash2;
+			sdk.IsInstalling = true;
+			var result = await _dotnet.Uninstall(sdk, status: new Progress<(float progress, string task)>(p =>
+			{
+				sdk.Progress = p.progress;
+				CurrentStatusText = $"Cleanup {sdk.VersionDisplay} - {p.task} {p.progress:P0}";
+				CurrentStatusIcon = LucideIcons.Trash2;
+				if (p.progress == 1)
+				{
+					ResetStatusInfo().SafeFireAndForget();
+				}
+			}));
+			if (result)
+			{
+				sdk.Path = string.Empty;
+			}
+			sdk.IsInstalling = false;
+			current++;
+		}
+	}
 
 	[RelayCommand(AllowConcurrentExecutions = true)]
 	async Task CleanupAndUpdateSdks()
-	{ }
+	{
+		await CheckSdks(true);
+		
+	}
+
+	[RelayCommand]
+	void CancelTask(Sdk sdk)
+	{
+		sdk.ProgressTask.CancellationTokenSource.Cancel();
+	}
 
 
 	[RelayCommand(AllowConcurrentExecutions = true)]
@@ -260,7 +296,16 @@ public partial class MainViewModel : ObservableRecipient
 			{
 				sdk.StatusMessage = Constants.UninstallingText;
 				CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage}";
-				var result = await _dotnet.Uninstall(sdk);
+				var result = await _dotnet.Uninstall(sdk, status: new Progress<(float progress, string task)>(p =>
+				{
+					sdk.Progress = p.progress;
+					CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage} - {p.task} {p.progress:P0}";
+					CurrentStatusIcon = LucideIcons.Trash2;
+					if (p.progress == 1)
+					{
+						ResetStatusInfo().SafeFireAndForget();
+					}
+				}));
 				if (result)
 				{
 					sdk.Path = string.Empty;
@@ -283,7 +328,16 @@ public partial class MainViewModel : ObservableRecipient
 				if (!string.IsNullOrEmpty(path))
 				{
 					sdk.StatusMessage = Constants.InstallingText;
-					var result = await _dotnet.Install(path);
+					var result = await _dotnet.Install(path, status: new Progress<(float progress, string task)>(p =>
+					{
+						sdk.Progress = p.progress;
+						CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage} - {p.task} {p.progress:P0}";
+						CurrentStatusIcon = LucideIcons.Trash2;
+						if (p.progress == 1)
+						{
+							ResetStatusInfo().SafeFireAndForget();
+						}
+					}));
 					if (result)
 					{
 						sdk.Path = await _dotnet.GetInstallationPath(sdk);
