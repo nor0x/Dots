@@ -808,13 +808,14 @@
 													  Background="Transparent">
 											<ItemsControl.ItemTemplate>
 												<DataTemplate x:DataType="data:FileInfo">
-													<StackPanel Height="50"
-																Orientation="Horizontal"
-																Spacing="8"
+													<Grid Height="50"
+														  ColumnDefinitions="60,*"
 																Margin="8">
 														<Border Background="#5effffff"
+																Grid.Column="0"
 																Height="50"
 																Width="50"
+																HorizontalAlignment="Left"
 																CornerRadius="25"
 																Padding="2">
 															<TextBlock VerticalAlignment="Center"
@@ -825,13 +826,16 @@
 																	   Text="{Binding Rid, Converter={StaticResource RidToIconConverter}}" />
 														</Border>
 														<StackPanel Spacing="2"
+																	Grid.Column="1"
 																	VerticalAlignment="Center">
 															<TextBlock VerticalAlignment="Center"
 																	   Text="{Binding Rid}" />
-															<hyper:Hyperlink Alias="{Binding Name}"
-																			 Url="{Binding Url}" />
-														</StackPanel>
-													</StackPanel>
+															<hyper:Hyperlink Alias="{Binding FileName}"
+																			 MaxLines="3"
+																			 TextWrapping="Wrap"
+																			Url="{Binding Url}" />
+															</StackPanel>
+													</Grid>
 												</DataTemplate>
 											</ItemsControl.ItemTemplate>
 										</ItemsControl>
