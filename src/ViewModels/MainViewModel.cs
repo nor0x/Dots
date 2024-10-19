@@ -130,13 +130,34 @@ public partial class MainViewModel : ObservableRecipient
 	{
 		await CheckSdks(true);
 		var toCleanup = Sdks.Source.Where(s => s.Installed && s.Data.SupportPhase is SupportPhase.Eol).ToList();
-		var installed = Sdks.Source.Where(s => s.Installed).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
+		var installed = Sdks.Source.Where(s => s.Installed).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Where(g => g.Count() >= 1).SelectMany(g => g).ToList();
 		var latests = Sdks.Source.Where(s => !s.Data.Preview).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.VersionDisplay).First()).ToList();
 
-		installed = installed.Except(latests).ToList();
 		var installedGrouped = installed.GroupBy(s => s.VersionDisplay.Substring(0, 3)).ToList();
-		installed = installedGrouped.SelectMany(g => g.OrderByDescending(s => s.VersionDisplay).Skip(1)).ToList();
-		toCleanup.AddRange(installed);
+
+		var addToCleanup = new List<Sdk>();
+		foreach (var sdk in installed)
+		{
+			if (latests.Contains(sdk))
+			{
+				continue;
+			}
+			else
+			{
+				//add from the same major version but skip the latest
+				var group = installedGrouped.FirstOrDefault(g => g.Key == sdk.VersionDisplay.Substring(0, 3));
+				if (group is not null)
+				{
+					var ordered = group.OrderByDescending(s => s.VersionDisplay).ToList();
+					for (int i = 1; i < ordered.Count; i++)
+					{
+						addToCleanup.Add(ordered[i]);
+					}
+				}
+			}
+		}
+		toCleanup.AddRange(addToCleanup);
+		toCleanup.AddRange(installed.Where(s => s.Data.SupportPhase is SupportPhase.Eol).ToList());
 		toCleanup = toCleanup.Distinct().ToList();
 
 		int current = 0;
@@ -168,7 +189,20 @@ public partial class MainViewModel : ObservableRecipient
 	async Task CleanupAndUpdateSdks()
 	{
 		await CheckSdks(true);
-		
+		var latests = Sdks.Source.GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.VersionDisplay).First()).ToList();
+		var installed = Sdks.Source.Where(s => s.Installed).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Where(g => g.Count() >= 1).SelectMany(g => g).ToList();
+		var toInstall = latests.Except(installed).ToList().Where(s => s.Data.SupportPhase is SupportPhase.Active || s.Data.SupportPhase is SupportPhase.Preview || s.Data.SupportPhase is SupportPhase.Maintenance);
+		toInstall = toInstall.Distinct().ToList();
+
+		int current = 0;
+		foreach (var sdk in toInstall)
+		{
+			CurrentStatusText = $"Installing {sdk.VersionDisplay} - Update {current + 1} | {toInstall.Count()}";
+			CurrentStatusIcon = LucideIcons.CircleFadingArrowUp;
+			await InstallOrUninstall(sdk);
+		}
+
+		await CleanupSdks();
 	}
 
 	[RelayCommand]
