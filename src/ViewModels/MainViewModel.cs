@@ -333,7 +333,7 @@ public partial class MainViewModel : ObservableRecipient
 					{
 						sdk.Progress = p.progress;
 						CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage} - {p.task} {p.progress:P0}";
-						CurrentStatusIcon = LucideIcons.Trash2;
+						CurrentStatusIcon = LucideIcons.HardDriveDownload;
 						if (p.progress == 1)
 						{
 							ResetStatusInfo().SafeFireAndForget();
