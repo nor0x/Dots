@@ -299,8 +299,8 @@
 												BorderThickness="0"
 												CornerRadius="22">
 											<TextBlock Text="{Binding Group}"
-													   FontFamily="{StaticResource SpaceGroteskBold}"
-													   FontSize="25"
+													   FontFamily="{StaticResource DottedFont}"
+													   FontSize="62"
 													   HorizontalAlignment="Center"
 													   VerticalAlignment="Center" />
 										</Border>
@@ -540,7 +540,7 @@
 												CornerRadius="35"
 												Margin="0,0,0,6">
 											<TextBlock Text="{Binding Group}"
-													   FontFamily="{StaticResource SpaceGroteskBold}"
+													   FontFamily="{StaticResource DottedFont}"
 													   FontSize="32"
 													   HorizontalAlignment="Center"
 													   VerticalAlignment="Center" />
@@ -594,14 +594,14 @@
 												CornerRadius="35"
 												Margin="0,0,0,6">
 											<TextBlock Text="{Binding Group}"
-													   FontFamily="{StaticResource SpaceGroteskBold}"
+													   FontFamily="{StaticResource DottedFont}"
 													   FontSize="62"
 													   HorizontalAlignment="Center"
 													   VerticalAlignment="Center" />
 										</Border>
-										<TextBlock FontSize="20">
-													<Run Text=".NET" />
-													<Run Text="{Binding VersionDisplay}" />
+										<TextBlock FontSize="20" TextWrapping="Wrap" HorizontalAlignment="Left">
+											<Run Text=".NET" />
+											<Run Text="{Binding VersionDisplay}" />
 										</TextBlock>
 										<StackPanel Orientation="Horizontal">
 											<Border Height="20"

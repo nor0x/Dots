@@ -32,6 +32,7 @@
     <FontFamily x:Key="SpaceGrotesk">avares://Dots/Assets/Fonts/SpaceGrotesk.ttf#Space Grotesk</FontFamily>
     <FontFamily x:Key="SpaceGroteskBold">avares://Dots/Assets/Fonts/SpaceGrotesk-Bold.ttf#Space Grotesk</FontFamily>
     <FontFamily x:Key="LucideIcons">avares://Dots/Assets/Fonts/Lucide.ttf#lucide</FontFamily>
+    <FontFamily x:Key="DottedFont">avares://Dots/Assets/Fonts/LED-Dot-Matrix.ttf#LED Dot-Matrix</FontFamily>
 
 	  <Image x:Key="IconFront">avares://Dots/Assets/iconlogo.png</Image>
 	  <Image x:Key="IconBack">avares://Dots/Assets/iconlogoback.png</Image>
