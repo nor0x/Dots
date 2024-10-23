@@ -247,30 +247,30 @@
 					   OpenPaneLength="200">
 				<SplitView.Content>
 					<Grid RowDefinitions="Auto,*,20">
-						<Grid 
+						<Grid
 							x:Name="SelectionInfoContainer"
 							Height="0"
 							Grid.Row="0">
-						<StackPanel x:Name="SelectionInfoBox"
-									ClipToBounds="True"
-									Margin="8"
-							Spacing="12">
+							<StackPanel x:Name="SelectionInfoBox"
+										ClipToBounds="True"
+										Margin="8"
+								Spacing="12">
 
-							<TextBlock x:Name="SelectionInfoText"
-									   HorizontalAlignment="Left"
-									   MaxLines="4"
-									   TextWrapping="Wrap"
-									   Text="Lorem Ipsum Sunt magni nostrum quae voluptatum eveniet aliquid. Possimus cumque enim voluptatum perspiciatis optio ratione veritatis inventore. Similique blanditiis rem sint quam eveniet."
-									   Grid.Column="0" />
-							<Button x:Name="SelectionInfoButton" 
-									Content="Cleanup"
-									Background="{StaticResource Success}"
-									Foreground="White"
-									Width="120"
-									HorizontalContentAlignment="Center"
-									Grid.Column="1" />
-							<Border Height="1" HorizontalAlignment="Stretch" Background="{StaticResource Background}" />
-						</StackPanel>
+								<TextBlock x:Name="SelectionInfoText"
+										   HorizontalAlignment="Left"
+										   MaxLines="4"
+										   TextWrapping="Wrap"
+										   Text="Lorem Ipsum Sunt magni nostrum quae voluptatum eveniet aliquid. Possimus cumque enim voluptatum perspiciatis optio ratione veritatis inventore. Similique blanditiis rem sint quam eveniet."
+										   Grid.Column="0" />
+								<Button x:Name="SelectionInfoButton"
+										Content="Cleanup"
+										Background="{StaticResource Success}"
+										Foreground="White"
+										Width="120"
+										HorizontalContentAlignment="Center"
+										Grid.Column="1" />
+								<Border Height="1" HorizontalAlignment="Stretch" Background="{StaticResource Background}" />
+							</StackPanel>
 						</Grid>
 						<ListBox x:Name="SdkList"
 								 Grid.Row="1"
@@ -361,10 +361,10 @@
 												<Border.Background>
 													<SolidColorBrush Color="{Binding Data.ReleaseType, Converter={StaticResource ReleaseTypeToColorConverter}}" />
 												</Border.Background>
-										<TextBlock VerticalAlignment="Center"
-												   Text="{Binding Data.ReleaseType}"
-												   FontSize="10" />
-									</Border>
+												<TextBlock VerticalAlignment="Center"
+														   Text="{Binding Data.ReleaseType}"
+														   FontSize="10" />
+											</Border>
 											<StackPanel>
 												<StackPanel Width="230"
 															IsVisible="{Binding IsBusy}">
@@ -490,7 +490,7 @@
 				<SplitView.Pane>
 					<Grid ColumnDefinitions="30,*"
 						  Background="{StaticResource BackgroundSubtle}">
-					
+
 						<Button Grid.Column="0"
 								Background="{StaticResource Background}"
 								Foreground="White"
@@ -860,7 +860,7 @@
 																			 MaxLines="3"
 																			 TextWrapping="Wrap"
 																			Url="{Binding Url}" />
-															</StackPanel>
+														</StackPanel>
 													</Grid>
 												</DataTemplate>
 											</ItemsControl.ItemTemplate>
