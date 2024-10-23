@@ -300,7 +300,7 @@
 												CornerRadius="22">
 											<TextBlock Text="{Binding Group}"
 													   FontFamily="{StaticResource DottedFont}"
-													   FontSize="62"
+													   FontSize="42"
 													   HorizontalAlignment="Center"
 													   VerticalAlignment="Center" />
 										</Border>

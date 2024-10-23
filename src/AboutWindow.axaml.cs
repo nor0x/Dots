@@ -1,13 +1,7 @@
-using System.Reflection;
-using Avalonia;
-using Avalonia.Animation;
-using Avalonia.Animation.Easings;
+﻿using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
-using Avalonia.Styling;
 using Dots.Helpers;
-using Newtonsoft.Json.Linq;
 
 #if MACOS
 using Foundation;
@@ -15,7 +9,7 @@ using Foundation;
 
 namespace Dots
 {
-    public partial class AboutWindow : Window
+	public partial class AboutWindow : Window
     {
         bool _imageFlipped;
         bool _canFlipBack;
@@ -33,6 +27,7 @@ namespace Dots
             var v = NSBundle.MainBundle.ObjectForInfoDictionary("CFBundleVersion")?.ToString();
             VersionRun.Text = v;
 #endif
+			CreditsTextBlock.Text = $"©️ {DateTime.Now.Year} Joachim Leonfellner";
         }
 
         private void OpenSourceButton_Clicked(object? sender, Avalonia.Input.TappedEventArgs e)

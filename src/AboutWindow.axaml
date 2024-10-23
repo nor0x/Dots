@@ -48,7 +48,7 @@
             <Transitions>
               <TransformOperationsTransition
                 Property="RenderTransform"
-                Duration="0:0:0.12" />
+                Duration="0:0:0.19" />
             </Transitions>
           </Image.Transitions>
 
@@ -113,9 +113,10 @@
             Tapped="SupportButton_Clicked" />
         </StackPanel>
         <TextBlock
+		  x:Name="CreditsTextBlock"
           HorizontalAlignment="Center"
           FontSize="11"
-          Text="©️ 2023 Joachim Leonfellner" />
+          Text="" />
       </StackPanel>
 
 
