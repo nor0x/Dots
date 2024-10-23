@@ -11,6 +11,7 @@ using System.IO;
 using System.Net.Http;
 using AsyncAwaitBestPractices;
 using Avalonia.Media;
+using Avalonia.Threading;
 
 
 namespace Dots.ViewModels;
@@ -24,6 +25,11 @@ public partial class MainViewModel : ObservableRecipient
 		_progressTasks = new ObservableCollection<ProgressTask>();
 		SelectedFilterIcon = LucideIcons.ListFilter;
 		CurrentStatusIcon = LucideIcons.Info;
+		_filteredSelection = new();
+		_baseSdks = new();
+		_currentStatusIcon = LucideIcons.Info;
+		_currentStatusText = "Loading SDKs...";
+		_lastUpdated = "";
 	}
 
 	string _query = "";
@@ -32,6 +38,8 @@ public partial class MainViewModel : ObservableRecipient
 	DotnetService _dotnet;
 	ErrorPopupHelper _errorHelper;
 	List<Sdk> _baseSdks;
+	List<Sdk> _filteredSelection;
+
 
 	[ObservableProperty]
 	bool _selectionEnabled;
@@ -40,10 +48,10 @@ public partial class MainViewModel : ObservableRecipient
 	bool _isBusy;
 
 	[ObservableProperty]
-	Sdk _selectedSdk;
+	Sdk? _selectedSdk;
 
 	[ObservableProperty]
-	ObservableView<Sdk> _sdks;
+	ObservableView<Sdk>? _sdks;
 
 	[ObservableProperty]
 	string _lastUpdated;
@@ -191,17 +199,9 @@ public partial class MainViewModel : ObservableRecipient
 		toCleanup.AddRange(installed.Where(s => s.Data.SupportPhase is SupportPhase.Eol).ToList());
 		toCleanup = toCleanup.Distinct().ToList();
 
-		foreach (var s in _baseSdks)
-		{
-			if (!toCleanup.Contains(s))
-			{
-				Sdks.View.Remove(s);
-			}
-			else if (!Sdks.View.Contains(s))
-			{
-				Sdks.View.Add(s);
-			}
-		}
+		_filteredSelection = toCleanup;
+		Sdks.Search(" ");
+		Sdks.Search(".");
 	}
 
 	[RelayCommand(AllowConcurrentExecutions = true)]
@@ -228,29 +228,17 @@ public partial class MainViewModel : ObservableRecipient
 		var toInstall = latests.Except(installed).ToList().Where(s => s.Data.SupportPhase is SupportPhase.Active || s.Data.SupportPhase is SupportPhase.Preview || s.Data.SupportPhase is SupportPhase.Maintenance);
 		toInstall = toInstall.Distinct().ToList();
 
-		if (toInstall.Any())
-		{
-			foreach (var s in _baseSdks)
-			{
-				if (!toInstall.Contains(s))
-				{
-					Sdks.View.Remove(s);
-				}
-				else if (!Sdks.View.Contains(s))
-				{
-					Sdks.View.Add(s);
-				}
-			}
-		}
-		else
-		{
-			//handle empty 
-		}
+
+		_filteredSelection = toInstall.ToList();
+		Sdks.Search(" ");
+		Sdks.Search(".");
 	}
 
 	public async Task ResetSelectionFilter()
 	{
 		await CheckSdks(false);
+		_filteredSelection = new();
+
 	}
 
 	[RelayCommand]
@@ -272,22 +260,6 @@ public partial class MainViewModel : ObservableRecipient
 	{
 		_query = query;
 		Sdks.Search(_query);
-
-		var filteredCollection = _baseSdks.Where(s =>
-		s.Data.Sdk.Version.ToLowerInvariant().Contains(query.ToLowerInvariant()) ||
-		s.Path.ToLowerInvariant().Contains(query.ToLowerInvariant())).ToList();
-
-		foreach (var s in _baseSdks)
-		{
-			if (!filteredCollection.Contains(s))
-			{
-				Sdks.View.Remove(s);
-			}
-			else if (!Sdks.View.Contains(s))
-			{
-				Sdks.View.Add(s);
-			}
-		}
 	}
 
 	[RelayCommand]
@@ -478,6 +450,11 @@ public partial class MainViewModel : ObservableRecipient
 		else
 		{
 			e.IsAllowed = false;
+		}
+
+		if(_filteredSelection.Count > 0)
+		{
+			e.IsAllowed = _filteredSelection.FirstOrDefault(s => s.VersionDisplay == e.Item.VersionDisplay) is not null;
 		}
 	}
 
