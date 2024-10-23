@@ -115,5 +115,52 @@ namespace Dots
         {
             FilterButton.Flyout.Hide();
         }
-    }
+
+		private async void UpdateAndCleanupButton_Click(object? sender, Avalonia.Input.TappedEventArgs e)
+		{
+			var filterTask = _vm.FilterUpdateSdks;
+			if (SelectionInfoContainer.Height == 0)
+			{
+				SelectionInfoContainer.HeightTo(105);
+			}
+			else
+			{
+				if (SelectionInfoText.Text == Constants.UpdateText)
+				{
+					SelectionInfoContainer.HeightTo(0);
+					filterTask = _vm.ResetSelectionFilter;
+				}
+			}
+			SelectionInfoButton.Command = _vm.DoUpdateCommand;
+			SelectionInfoButton.Content = Constants.UpdateButtonText;
+			SelectionInfoText.Text = Constants.UpdateText;
+			SelectionInfoButton.Background = Constants.UpdateBrush;
+
+			await filterTask();
+		}		
+		
+		private async void CleanupButton_Click(object? sender, Avalonia.Input.TappedEventArgs e)
+		{
+			var filterTask = _vm.FilterCleanupSdks;
+			if (SelectionInfoContainer.Height == 0)
+			{
+				SelectionInfoContainer.HeightTo(105);
+			}
+			else
+			{
+				if (SelectionInfoText.Text == Constants.CleanupText)
+				{
+					SelectionInfoContainer.HeightTo(0);
+					filterTask = _vm.ResetSelectionFilter;
+				}
+			}
+			SelectionInfoButton.Command = _vm.DoCleanupCommand;
+			SelectionInfoButton.Content = Constants.CleanupButtonText;
+			SelectionInfoText.Text = Constants.CleanupText;
+			SelectionInfoButton.Background = Constants.CleanupBrush;
+
+			await filterTask();
+
+		}
+	}
 }

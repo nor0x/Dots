@@ -104,7 +104,7 @@
 						Foreground="White"
 						Padding="0"
 						FontSize="15"
-						Command="{Binding CleanupSdksCommand}"
+						Tapped="CleanupButton_Click"
 						HorizontalContentAlignment="Center"
 						VerticalContentAlignment="Center"
 						VerticalAlignment="Center"
@@ -121,7 +121,7 @@
 						Foreground="White"
 						Padding="0"
 						FontSize="15"
-						Command="{Binding CleanupAndUpdateSdksCommand}"
+						Tapped="UpdateAndCleanupButton_Click"
 						HorizontalContentAlignment="Center"
 						VerticalContentAlignment="Center"
 						VerticalAlignment="Center"
@@ -246,8 +246,34 @@
 					   DisplayMode="CompactInline"
 					   OpenPaneLength="200">
 				<SplitView.Content>
-					<Grid>
+					<Grid RowDefinitions="Auto,*,20">
+						<Grid 
+							x:Name="SelectionInfoContainer"
+							Height="0"
+							Grid.Row="0">
+						<StackPanel x:Name="SelectionInfoBox"
+									ClipToBounds="True"
+									Margin="8"
+							Spacing="12">
+
+							<TextBlock x:Name="SelectionInfoText"
+									   HorizontalAlignment="Left"
+									   MaxLines="4"
+									   TextWrapping="Wrap"
+									   Text="Lorem Ipsum Sunt magni nostrum quae voluptatum eveniet aliquid. Possimus cumque enim voluptatum perspiciatis optio ratione veritatis inventore. Similique blanditiis rem sint quam eveniet."
+									   Grid.Column="0" />
+							<Button x:Name="SelectionInfoButton" 
+									Content="Cleanup"
+									Background="{StaticResource Success}"
+									Foreground="White"
+									Width="120"
+									HorizontalContentAlignment="Center"
+									Grid.Column="1" />
+							<Border Height="1" HorizontalAlignment="Stretch" Background="{StaticResource Background}" />
+						</StackPanel>
+						</Grid>
 						<ListBox x:Name="SdkList"
+								 Grid.Row="1"
 								 ItemsSource="{Binding Sdks.View}"
 								 Background="Transparent">
 							<ListBox.Styles>
@@ -451,7 +477,7 @@
 								</DataTemplate>
 							</ListBox.ItemTemplate>
 						</ListBox>
-						<Grid ColumnDefinitions="20,*" Background="{StaticResource Background}" Height="20" VerticalAlignment="Bottom">
+						<Grid Grid.Row="2" ColumnDefinitions="20,*" Background="{StaticResource Background}" Height="20" VerticalAlignment="Bottom">
 							<TextBlock FontFamily="{StaticResource LucideIcons}" Grid.Column="0"
 									   VerticalAlignment="Center"
 									   Margin="8,0,8,0"

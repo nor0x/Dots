@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia.Media;
 
 namespace Dots;
 
@@ -48,4 +49,13 @@ public class Constants
     public const string InstallingText = "Installing...";
     public const string UninstallingText = "Uninstalling...";
     public const string OpeningText = "Opening...";
+
+	public const string CleanupText = "These SDKs are have newer versions installed or are EOL. Do you want to remove them?";
+	public const string UpdateText = "These are the latest SDKs available that have an active support lifecycle. Do you want to update them?";
+	public const string UpdateButtonText = "Update";
+	public const string CleanupButtonText = "Cleanup";
+	public const string CancelButtonText = "Cancel";
+
+	public static IBrush CleanupBrush = new SolidColorBrush(Color.Parse("#bf8700"));
+	public static IBrush UpdateBrush = new SolidColorBrush(Color.Parse("#2da44e"));
 }

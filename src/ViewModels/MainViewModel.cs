@@ -10,6 +10,7 @@ using ObservableView.Searching.Operators;
 using System.IO;
 using System.Net.Http;
 using AsyncAwaitBestPractices;
+using Avalonia.Media;
 
 
 namespace Dots.ViewModels;
@@ -58,14 +59,15 @@ public partial class MainViewModel : ObservableRecipient
 
 	[ObservableProperty]
 	string _currentStatusIcon;
-	[ObservableProperty]
-	string _currentStatusText;
 
-	bool _showOnline = true;
-	bool _showInstalled = true;
+	[ObservableProperty]
+	string _currentStatusText;	
 
 	[ObservableProperty]
 	bool _emptyData;
+
+	bool _showOnline = true;
+	bool _showInstalled = true;
 
 	public bool SetSelectedSdk(Sdk sdk)
 	{
@@ -126,7 +128,36 @@ public partial class MainViewModel : ObservableRecipient
 	}
 
 	[RelayCommand(AllowConcurrentExecutions = true)]
-	async Task CleanupSdks()
+	async Task DoCleanup()
+	{
+		int current = 0;
+		var toCleanup = Sdks.View.ToList();
+
+		foreach (var sdk in toCleanup)
+		{
+			CurrentStatusText = $"Uninstalling {sdk.VersionDisplay} - Cleanup {current + 1} | {toCleanup.Count}";
+			CurrentStatusIcon = LucideIcons.Trash2;
+			sdk.IsInstalling = true;
+			var result = await _dotnet.Uninstall(sdk, status: new Progress<(float progress, string task)>(p =>
+			{
+				sdk.Progress = p.progress;
+				CurrentStatusText = $"Cleanup {sdk.VersionDisplay} - {p.task} {p.progress:P0}";
+				CurrentStatusIcon = LucideIcons.Trash2;
+				if (p.progress == 1)
+				{
+					ResetStatusInfo().SafeFireAndForget();
+				}
+			}));
+			if (result)
+			{
+				sdk.Path = string.Empty;
+			}
+			sdk.IsInstalling = false;
+			current++;
+		}
+	}
+
+	public async Task FilterCleanupSdks()
 	{
 		await CheckSdks(true);
 		var toCleanup = Sdks.Source.Where(s => s.Installed && s.Data.SupportPhase is SupportPhase.Eol).ToList();
@@ -160,41 +191,24 @@ public partial class MainViewModel : ObservableRecipient
 		toCleanup.AddRange(installed.Where(s => s.Data.SupportPhase is SupportPhase.Eol).ToList());
 		toCleanup = toCleanup.Distinct().ToList();
 
-		int current = 0;
-		foreach (var sdk in toCleanup)
+		foreach (var s in _baseSdks)
 		{
-			CurrentStatusText = $"Uninstalling {sdk.VersionDisplay} - Cleanup {current + 1} | {toCleanup.Count}";
-			CurrentStatusIcon = LucideIcons.Trash2;
-			sdk.IsInstalling = true;
-			var result = await _dotnet.Uninstall(sdk, status: new Progress<(float progress, string task)>(p =>
+			if (!toCleanup.Contains(s))
 			{
-				sdk.Progress = p.progress;
-				CurrentStatusText = $"Cleanup {sdk.VersionDisplay} - {p.task} {p.progress:P0}";
-				CurrentStatusIcon = LucideIcons.Trash2;
-				if (p.progress == 1)
-				{
-					ResetStatusInfo().SafeFireAndForget();
-				}
-			}));
-			if (result)
-			{
-				sdk.Path = string.Empty;
+				Sdks.View.Remove(s);
 			}
-			sdk.IsInstalling = false;
-			current++;
+			else if (!Sdks.View.Contains(s))
+			{
+				Sdks.View.Add(s);
+			}
 		}
 	}
 
 	[RelayCommand(AllowConcurrentExecutions = true)]
-	async Task CleanupAndUpdateSdks()
+	async Task DoUpdate()
 	{
-		await CheckSdks(true);
-		var latests = Sdks.Source.GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.VersionDisplay).First()).ToList();
-		var installed = Sdks.Source.Where(s => s.Installed).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Where(g => g.Count() >= 1).SelectMany(g => g).ToList();
-		var toInstall = latests.Except(installed).ToList().Where(s => s.Data.SupportPhase is SupportPhase.Active || s.Data.SupportPhase is SupportPhase.Preview || s.Data.SupportPhase is SupportPhase.Maintenance);
-		toInstall = toInstall.Distinct().ToList();
-
 		int current = 0;
+		var toInstall = Sdks.View.ToList();
 		foreach (var sdk in toInstall)
 		{
 			CurrentStatusText = $"Installing {sdk.VersionDisplay} - Update {current + 1} | {toInstall.Count()}";
@@ -202,7 +216,41 @@ public partial class MainViewModel : ObservableRecipient
 			await InstallOrUninstall(sdk);
 		}
 
-		await CleanupSdks();
+		await FilterCleanupSdks();
+		await DoCleanup();
+	}
+
+	public async Task FilterUpdateSdks()
+	{
+		await CheckSdks(true);
+		var latests = Sdks.Source.GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.VersionDisplay).First()).ToList();
+		var installed = Sdks.Source.Where(s => s.Installed).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Where(g => g.Count() >= 1).SelectMany(g => g).ToList();
+		var toInstall = latests.Except(installed).ToList().Where(s => s.Data.SupportPhase is SupportPhase.Active || s.Data.SupportPhase is SupportPhase.Preview || s.Data.SupportPhase is SupportPhase.Maintenance);
+		toInstall = toInstall.Distinct().ToList();
+
+		if (toInstall.Any())
+		{
+			foreach (var s in _baseSdks)
+			{
+				if (!toInstall.Contains(s))
+				{
+					Sdks.View.Remove(s);
+				}
+				else if (!Sdks.View.Contains(s))
+				{
+					Sdks.View.Add(s);
+				}
+			}
+		}
+		else
+		{
+			//handle empty 
+		}
+	}
+
+	public async Task ResetSelectionFilter()
+	{
+		await CheckSdks(false);
 	}
 
 	[RelayCommand]
