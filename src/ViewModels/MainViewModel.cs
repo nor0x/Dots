@@ -224,8 +224,6 @@ public partial class MainViewModel : ObservableRecipient
 			await InstallOrUninstall(sdk);
 		}
 
-		await FilterCleanupSdks();
-		await DoCleanup();
 		await CheckSdks(false);
 	}
 
