@@ -27,7 +27,7 @@
 			<Setter Property="Margin"
 					Value="0,4,4,0" />
 			<Setter Property="Width"
-					Value="200" />
+					Value="160" />
 		</Style>
 
 	</Window.Styles>
@@ -120,7 +120,6 @@
 						Background="Transparent"
 						Foreground="White"
 						Padding="0"
-						FontSize="15"
 						Tapped="UpdateAndCleanupButton_Click"
 						HorizontalContentAlignment="Center"
 						VerticalContentAlignment="Center"
@@ -148,7 +147,7 @@
 						Width="42"
 						Height="42">
 					<StackPanel>
-						<TextBlock Text="{Binding SelectedFilterIcon}" FontFamily="{StaticResource LucideIcons}" HorizontalAlignment="Center" FontSize="15"  />
+						<TextBlock Text="{Binding SelectedFilterIcon}" FontFamily="{StaticResource LucideIcons}" HorizontalAlignment="Center" FontSize="16"  />
 						<TextBlock Text="Filter" FontSize="9" HorizontalAlignment="Center" />
 					</StackPanel>
 					<Button.Flyout>
@@ -164,9 +163,10 @@
 												Margin="4">
 										<TextBlock Text="{x:Static helpers:LucideIcons.ListFilter}"
 												   FontFamily="{StaticResource LucideIcons}"
-												   FontSize="15"
+												   VerticalAlignment="Center"
+												   FontSize="16"
 												   Margin="0,0,8,0" />
-										<TextBlock Text="All" />
+										<TextBlock Text="All" FontSize="9" VerticalAlignment="Center" />
 									</StackPanel>
 								</Button>
 								<Button HorizontalAlignment="Stretch"
@@ -178,9 +178,10 @@
 												Margin="4">
 										<TextBlock Text="{x:Static helpers:LucideIcons.Cloudy}"
 												   FontFamily="{StaticResource LucideIcons}"
-												   FontSize="15"
+												   VerticalAlignment="Center"
+												   FontSize="16"
 												   Margin="0,0,8,0" />
-										<TextBlock Text="Online" />
+										<TextBlock Text="Online" FontSize="9" VerticalAlignment="Center" />
 									</StackPanel>
 								</Button>
 								<Button HorizontalAlignment="Stretch"
@@ -192,9 +193,10 @@
 												Margin="4">
 										<TextBlock Text="{x:Static helpers:LucideIcons.HardDrive}"
 												   FontFamily="{StaticResource LucideIcons}"
-												   FontSize="15"
+												   VerticalAlignment="Center"
+												   FontSize="16"
 												   Margin="0,0,8,0" />
-										<TextBlock Text="Installed" />
+										<TextBlock Text="Installed" FontSize="9" VerticalAlignment="Center" />
 
 									</StackPanel>
 								</Button>
@@ -206,7 +208,6 @@
 				<Button Background="Transparent"
 						Foreground="White"
 						Padding="0"
-						FontSize="15"
 						Command="{Binding ListSdksCommand}"
 						HorizontalContentAlignment="Center"
 						VerticalContentAlignment="Center"
@@ -222,7 +223,6 @@
 						IsVisible="false"
 						Foreground="White"
 						Padding="0"
-						FontSize="15"
 						Command="{Binding OpenSettingsCommand}"
 						HorizontalContentAlignment="Center"
 						VerticalContentAlignment="Center"

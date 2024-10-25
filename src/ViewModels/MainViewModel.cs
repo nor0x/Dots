@@ -163,9 +163,11 @@ public partial class MainViewModel : ObservableRecipient
 			sdk.IsInstalling = false;
 			current++;
 		}
+
+		await CheckSdks(false);
 	}
 
-	public async Task FilterCleanupSdks()
+	public async Task<bool> FilterCleanupSdks()
 	{
 		await CheckSdks(true);
 		var toCleanup = Sdks.Source.Where(s => s.Installed && s.Data.SupportPhase is SupportPhase.Eol).ToList();
@@ -199,9 +201,15 @@ public partial class MainViewModel : ObservableRecipient
 		toCleanup.AddRange(installed.Where(s => s.Data.SupportPhase is SupportPhase.Eol).ToList());
 		toCleanup = toCleanup.Distinct().ToList();
 
+		if (toCleanup.Count() == 0)
+		{
+			return false;
+		}
+
 		_filteredSelection = toCleanup;
 		Sdks.Search(" ");
 		Sdks.Search(".");
+		return true;
 	}
 
 	[RelayCommand(AllowConcurrentExecutions = true)]
@@ -218,9 +226,10 @@ public partial class MainViewModel : ObservableRecipient
 
 		await FilterCleanupSdks();
 		await DoCleanup();
+		await CheckSdks(false);
 	}
 
-	public async Task FilterUpdateSdks()
+	public async Task<bool> FilterUpdateSdks()
 	{
 		await CheckSdks(true);
 		var latests = Sdks.Source.GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.VersionDisplay).First()).ToList();
@@ -228,17 +237,22 @@ public partial class MainViewModel : ObservableRecipient
 		var toInstall = latests.Except(installed).ToList().Where(s => s.Data.SupportPhase is SupportPhase.Active || s.Data.SupportPhase is SupportPhase.Preview || s.Data.SupportPhase is SupportPhase.Maintenance);
 		toInstall = toInstall.Distinct().ToList();
 
+		if (toInstall.Count() == 0)
+		{
+			return false;
+		}
 
 		_filteredSelection = toInstall.ToList();
 		Sdks.Search(" ");
 		Sdks.Search(".");
+		return true;
 	}
 
-	public async Task ResetSelectionFilter()
+	public async Task<bool> ResetSelectionFilter()
 	{
 		await CheckSdks(false);
 		_filteredSelection = new();
-
+		return false;
 	}
 
 	[RelayCommand]
