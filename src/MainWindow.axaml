@@ -7,8 +7,10 @@
         xmlns:hyper="clr-namespace:HyperText.Avalonia.Controls;assembly=HyperText.Avalonia"
         xmlns:anim="https://github.com/whistyun/AnimatedImage.Avalonia"
         mc:Ignorable="d"
-        d:DesignWidth="800"
+        d:DesignWidth="700"
         d:DesignHeight="450"
+		Width="1200"
+		Height="700"
         xmlns:vm="using:Dots.ViewModels"
         xmlns:models="using:Dots.Models"
         xmlns:helpers="using:Dots.Helpers"
@@ -69,12 +71,13 @@
 
 					</Image.Styles>
 				</Image>
-				<StackPanel Orientation="Vertical">
+				<StackPanel Orientation="Vertical" VerticalAlignment="Center">
 					<TextBlock Text="Dots"
-							   FontFamily="{StaticResource SpaceGroteskBold}"
+							   FontFamily="{StaticResource DottedFont}"
 							   TextAlignment="Left"
-							   Margin="-1.7,0,0,0"
-							   FontSize="22" />
+							   
+							   Margin="0,0,0,0"
+							   FontSize="32" />
 					<TextBlock FontSize="14"
 							   TextAlignment="Left"
 							   FontFamily="{StaticResource SpaceGrotesk}">
@@ -124,7 +127,7 @@
 						HorizontalContentAlignment="Center"
 						VerticalContentAlignment="Center"
 						VerticalAlignment="Center"
-						ToolTip.Tip="Update and remove"
+						ToolTip.Tip="Update to the latest stable SDKs"
 						Width="42"
 						Height="42">
 					<StackPanel>
@@ -143,7 +146,7 @@
 							HorizontalContentAlignment="Center"
 						VerticalContentAlignment="Center"
 						VerticalAlignment="Center"
-						ToolTip.Tip="Update and remove"
+						ToolTip.Tip="Filter SDKs"
 						Width="42"
 						Height="42">
 					<StackPanel>
@@ -244,7 +247,7 @@
 					   PanePlacement="Right"
 					   CompactPaneLength="30"
 					   DisplayMode="CompactInline"
-					   OpenPaneLength="200">
+					   OpenPaneLength="280">
 				<SplitView.Content>
 					<Grid RowDefinitions="Auto,*,20">
 						<Grid
@@ -826,7 +829,7 @@
 												   Margin="0,12,0,0" />
 										<TextBlock Text="{Binding SdkData.VsMacSupport}" />
 										<TextBlock Text="{Binding SdkData.VsMacVersion}" />
-										<TextBlock Text="Download Files"
+										<TextBlock Text="Downloads"
 												   FontWeight="Bold"
 												   Margin="0,12,0,0" />
 										<ItemsControl ItemsSource="{Binding SdkData.Files}"
@@ -836,7 +839,7 @@
 												<DataTemplate x:DataType="data:FileInfo">
 													<Grid Height="50"
 														  ColumnDefinitions="60,*"
-																Margin="8">
+																Margin="0,8,8,8">
 														<Border Background="#5effffff"
 																Grid.Column="0"
 																Height="50"
@@ -851,7 +854,32 @@
 																	   FontSize="30"
 																	   Text="{Binding Rid, Converter={StaticResource RidToIconConverter}}" />
 														</Border>
+														<Border 
+															Grid.Column="0"
+															BorderThickness="2"
+															Height="20"
+															Width="20"
+															Margin="0,3,3,0"
+															HorizontalAlignment="Right"
+															VerticalAlignment="Bottom"
+															CornerRadius="10">
+															<Border.BorderBrush>
+																<SolidColorBrush Color="{StaticResource Background}" />
+															</Border.BorderBrush>
+															<Border.Background>
+																<SolidColorBrush Color="{Binding FileName, Converter={StaticResource FileNameToColorConverter}}" />
+															</Border.Background>
+															<TextBlock VerticalAlignment="Center"
+																	   HorizontalAlignment="Center"
+																	   TextAlignment="Center"
+																	   Width="20"
+																	   FontSize="12"
+																	   Margin="0,2,0,0"
+																	   FontFamily="{StaticResource LucideIcons}"
+																	   Text="{Binding FileName, Converter={StaticResource FileNameToIconConverter}}" />
+														</Border>
 														<StackPanel Spacing="2"
+																	Margin="4,0,0,0"
 																	Grid.Column="1"
 																	VerticalAlignment="Center">
 															<TextBlock VerticalAlignment="Center"

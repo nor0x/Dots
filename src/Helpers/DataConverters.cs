@@ -103,6 +103,70 @@ namespace Dots.Helpers
 		{
 			throw new NotImplementedException();
 		}
+	}	
+	
+	public class FileNameToColorConverter : IValueConverter
+	{
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			if (value is string filename)
+			{
+
+				if (filename.EndsWith(".exe"))
+				{
+					return Color.Parse("#2da44e");
+				}
+				else if (filename.EndsWith(".tar.gz") || filename.EndsWith(".zip"))
+				{
+					return Color.Parse("#bf8700");
+				}
+				else if (filename.EndsWith(".pkg"))
+				{
+					return Color.Parse("#0969da");
+				}
+				else
+				{
+					return Color.Parse("#000000");
+				}
+			}
+			else return null;
+		}
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			throw new NotImplementedException();
+		}
+	}	
+	
+	public class FileNameToIconConverter : IValueConverter
+	{
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			if (value is string filename)
+			{
+
+				if (filename.EndsWith(".exe"))
+				{
+					return LucideIcons.AppWindow;
+				}
+				else if (filename.EndsWith(".tar.gz") || filename.EndsWith(".zip"))
+				{
+					return LucideIcons.FolderArchive;
+				}
+				else if (filename.EndsWith(".pkg"))
+				{
+					return LucideIcons.Package;
+				}
+				else
+				{
+					return Color.Parse("#000000");
+				}
+			}
+			else return null;
+		}
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			throw new NotImplementedException();
+		}
 	}
 
 	public class StringIsNullOrEmptyConverter : IValueConverter

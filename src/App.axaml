@@ -57,6 +57,8 @@
     <helpers:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmptyConverter" />
     <helpers:PreviewTypeToStringConverter x:Key="PreviewTypeToStringConverter" />
     <helpers:PreviewTypeToColorConverter x:Key="PreviewTypeToColorConverter" />
+	<helpers:FileNameToIconConverter x:Key="FileNameToIconConverter" />
+	<helpers:FileNameToColorConverter x:Key="FileNameToColorConverter" />
   </Application.Resources>
     <Application.Styles>
         <FluentTheme />

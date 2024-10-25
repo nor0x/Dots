@@ -13,6 +13,8 @@ namespace Dots
 		MainViewModel _vm = new MainViewModel(new DotnetService(), new ErrorPopupHelper());
 		AboutWindow _aboutWindow = new AboutWindow();
 		bool _aboutWindowOpen = false;
+		int _minPaneWidth = 260;
+		double _paneRatio = 0.3;
 
 		public MainWindow()
 		{
@@ -22,9 +24,7 @@ namespace Dots
 
 		protected override void OnSizeChanged(SizeChangedEventArgs e)
 		{
-			var paneWidth = (int)(this.Width * 0.25);
-			paneWidth = paneWidth < 200 ? 200 : paneWidth;
-			MainSplitView.OpenPaneLength = Math.Min(paneWidth, 500);
+			SetPaneWidth();
 		}
 
 		protected override async void OnInitialized()
@@ -62,9 +62,7 @@ namespace Dots
 
 		private void ToggleDetails_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
 		{
-			var paneWidth = (int)(this.Width * 0.25);
-			paneWidth = paneWidth < 200 ? 200 : paneWidth;
-			MainSplitView.OpenPaneLength = Math.Min(paneWidth, 500);
+			SetPaneWidth();
 			MainSplitView.IsPaneOpen = !MainSplitView.IsPaneOpen;
 			ToggleDetailsButton.Content = MainSplitView.IsPaneOpen ? LucideIcons.ChevronRight : LucideIcons.ChevronLeft;
 			if (!MainSplitView.IsPaneOpen)
@@ -87,9 +85,8 @@ namespace Dots
 				//workaround for button click inside ListBox item
 				return;
 			}
-			var paneWidth = (int)(this.Width * 0.25);
-			paneWidth = paneWidth < 200 ? 200 : paneWidth;
-			MainSplitView.OpenPaneLength = Math.Min(paneWidth, 500);
+
+			SetPaneWidth();
 			var unselect = _vm.SetSelectedSdk((Sdk)((Avalonia.Controls.Grid)sender).DataContext);
 			if (unselect)
 			{
@@ -169,6 +166,13 @@ namespace Dots
 				SelectionInfoContainer.HeightTo(105);
 			}
 
+		}
+
+		void SetPaneWidth()
+		{
+			var paneWidth = (int)(this.Width * _paneRatio);
+			paneWidth = paneWidth < _minPaneWidth ? _minPaneWidth : paneWidth;
+			MainSplitView.OpenPaneLength = Math.Min(paneWidth, 500);
 		}
 	}
 }

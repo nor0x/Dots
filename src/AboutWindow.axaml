@@ -60,12 +60,12 @@
         Margin="0,0,0,10">
         <TextBlock
           Text="Dots"
-          FontSize="34"
-          FontFamily="{StaticResource SpaceGroteskBold}"
+          FontSize="42"
+          FontFamily="{StaticResource DottedFont}"
           HorizontalAlignment="Center" />
         <TextBlock
           Text="the 🙂 friendly .NET SDK manager"
-          Margin="0,-8,0,8"
+          Margin="0,0,0,8"
           FontFamily="{StaticResource SpaceGrotesk}"
           HorizontalAlignment="Center" />
       </StackPanel>
