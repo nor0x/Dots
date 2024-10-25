@@ -214,7 +214,7 @@ public class DotnetService
 		{
 			Rid rid = GetRid();
 			var extension = GetExtension();
-			if (sdk.Data.Sdk.Files.Where(f => f.Rid == rid).FirstOrDefault(r => r.Name.Contains(extension)) is Data.FileInfo info)
+			if (sdk.SdkData.Files.Where(f => f.Rid == rid).FirstOrDefault(r => r.Name.Contains(extension)) is Data.FileInfo info)
 			{
 				if (!Directory.Exists(Constants.AppDataPath))
 				{
@@ -246,7 +246,7 @@ public class DotnetService
 				}
 
 				var progress = new ProgressTask();
-				progress.Title = $"Downloading {sdk.Data.Sdk.Version}";
+				progress.Title = $"Downloading {sdk.SdkData.Version}";
 				progress.Url = info.Url.ToString();
 				progress.CancellationTokenSource = new CancellationTokenSource();
 
@@ -282,7 +282,7 @@ public class DotnetService
 		catch (Exception ex)
 		{
 			Debug.WriteLine(ex);
-			//Analytics.TrackEvent("Download SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
+			//Analytics.TrackEvent("Download SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.SdkData.Version } });
 			return null;
 		}
 	}
@@ -324,14 +324,14 @@ public class DotnetService
 	public async Task<string> GetInstallationPath(Sdk sdk)
 	{
 		var installed = await GetInstalledSdks(true);
-		return installed.FirstOrDefault(x => x.Version == sdk.Data.Sdk.Version)?.Path ?? string.Empty;
+		return installed.FirstOrDefault(x => x.Version == sdk.SdkData.Version)?.Path ?? string.Empty;
 	}
 
 	public async Task OpenFolder(Sdk sdk)
 	{
 		try
 		{
-			string path = Path.Combine(sdk.Path, sdk.Data.Sdk.Version);
+			string path = Path.Combine(sdk.Path, sdk.SdkData.Version);
 			path.OpenFilePath();
 		}
 		catch (Exception ex)
@@ -360,7 +360,7 @@ public class DotnetService
 		try
 		{
 			var progress = new ProgressTask();
-			progress.Title = $"Uninstalling {sdk.Data.Sdk.Version}";
+			progress.Title = $"Uninstalling {sdk.SdkData.Version}";
 			progress.CancellationTokenSource = new CancellationTokenSource();
 
 			var p = new Progress<(float progress, string task)>();
@@ -439,9 +439,9 @@ public class DotnetService
                 Directory.CreateDirectory(Constants.AppDataPath);
             }
             //write Constants.UninstallScriptFile to file
-            var script = Constants.UninstallScriptFile.Replace("XXXXX", sdk.Data.Sdk.Version);
-            script = script.Replace("XXXXX", sdk.Data.Sdk.Version);
-            var filename = "uninstall-" + sdk.Data.Sdk.Version.Replace(".", "-") + ".sh";
+            var script = Constants.UninstallScriptFile.Replace("XXXXX", sdk.SdkData.Version);
+            script = script.Replace("XXXXX", sdk.SdkData.Version);
+            var filename = "uninstall-" + sdk.SdkData.Version.Replace(".", "-") + ".sh";
             var path = Path.Combine(Constants.AppDataPath, filename);
 			sdk.ProgressTask.Progress?.Report((0.5f, "Writing Uninstaller"));
             await File.WriteAllTextAsync(path, script);
@@ -458,7 +458,7 @@ public class DotnetService
 		catch (Exception ex)
 		{
 			Debug.WriteLine(ex);
-			//Analytics.TrackEvent("Uninstall SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
+			//Analytics.TrackEvent("Uninstall SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.SdkData.Version } });
 		}
 		return false;
 	}
@@ -481,13 +481,13 @@ public class DotnetService
 				os = "macos";
 			}
 
-			return $"dotnet-sdk-{sdk.Data.Sdk.Version}-{os}-{arch}{env}.exe";
+			return $"dotnet-sdk-{sdk.SdkData.Version}-{os}-{arch}{env}.exe";
 
 		}
 		catch (Exception ex)
 		{
 			Debug.WriteLine(ex);
-			//Analytics.TrackEvent("GetSetupName", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.Data.Sdk.Version } });
+			//Analytics.TrackEvent("GetSetupName", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.SdkData.Version } });
 			return null;
 		}
 	}
