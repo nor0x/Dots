@@ -254,7 +254,7 @@
 							x:Name="SelectionInfoContainer"
 							Height="0"
 							Grid.Row="0">
-							<Button x:Name="CloseSelectionInfoButton" Background="Transparent" 
+							<Button x:Name="CloseSelectionInfoButton" Background="Transparent"
 									Tapped="CloseSelectionInfoButton_Tapped"
 									HorizontalAlignment="Right"
 									Foreground="White"
@@ -860,11 +860,11 @@
 																	   FontSize="30"
 																	   Text="{Binding Rid, Converter={StaticResource RidToIconConverter}}" />
 														</Border>
-														<Border 
+														<Border
 															Grid.Column="0"
 															BorderThickness="2"
-															Height="20"
-															Width="20"
+															Height="22"
+															Width="22"
 															Margin="0,3,3,0"
 															HorizontalAlignment="Right"
 															VerticalAlignment="Bottom"
@@ -880,7 +880,6 @@
 																	   TextAlignment="Center"
 																	   Width="20"
 																	   FontSize="12"
-																	   Margin="0,2,0,0"
 																	   FontFamily="{StaticResource LucideIcons}"
 																	   Text="{Binding FileName, Converter={StaticResource FileNameToIconConverter}}" />
 														</Border>
@@ -899,7 +898,6 @@
 												</DataTemplate>
 											</ItemsControl.ItemTemplate>
 										</ItemsControl>
-
 									</StackPanel>
 								</StackPanel>
 							</ScrollViewer>
