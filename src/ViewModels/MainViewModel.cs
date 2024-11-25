@@ -172,7 +172,7 @@ public partial class MainViewModel : ObservableRecipient
 		await CheckSdks(true);
 		var toCleanup = Sdks.Source.Where(s => s.Installed && s.Data.SupportPhase is SupportPhase.Eol).ToList();
 		var installed = Sdks.Source.Where(s => s.Installed).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Where(g => g.Count() >= 1).SelectMany(g => g).ToList();
-		var latests = Sdks.Source.Where(s => !s.Data.Preview).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.VersionDisplay).First()).ToList();
+		var latests = Sdks.Source.Where(s => !s.Data.Preview).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.Data.ReleaseDate).First()).ToList();
 
 		var installedGrouped = installed.GroupBy(s => s.VersionDisplay.Substring(0, 3)).ToList();
 
@@ -189,7 +189,7 @@ public partial class MainViewModel : ObservableRecipient
 				var group = installedGrouped.FirstOrDefault(g => g.Key == sdk.VersionDisplay.Substring(0, 3));
 				if (group is not null)
 				{
-					var ordered = group.OrderByDescending(s => s.VersionDisplay).ToList();
+					var ordered = group.OrderByDescending(s => s.Data.ReleaseDate).ToList();
 					for (int i = 1; i < ordered.Count; i++)
 					{
 						addToCleanup.Add(ordered[i]);
@@ -203,6 +203,9 @@ public partial class MainViewModel : ObservableRecipient
 
 		if (toCleanup.Count() == 0)
 		{
+			CurrentStatusText = $"no SDKs to cleanup";
+			CurrentStatusIcon = LucideIcons.TriangleAlert;
+			ResetStatusInfo().SafeFireAndForget();
 			return false;
 		}
 
@@ -230,13 +233,16 @@ public partial class MainViewModel : ObservableRecipient
 	public async Task<bool> FilterUpdateSdks()
 	{
 		await CheckSdks(true);
-		var latests = Sdks.Source.GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.VersionDisplay).First()).ToList();
+		var latests = Sdks.Source.GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.Data.ReleaseDate).First()).ToList();
 		var installed = Sdks.Source.Where(s => s.Installed).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Where(g => g.Count() >= 1).SelectMany(g => g).ToList();
 		var toInstall = latests.Except(installed).ToList().Where(s => s.Data.SupportPhase is SupportPhase.Active || s.Data.SupportPhase is SupportPhase.Preview || s.Data.SupportPhase is SupportPhase.Maintenance);
 		toInstall = toInstall.Distinct().ToList();
 
 		if (toInstall.Count() == 0)
 		{
+			CurrentStatusText = $"everything is up to date - no SDKs to update";
+			CurrentStatusIcon = LucideIcons.TriangleAlert;
+			ResetStatusInfo().SafeFireAndForget();
 			return false;
 		}
 
@@ -429,7 +435,7 @@ public partial class MainViewModel : ObservableRecipient
 	{
 		if (delay)
 		{
-			await Task.Delay(1500);
+			await Task.Delay(1800);
 		}
 		CurrentStatusText = $"{Sdks.Source.Count()} SDKs found - {Sdks.Source.Count(s => s.Installed)} installed";
 		CurrentStatusIcon = LucideIcons.Info;
