@@ -1,0 +1,114 @@
+name: build validation
+
+# run it on dispatch or for every PR
+on:
+  pull_request:
+  workflow_dispatch:
+
+
+env:
+  APPLE_ID: ${{ secrets.APPLE_ID }}
+  TEAM_ID: ${{ secrets.TEAM_ID }}
+  APP_SPECIFIC_PWD: ${{ secrets.APP_SPECIFIC_PWD }}
+  SIGNING_IDENTITY: ${{ secrets.SIGNING_IDENTITY }}
+
+jobs:
+  build-macos:
+    runs-on: macos-14
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4.1.1
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v3.2.0
+      with:
+        dotnet-version: '8.0.x'
+    - name: restore workloads
+      run: |
+        cd $GITHUB_WORKSPACE/src
+        dotnet workload restore
+    - name: run housekeeping scripts
+      run: |
+        sudo xcode-select -s /Applications/Xcode_16.app
+        cd $GITHUB_WORKSPACE/scripts
+        bash housekeeping.sh
+    - name: Install the Apple certificate and provisioning profile
+      env:
+        BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+        P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      run: |
+        # create variables
+        CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+        PP_PATH=$RUNNER_TEMP/build_pp.provisionprofile
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+        # import certificate and provisioning profile from secrets
+        echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+        echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
+        # create temporary keychain
+        security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+        # import certificate to keychain
+        security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security list-keychain -d user -s $KEYCHAIN_PATH
+
+        # apply provisioning profile
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+    
+    - name: run build scripts
+      run: |
+        cd $GITHUB_WORKSPACE/scripts
+        bash build-macos.sh
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: macosx64file
+        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-x64/publish/*.zip
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: macosarm64file
+        path: ${{ github.workspace }}/src/bin/Release/net8.0-macos/osx-arm64/publish/*.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4.1.1
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v3.2.0
+      with:
+        dotnet-version: '8.0.x'
+    - name: restore workloads
+      shell: bash
+      run: |
+        cd $GITHUB_WORKSPACE/src
+        dotnet workload restore
+    - name: run housekeeping scripts
+      shell: bash
+      run: |
+        cd $GITHUB_WORKSPACE/scripts
+        bash housekeeping.sh
+    - name: run build scripts
+      shell: bash
+      run: |
+        cd $GITHUB_WORKSPACE/scripts
+        bash build-windows.sh
+        echo "windowsarm64file=$windowsarm64file" >> $GITHUB_ENV
+        echo "windowsx64file=$windowsx64file" >> $GITHUB_ENV
+        echo "windowsx86file=$windowsx86file" >> $GITHUB_ENV
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: windowsx86file
+        path: ${{ github.workspace }}\src\*arm64.zip
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: windowsx64file
+        path: ${{ github.workspace }}\src\*x64.zip
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: windowsarm64file
+        path: ${{ github.workspace }}\src\*x86.zip

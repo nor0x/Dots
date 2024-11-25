@@ -1,62 +1,67 @@
 ﻿using Avalonia.Media;
 using Dots.Data;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 
 namespace Dots.Models;
 
+[DebuggerDisplay("{VersionDisplay}")]
 public partial class Sdk : ObservableObject
 {
-    [ObservableProperty]
-    Release _data;
+	[ObservableProperty]
+	Release _data;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Installed))]
-    string _path = "";
+	[ObservableProperty]
+	SdkInfo _sdkData;
 
-    //UI
-    public string ColorHex { get; set; }
-    public string Group => VersionDisplay.First().ToString();
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(Installed))]
+	string _path = "";
 
-    [JsonIgnore]
-    public IBrush Color => SolidColorBrush.Parse(ColorHex);
+	//UI
+	public string ColorHex { get; set; }
+	public string Group => VersionDisplay.First().ToString();
 
-    [JsonIgnore]
-    public bool IsSelected { get; set; }
-    [JsonIgnore]
-    public bool Installed => !string.IsNullOrEmpty(Path);
+	[JsonIgnore]
+	public IBrush Color => SolidColorBrush.Parse(ColorHex);
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsBusy))]
-    [JsonIgnore]
-    public bool _isDownloading;
+	[JsonIgnore]
+	public bool IsSelected { get; set; }
+	[JsonIgnore]
+	public bool Installed => !string.IsNullOrEmpty(Path);
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsBusy))]
-    [JsonIgnore]
-    public bool _isInstalling;
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(IsBusy))]
+	[JsonIgnore]
+	public bool _isDownloading;
 
-    [ObservableProperty]
-    [JsonIgnore]
-    public string _statusMessage;
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(IsBusy))]
+	[JsonIgnore]
+	public bool _isInstalling;
 
-    [ObservableProperty]
-    [JsonIgnore]
-    double _progress;
+	[ObservableProperty]
+	[JsonIgnore]
+	public string _statusMessage;
 
-    [JsonIgnore]
-    public bool IsBusy => _isDownloading || _isInstalling;
+	[ObservableProperty]
+	[JsonIgnore]
+	double _progress;
 
-    [JsonIgnore]
-    public string VersionDisplay { get; set; }
+	[JsonIgnore]
+	public bool IsBusy => _isDownloading || _isInstalling;
 
-    [ObservableProperty]
-    [JsonIgnore]
-    ProgressTask _progressTask;
+	[JsonIgnore]
+	public string VersionDisplay { get; set; }
+
+	[ObservableProperty]
+	[JsonIgnore]
+	ProgressTask _progressTask;
 }
 
 
 public class InstalledSdk
 {
-    public string Version { get; set; }
-    public string Path { get; set; }
+	public string Version { get; set; }
+	public string Path { get; set; }
 }

@@ -9,11 +9,14 @@ namespace Dots.Models;
 
 public partial class ProgressTask : ObservableObject
 {
-    public string Title { get; set; }
-    public string Url { get; set; }
-    public CancellationTokenSource CancellationTokenSource { get; set; }
-    public IProgress<float> Progress { get; set; }
+	public string Title { get; set; }
+	public string Url { get; set; }
+	public CancellationTokenSource CancellationTokenSource { get; set; }
+	public IProgress<(float progress, string task)> Progress { get; set; }
 
-    [ObservableProperty]
-    float _value;
+	[ObservableProperty]
+	float? _value;
+
+	[ObservableProperty]
+	string? _task;
 }

@@ -151,9 +151,18 @@ public static class Extensions
 
 
     //credits https://gist.github.com/dalexsoto/9fd3c5bdbe9f61a717d47c5843384d11
-    public static async Task DownloadDataAsync(this HttpClient client, string requestUrl, Stream destination, IProgress<float> progress = null, CancellationToken cancellationToken = default(CancellationToken))
+    public static async Task DownloadDataAsync(this HttpClient client, string requestUrl, Stream destination, IProgress<(float progress, string task)>? progress = null, CancellationToken cancellationToken = default(CancellationToken))
     {
-        using (var response = await client.GetAsync(requestUrl, HttpCompletionOption.ResponseHeadersRead))
+		//if cancellation is requested, delete the file
+		cancellationToken.Register(() =>
+		{
+			if (destination is FileStream fs)
+			{
+				fs.Close();
+				File.Delete(fs.Name);
+			}
+		});
+		using (var response = await client.GetAsync(requestUrl, HttpCompletionOption.ResponseHeadersRead))
         {
             var contentLength = response.Content.Headers.ContentLength;
             using (var download = await response.Content.ReadAsStreamAsync())
@@ -165,15 +174,15 @@ public static class Extensions
                     return;
                 }
                 // Such progress and contentLength much reporting Wow!
-                var progressWrapper = new Progress<long>(totalBytes => progress.Report(GetProgressPercentage(totalBytes, contentLength.Value)));
-                await download.CopyToAsync(destination, 81920, progressWrapper, cancellationToken);
+                var progressWrapper = new Progress<(float progress, string task)>(p => progress.Report((GetProgress(p.progress, contentLength.Value), "Downloading")));
+				await download.CopyToAsync(destination, 81920, progressWrapper, cancellationToken);
             }
         }
 
-        float GetProgressPercentage(float totalBytes, float currentBytes) => (totalBytes / currentBytes) * 100f;
+        float GetProgress(float totalBytes, float currentBytes) => (totalBytes / currentBytes);
     }
 
-    static async Task CopyToAsync(this Stream source, Stream destination, int bufferSize, IProgress<long> progress = null, CancellationToken cancellationToken = default(CancellationToken))
+    static async Task CopyToAsync(this Stream source, Stream destination, int bufferSize, IProgress<(float progress, string task)>? progress = null, CancellationToken cancellationToken = default(CancellationToken))
     {
         if (bufferSize < 0)
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
@@ -193,7 +202,35 @@ public static class Extensions
         {
             await destination.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
             totalBytesRead += bytesRead;
-            progress?.Report(totalBytesRead);
-        }
+            progress?.Report((totalBytesRead, "Downloading"));
+		}
     }
+
+	public static async Task WriteAllBytesAsync(this byte[] bytes, string path, IProgress<(float progress, string task)> progress, CancellationToken cancellationToken)
+	{
+		const int bufferSize = 81920;
+		var totalBytes = bytes.Length;
+		var bytesWritten = 0;
+
+		using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, useAsync: true))
+		{
+			int index = 0;
+
+			while (index < totalBytes)
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+
+				int bytesToWrite = Math.Min(bufferSize, totalBytes - index);
+
+				await stream.WriteAsync(bytes, index, bytesToWrite, cancellationToken);
+
+				index += bytesToWrite;
+				bytesWritten += bytesToWrite;
+
+				var p = bytesWritten / totalBytes;
+
+				progress?.Report((p, "Writing to Disk"));
+			}
+		}
+	}
 }
