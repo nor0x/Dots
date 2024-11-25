@@ -49,6 +49,10 @@ public class DotnetService
 
 		foreach (var release in releaseInfos)
 		{
+			if (release is null)
+			{
+				continue;
+			}
 			var sdk = new Sdk()
 			{
 				Data = release,
@@ -100,7 +104,12 @@ public class DotnetService
 			}
 		}
 
-		return result.OrderByDescending(x => x.VersionDisplay).ToList();
+		result = result.GroupBy(x => x.Group)
+			.SelectMany(x => x.OrderByDescending(y => y.Data?.ReleaseDate))
+			.OrderByDescending(x => x.Group)
+			.ToList();
+
+		return result;
 	}
 
 	async Task<ReleaseIndex[]> GetReleaseIndex(bool force = false)
