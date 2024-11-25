@@ -1,6 +1,8 @@
 name: build validation
 
+# run it on dispatch or for every PR
 on:
+  pull_request:
   workflow_dispatch:
 
 
