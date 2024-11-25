@@ -254,6 +254,12 @@
 							x:Name="SelectionInfoContainer"
 							Height="0"
 							Grid.Row="0">
+							<Button x:Name="CloseSelectionInfoButton" Background="Transparent" 
+									Tapped="CloseSelectionInfoButton_Tapped"
+									HorizontalAlignment="Right"
+									Foreground="White"
+									VerticalAlignment="Top"
+									Content="{x:Static helpers:LucideIcons.x}" FontFamily="{StaticResource LucideIcons}" />
 							<StackPanel x:Name="SelectionInfoBox"
 										ClipToBounds="True"
 										Margin="8"

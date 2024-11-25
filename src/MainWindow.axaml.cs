@@ -174,5 +174,13 @@ namespace Dots
 			paneWidth = paneWidth < _minPaneWidth ? _minPaneWidth : paneWidth;
 			MainSplitView.OpenPaneLength = Math.Min(paneWidth, 500);
 		}
+
+		private async void CloseSelectionInfoButton_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
+		{
+			await _vm.ResetSelectionFilter();
+			await SelectionInfoContainer.HeightTo(0);
+			_vm.Sdks.Search(" ");
+			_vm.Sdks.Search(".");
+		}
 	}
 }
