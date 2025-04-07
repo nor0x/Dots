@@ -128,23 +128,23 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/scripts
           bash housekeeping.sh
-      - uses: actions/download-artifact@v3.0.2
+      - uses: actions/download-artifact@v4
         with:
           name: macosx64file
           path: $GITHUB_WORKSPACE
-      - uses: actions/download-artifact@v3.0.2
+      - uses: actions/download-artifact@v4
         with:
           name: macosarm64file
           path: $GITHUB_WORKSPACE
-      - uses: actions/download-artifact@v3.0.2
+      - uses: actions/download-artifact@v4
         with:
           name: windowsx86file
           path: $GITHUB_WORKSPACE
-      - uses: actions/download-artifact@v3.0.2
+      - uses: actions/download-artifact@v4
         with:
           name: windowsx64file
           path: $GITHUB_WORKSPACE
-      - uses: actions/download-artifact@v3.0.2
+      - uses: actions/download-artifact@v4
         with:
           name: windowsarm64file
           path: $GITHUB_WORKSPACE
