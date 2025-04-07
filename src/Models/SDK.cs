@@ -20,7 +20,7 @@ public partial class Sdk : ObservableObject
 
 	//UI
 	public string ColorHex { get; set; }
-	public string Group => VersionDisplay.First().ToString();
+	public int Group => Convert.ToInt16(VersionDisplay.Split('.').FirstOrDefault());
 
 	[JsonIgnore]
 	public IBrush Color => SolidColorBrush.Parse(ColorHex);
