@@ -1,92 +1,59 @@
-cd ..
+set -e
+
+cd "$(dirname "$0")/.."
+root=$PWD
 version=$(cat version.txt)
-cd /Users/runner/work/Dots/Dots/src/
-echo "setting <CFBundleVersion> and <CFBundleShortVersionString> in Dots.csproj to $version"
-sed -i '' "s/CFBundleVersion>.*</CFBundleVersion>$version</g" Dots.csproj
-sed -i '' "s/CFBundleShortVersionString>.*</CFBundleShortVersionString>$version</g" Dots.csproj
+repo_url="https://github.com/nor0x/Dots"
+releases_dir="$root/releases"
+entitlements="$root/scripts/Dots.entitlements"
 
-
+cd src
 dotnet restore
-echo "Building Dots for macOS arm64"
-dotnet msbuild -t:BundleApp -property:Configuration=Release -p:UseAppHost=true -p:RuntimeIdentifier=osx-arm64
 
-echo "Prepare App Bundle for arm64"
-rm bin/Release/net10.0-macos/osx-arm64/publish/Dots.app/Contents/MacOS/*.pkg
-cp Assets/AppIcon.icns bin/Release/net10.0-macos/osx-arm64/publish/Dots.app/Contents/Resources/
-cp -Rf bin/Release/net10.0-macos/osx-arm64/Dots.app/Contents/MacOS bin/Release/net10.0-macos/osx-arm64/publish/Dots.app/Contents
-cp -Rf bin/Release/net10.0-macos/osx-arm64/Dots.app/Contents/MonoBundle bin/Release/net10.0-macos/osx-arm64/publish/Dots.app/Contents
-cp bin/Release/net10.0-macos/osx-arm64/Dots.app/Contents/PkgInfo bin/Release/net10.0-macos/osx-arm64/publish/Dots.app/Contents/
+for rid in osx-arm64 osx-x64; do
+	echo "Building Dots for macOS $rid"
+	dotnet msbuild -t:BundleApp -property:Configuration=Release -p:UseAppHost=true -p:RuntimeIdentifier=$rid
 
-echo "codesign Dots for macOS arm64"
-APP_NAME="/Users/runner/work/Dots/Dots/src/bin/Release/net10.0-macos/osx-arm64/publish/Dots.app"
-ENTITLEMENTS="/Users/runner/work/Dots/Dots/scripts/Dots.entitlements"
+	echo "Prepare App Bundle for $rid"
+	bundle="bin/Release/net10.0-macos/$rid/publish/Dots.app"
+	rm -f $bundle/Contents/MacOS/*.pkg
+	cp Assets/AppIcon.icns $bundle/Contents/Resources/
+	cp -Rf bin/Release/net10.0-macos/$rid/Dots.app/Contents/MacOS $bundle/Contents
+	cp -Rf bin/Release/net10.0-macos/$rid/Dots.app/Contents/MonoBundle $bundle/Contents
+	cp bin/Release/net10.0-macos/$rid/Dots.app/Contents/PkgInfo $bundle/Contents/
 
-echo "[INFO]______________[INFO] Signing app files"
-find "$APP_NAME/Contents/MacOS/"|while read fname; do
-    if [[ -f $fname ]]; then
-        echo "[INFO]______________[INFO] Signing $fname"
-        codesign --force --timestamp --options=runtime --entitlements "$ENTITLEMENTS" --sign "$SIGNING_IDENTITY" "$fname"
-    fi
+	# pull the previous release of this channel so vpk can build a delta package on top of it.
+	# expected to fail on the very first Velopack release - there is nothing to diff against yet.
+	echo "Fetching previous release for channel $rid"
+	vpk download github --repoUrl "$repo_url" --channel "$rid" --outputDir "$releases_dir" || true
+
+	# vpk owns codesigning and notarization here. It injects its own updater binary into the bundle,
+	# so signing beforehand would leave that binary unsigned. It also signs Contents/MonoBundle,
+	# which the net10.0-macos TFM produces and plain `codesign --deep` cannot handle
+	# (velopack/velopack#106, fixed in velopack/velopack#292).
+	#
+	# --noInst skips the .pkg installer: signing one needs a "Developer ID Installer" certificate,
+	# which is a different cert to the "Developer ID Application" one in BUILD_CERTIFICATE_BASE64.
+	# New users install from the portable zip, which self-extracts in Finder. Drop --noInst once
+	# the installer certificate is available.
+	# packId matches build-windows.sh - see the note there about the %LocalAppData%\Dots collision
+	echo "Packing Dots for macOS $rid"
+	vpk pack \
+		--packId nor0x.Dots \
+		--packVersion "$version" \
+		--packDir "$bundle" \
+		--packTitle "Dots" \
+		--packAuthors "Joachim Leonfellner" \
+		--mainExe Dots \
+		--icon Assets/AppIcon.icns \
+		--bundleId com.nor0x.dots \
+		--channel "$rid" \
+		--outputDir "$releases_dir" \
+		--signAppIdentity "$SIGNING_IDENTITY" \
+		--signEntitlements "$entitlements" \
+		--notaryProfile "$NOTARY_PROFILE" \
+		--noInst
 done
 
-echo "[INFO]______________[INFO] Signing all files in APP_NAME/Contents/MonoBundle"
-find "$APP_NAME/Contents/MonoBundle/"|while read fname; do
-    if [[ -f $fname ]]; then
-        echo "[INFO]______________[INFO] Signing $fname"
-        codesign --force --timestamp --options=runtime --entitlements "$ENTITLEMENTS" --sign "$SIGNING_IDENTITY" "$fname"
-    fi
-done
-
-echo "[INFO]______________[INFO] Signing app file"
-
-codesign --force --timestamp --options=runtime --entitlements "$ENTITLEMENTS" --sign "$SIGNING_IDENTITY" "$APP_NAME"
-
-echo "dittoing Dots for macOS arm64"
-cd /Users/runner/work/Dots/Dots/src/bin/Release/net10.0-macos/osx-arm64/publish
-macosarm64file=$(echo Dots-$version-macos-arm64.zip)
-ditto -c -k --sequesterRsrc --keepParent Dots.app $macosarm64file
-xcrun notarytool submit $macosarm64file --apple-id $APPLE_ID --team-id $TEAM_ID --password $APP_SPECIFIC_PWD --verbose --wait
-
-cd /Users/runner/work/Dots/Dots/src/
-echo "Building Dots for macOS x64"
-dotnet msbuild -t:BundleApp -property:Configuration=Release -p:UseAppHost=true -p:RuntimeIdentifier=osx-x64
-
-echo "Prepare App Bundle for x64"
-rm bin/Release/net10.0-macos/osx-x64/publish/Dots.app/Contents/MacOS/*.pkg
-cp Assets/AppIcon.icns bin/Release/net10.0-macos/osx-x64/publish/Dots.app/Contents/Resources/
-cp -Rf bin/Release/net10.0-macos/osx-x64/Dots.app/Contents/MacOS bin/Release/net10.0-macos/osx-x64/publish/Dots.app/Contents
-cp -Rf bin/Release/net10.0-macos/osx-x64/Dots.app/Contents/MonoBundle bin/Release/net10.0-macos/osx-x64/publish/Dots.app/Contents
-cp bin/Release/net10.0-macos/osx-x64/Dots.app/Contents/PkgInfo bin/Release/net10.0-macos/osx-x64/publish/Dots.app/Contents/
-
-echo "codesign Dots for macOS x64"
-APP_NAME="/Users/runner/work/Dots/Dots/src/bin/Release/net10.0-macos/osx-x64/publish/Dots.app"
-ENTITLEMENTS="/Users/runner/work/Dots/Dots/scripts/Dots.entitlements"
-
-echo "[INFO]______________[INFO] Signing app files"
-find "$APP_NAME/Contents/MacOS/"|while read fname; do
-    if [[ -f $fname ]]; then
-        echo "[INFO]______________[INFO] Signing $fname"
-        codesign --force --timestamp --options=runtime --entitlements "$ENTITLEMENTS" --sign "$SIGNING_IDENTITY" "$fname"
-    fi
-done
-
-echo "[INFO]______________[INFO] Signing all files in APP_NAME/Contents/MonoBundle"
-find "$APP_NAME/Contents/MonoBundle/"|while read fname; do
-    if [[ -f $fname ]]; then
-        echo "[INFO]______________[INFO] Signing $fname"
-        codesign --force --timestamp --options=runtime --entitlements "$ENTITLEMENTS" --sign "$SIGNING_IDENTITY" "$fname"
-    fi
-done
-
-echo "[INFO]______________[INFO] Signing app file"
-
-codesign --force --timestamp --options=runtime --entitlements "$ENTITLEMENTS" --sign "$SIGNING_IDENTITY" "$APP_NAME"
-
-echo "dittoing Dots for macOS x64"
-cd /Users/runner/work/Dots/Dots/src/bin/Release/net10.0-macos/osx-x64/publish
-macosx64file=$(echo Dots-$version-macos-x64.zip)
-ditto -c -k --sequesterRsrc --keepParent Dots.app $macosx64file
-xcrun notarytool submit $macosx64file --apple-id $APPLE_ID --team-id $TEAM_ID --password $APP_SPECIFIC_PWD --verbose --wait
-
-
-
+echo "Artifacts in $releases_dir:"
+ls -la "$releases_dir"

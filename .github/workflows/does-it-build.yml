@@ -11,6 +11,8 @@ env:
   TEAM_ID: ${{ secrets.TEAM_ID }}
   APP_SPECIFIC_PWD: ${{ secrets.APP_SPECIFIC_PWD }}
   SIGNING_IDENTITY: ${{ secrets.SIGNING_IDENTITY }}
+  # notarytool keychain profile created in the build-macos job and consumed by vpk
+  NOTARY_PROFILE: DotsNotary
 
 jobs:
   build-macos:
@@ -26,6 +28,10 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/src
         dotnet workload restore
+    - name: Install Velopack CLI
+      run: |
+        dotnet tool install -g vpk --version 1.2.0
+        echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
     - name: run housekeeping scripts
       run: |
         sudo xcode-select -s /Applications/Xcode_26.2.app
@@ -60,18 +66,18 @@ jobs:
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
     
+    - name: Store notarization credentials
+      run: |
+        xcrun notarytool store-credentials "$NOTARY_PROFILE" \
+          --apple-id "$APPLE_ID" --team-id "$TEAM_ID" --password "$APP_SPECIFIC_PWD"
     - name: run build scripts
       run: |
         cd $GITHUB_WORKSPACE/scripts
         bash build-macos.sh
     - uses: actions/upload-artifact@v4
       with:
-        name: macosx64file
-        path: ${{ github.workspace }}/src/bin/Release/net10.0-macos/osx-x64/publish/*.zip
-    - uses: actions/upload-artifact@v4
-      with:
-        name: macosarm64file
-        path: ${{ github.workspace }}/src/bin/Release/net10.0-macos/osx-arm64/publish/*.zip
+        name: macos-releases
+        path: ${{ github.workspace }}/releases
 
   build-windows:
     runs-on: windows-latest
@@ -79,14 +85,17 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4.1.1
     - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v3.2.0
+      uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
     - name: restore workloads
       shell: bash
       run: |
         cd $GITHUB_WORKSPACE/src
         dotnet workload restore
+    - name: Install Velopack CLI
+      shell: bash
+      run: dotnet tool install -g vpk --version 1.2.0
     - name: run housekeeping scripts
       shell: bash
       run: |
@@ -97,18 +106,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/scripts
         bash build-windows.sh
-        echo "windowsarm64file=$windowsarm64file" >> $GITHUB_ENV
-        echo "windowsx64file=$windowsx64file" >> $GITHUB_ENV
-        echo "windowsx86file=$windowsx86file" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v4
       with:
-        name: windowsx86file
-        path: ${{ github.workspace }}\src\*arm64.zip
-    - uses: actions/upload-artifact@v4
-      with:
-        name: windowsx64file
-        path: ${{ github.workspace }}\src\*x64.zip
-    - uses: actions/upload-artifact@v4
-      with:
-        name: windowsarm64file
-        path: ${{ github.workspace }}\src\*x86.zip
+        name: windows-releases
+        path: ${{ github.workspace }}\releases

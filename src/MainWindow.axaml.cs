@@ -10,7 +10,7 @@ namespace Dots
 {
 	public partial class MainWindow : Window
 	{
-		MainViewModel _vm = new MainViewModel(new DotnetService(), new ErrorPopupHelper());
+		MainViewModel _vm = new MainViewModel(new DotnetService(), new ErrorPopupHelper(), UpdateService.Shared);
 		AboutWindow _aboutWindow = new AboutWindow();
 		bool _aboutWindowOpen = false;
 		int _minPaneWidth = 260;
@@ -43,6 +43,29 @@ namespace Dots
 				await CacheDatabase.UserAccount.InsertObject(Constants.LastCheckedKey, DateTime.Now);
 			}
 			await _vm.CheckSdks(force);
+			await CheckForAppUpdate();
+		}
+
+		async Task CheckForAppUpdate()
+		{
+			if (!UpdateService.Shared.IsSupported)
+			{
+				return;
+			}
+
+			if (!await CacheDatabase.UserAccount.ContainsKey(Constants.LastUpdateCheckKey))
+			{
+				await CacheDatabase.UserAccount.InsertObject(Constants.LastUpdateCheckKey, DateTime.MinValue);
+			}
+			var lastUpdateCheck = await CacheDatabase.UserAccount.GetObject<DateTime>(Constants.LastUpdateCheckKey);
+
+			if (DateTime.Now.Subtract(lastUpdateCheck).TotalDays < 1)
+			{
+				return;
+			}
+
+			await CacheDatabase.UserAccount.InsertObject(Constants.LastUpdateCheckKey, DateTime.Now);
+			await _vm.CheckForAppUpdateCommand.ExecuteAsync(null);
 		}
 
 		private void Logo_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)

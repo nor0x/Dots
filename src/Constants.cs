@@ -13,6 +13,8 @@ public class Constants
     public const string AppName = "Dots";
     public const string InstalledSdksKey = "installed-sdks-key";
     public const string LastCheckedKey = "last-checked";
+    // throttles the app self-update check - separate from LastCheckedKey, which throttles the SDK release index
+    public const string LastUpdateCheckKey = "last-update-check";
 #if MACOS
     public const string UninstallerPath = "Package Cache";
     public const string InstallerScript = "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh";

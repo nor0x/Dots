@@ -182,6 +182,9 @@ DocProject/Help/html
 # Click-Once directory
 publish/
 
+# Velopack pack output (vpk pack --outputDir)
+releases/
+
 # Publish Web Output
 *.[Pp]ublish.xml
 *.azurePubxml

@@ -17,6 +17,20 @@ Dots is a .NET SDK manager that allows you to install, uninstall, and switch bet
 
 <img src="https://raw.githubusercontent.com/nor0x/Dots/main/Assets/screenshot.png" width="650px" />
 
+## Download
+Grab the latest build from the [releases page](https://github.com/nor0x/Dots/releases/latest).
+
+| Platform | Installer | Portable |
+| --- | --- | --- |
+| Windows (x64 / x86 / arm64) | `nor0x.Dots-win-<arch>-Setup.exe` | `nor0x.Dots-win-<arch>-Portable.zip` |
+| macOS (Apple Silicon / Intel) | – | `nor0x.Dots-osx-<arch>-Portable.zip` |
+
+The `.nupkg` and `releases.*.json` assets are the update feed - you don't need to download those.
+
+Dots keeps itself up to date from version 2.3.0 onwards - it checks GitHub once a day and offers a one-click update in the header bar. You can also check manually from the About window.
+
+> If you are still running a pre-2.3.0 portable `Dots.exe`, download once from the link above. Older builds have no updater and cannot migrate themselves.
+
 ## Building
 Make sure to have .NET 10.0 and Avalonia installed. Then, clone the repository and run `dotnet build` in the src directory. You can also use Visual Studio, Rider or Visual Studio Code to build the project. Also make sure to check out the [release.yml](https://github.com/nor0x/Dots/actions/workflows/release.yml) workflow file for more information on how to build the project.
 

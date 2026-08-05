@@ -224,6 +224,22 @@
 					</StackPanel>
 				</Button>
 				<Button Background="Transparent"
+						IsVisible="{Binding UpdateAvailable}"
+						ToolTip.Tip="{Binding AvailableVersion}"
+						Foreground="White"
+						Padding="0"
+						Command="{Binding InstallAppUpdateCommand}"
+						HorizontalContentAlignment="Center"
+						VerticalContentAlignment="Center"
+						VerticalAlignment="Center"
+						Width="62"
+						Height="42">
+					<StackPanel>
+						<TextBlock Text="{x:Static helpers:LucideIcons.CircleFadingArrowUp}" FontFamily="{StaticResource LucideIcons}" HorizontalAlignment="Center" FontSize="16"  />
+						<TextBlock Text="Update Dots" FontSize="9" HorizontalAlignment="Center" />
+					</StackPanel>
+				</Button>
+				<Button Background="Transparent"
 						IsVisible="false"
 						Foreground="White"
 						Padding="0"

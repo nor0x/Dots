@@ -16,10 +16,11 @@ namespace Dots.ViewModels;
 
 public partial class MainViewModel : ObservableRecipient
 {
-	public MainViewModel(DotnetService dotnet, ErrorPopupHelper errorHelper)
+	public MainViewModel(DotnetService dotnet, ErrorPopupHelper errorHelper, UpdateService updateService)
 	{
 		_dotnet = dotnet;
 		_errorHelper = errorHelper;
+		_updateService = updateService;
 		_progressTasks = new ObservableCollection<ProgressTask>();
 		SelectedFilterIcon = LucideIcons.ListFilter;
 		CurrentStatusIcon = LucideIcons.Info;
@@ -35,6 +36,7 @@ public partial class MainViewModel : ObservableRecipient
 
 	DotnetService _dotnet;
 	ErrorPopupHelper _errorHelper;
+	UpdateService _updateService;
 	List<Sdk> _baseSdks;
 	List<Sdk> _filteredSelection;
 
@@ -71,6 +73,12 @@ public partial class MainViewModel : ObservableRecipient
 
 	[ObservableProperty]
 	bool _emptyData;
+
+	[ObservableProperty]
+	bool _updateAvailable;
+
+	[ObservableProperty]
+	string _availableVersion = "";
 
 	bool _showOnline = true;
 	bool _showInstalled = true;
@@ -437,6 +445,45 @@ public partial class MainViewModel : ObservableRecipient
 		}
 		CurrentStatusText = $"{Sdks.Source.Count()} SDKs found - {Sdks.Source.Count(s => s.Installed)} installed";
 		CurrentStatusIcon = LucideIcons.Info;
+	}
+
+	[RelayCommand]
+	async Task CheckForAppUpdate()
+	{
+		var version = await _updateService.CheckAsync();
+		AvailableVersion = version is null ? "" : $"Dots {version} is available";
+		UpdateAvailable = version is not null;
+	}
+
+	[RelayCommand]
+	async Task InstallAppUpdate()
+	{
+		if (!_updateService.HasPendingUpdate)
+		{
+			return;
+		}
+
+		IsBusy = true;
+		CurrentStatusIcon = LucideIcons.Download;
+		CurrentStatusText = $"Downloading Dots {_updateService.PendingVersion}...";
+
+		var downloaded = await _updateService.DownloadAsync(p =>
+		{
+			CurrentStatusText = $"Downloading Dots {_updateService.PendingVersion} - {p}%";
+		});
+
+		IsBusy = false;
+
+		if (!downloaded)
+		{
+			CurrentStatusIcon = LucideIcons.TriangleAlert;
+			CurrentStatusText = $"update failed - {_updateService.LastError}";
+			return;
+		}
+
+		CurrentStatusIcon = LucideIcons.CircleFadingArrowUp;
+		CurrentStatusText = "restarting to finish the update...";
+		_updateService.ApplyAndRestart();
 	}
 
 	[RelayCommand]

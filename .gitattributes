@@ -1,0 +1,3 @@
+# The build scripts run under Git Bash on the windows-latest runner. With CRLF endings bash reads
+# a backslash line-continuation as an escaped CR instead, which splits the vpk commands apart.
+*.sh text eol=lf

@@ -1,38 +1,40 @@
-cd ..
+set -e
+
+cd "$(dirname "$0")/.."
+root=$PWD
 version=$(cat version.txt)
+repo_url="https://github.com/nor0x/Dots"
+releases_dir="$root/releases"
+
 cd src
-echo "setting <Version> in Dots.csproj to $version"
-sed -i '' "s/Version>.*</Version>$version</g" Dots.csproj
-
-
 dotnet restore
 
-echo "Building Dots for Windows x64"
-dotnet publish "Dots.csproj" -c Release -f net10.0 -r win-x64
+for rid in win-x64 win-x86 win-arm64; do
+	echo "Building Dots for Windows $rid"
+	rm -rf "publish/$rid"
+	dotnet publish "Dots.csproj" -c Release -f net10.0 -r "$rid" --self-contained -o "publish/$rid"
 
-echo "zip Dots for Windows x64"
-mv bin/Release/net10.0/win-x64/publish/Dots.exe .
-7z a -tzip Dots-$version-win-x64.zip Dots.exe
-rm Dots.exe
-windowsx64file=$(echo Dots-$version-win-x64.zip)
-export windowsx64file
+	# pull the previous release of this channel so vpk can build a delta package on top of it.
+	# expected to fail on the very first Velopack release - there is nothing to diff against yet.
+	echo "Fetching previous release for channel $rid"
+	vpk download github --repoUrl "$repo_url" --channel "$rid" --outputDir "$releases_dir" || true
 
-echo "Building Dots for Windows x86"
-dotnet publish "Dots.csproj" -c Release -f net10.0 -r win-x86
+	# packId must NOT be plain "Dots": Velopack installs to %LocalAppData%\<packId> and wipes that
+	# directory on every install, which is exactly where Constants.AppDataPath keeps the release
+	# index and downloaded SDK installers.
+	echo "Packing Dots for Windows $rid"
+	vpk pack \
+		--packId nor0x.Dots \
+		--packVersion "$version" \
+		--packDir "publish/$rid" \
+		--packTitle "Dots" \
+		--packAuthors "Joachim Leonfellner" \
+		--mainExe Dots.exe \
+		--icon Assets/appicon.ico \
+		--channel "$rid" \
+		--runtime "$rid" \
+		--outputDir "$releases_dir"
+done
 
-echo "zip Dots for Windows x86"
-mv bin/Release/net10.0/win-x86/publish/Dots.exe .
-7z a -tzip Dots-$version-win-x86.zip Dots.exe
-rm Dots.exe
-windowsx86file=$(echo Dots-$version-win-x86.zip)
-export windowsx86file
-
-echo "Building Dots for Windows arm64"
-dotnet publish "Dots.csproj" -c Release -f net10.0 -r win-arm64
-
-echo "zip Dots for Windows arm64"
-mv bin/Release/net10.0/win-arm64/publish/Dots.exe .
-7z a -tzip Dots-$version-win-arm64.zip Dots.exe
-rm Dots.exe
-windowsarm64file=$(echo Dots-$version-win-arm64.zip)
-export windowsarm64file
+echo "Artifacts in $releases_dir:"
+ls -la "$releases_dir"

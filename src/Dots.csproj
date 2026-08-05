@@ -15,11 +15,10 @@
     <Version>2.0.0</Version>
   </PropertyGroup>
 
+  <!-- no PublishSingleFile: Velopack updates by swapping a folder and diffs files to build deltas -->
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows')) and '$(Configuration)' == 'Release'">
-    <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
     <PublishReadyToRun>true</PublishReadyToRun>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <SelfContained>true</SelfContained>
   </PropertyGroup>
 
@@ -86,10 +85,14 @@
     <PackageReference Include="CliWrap" Version="3.10.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Akavache.Sqlite3" Version="11.5.1" />
-		<PackageReference Include="Akavache.SystemTextJson" Version="*" />
+		<!-- pinned to match Akavache.Sqlite3: the floating "*" resolved to 12.x, whose
+		     CacheDatabase.Initialize<T> signature no longer matches App.axaml.cs -->
+		<PackageReference Include="Akavache.SystemTextJson" Version="11.5.1" />
 		<PackageReference Include="HyperText.Avalonia" Version="11.0.0-rc1" />
     <PackageReference Include="AnimatedImage.Avalonia" Version="2.1.2" />
     <PackageReference Include="Dotnet.Bundle" Version="*" />
+    <!-- keep in sync with the vpk tool version installed in .github/workflows -->
+    <PackageReference Include="Velopack" Version="1.2.0" />
   </ItemGroup>
 
 </Project>
