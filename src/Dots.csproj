@@ -28,6 +28,13 @@
     <RuntimeIdentifiers>osx-x64;osx-arm64</RuntimeIdentifiers>
     <OutputType>Exe</OutputType>
     <UseAppHost>true</UseAppHost>
+    <!-- Deployment target for the native launcher in Contents/MacOS/Dots. Without this the macOS
+         workload links it against whatever SDK `xcode-select` points at, so the binary's
+         LC_BUILD_VERSION minos tracked the CI Xcode: 15.0 in 2.0.3/2.1.1, 26.2 in 2.2.0. macOS
+         refuses to launch a bundle whose minos is newer than the running OS - crossed-out icon in
+         Finder plus "You can't use this version of the application with this version of macOS".
+         13.0 is the oldest macOS .NET 10 supports; keep it below the CI Xcode SDK. -->
+    <SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
     <PublishTrimmed>true</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <SelfContained>true</SelfContained>
