@@ -29,6 +29,9 @@ public class DotnetService
 	{
 	}
 
+	static string GetMajorVersion(string version) =>
+		version?.Split('.').FirstOrDefault() ?? string.Empty;
+
 	public async Task<List<Sdk>> GetSdks(bool force = false)
 	{
 		var result = new List<Sdk>();
@@ -56,7 +59,7 @@ public class DotnetService
 			var sdk = new Sdk()
 			{
 				Data = release,
-				ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
+				ColorHex = ColorHelper.GenerateHexColor(GetMajorVersion(release.Sdk.Version)),
 				Path = _installedSdks.FirstOrDefault(x => x.Version == release.Sdk.Version)?.Path ?? string.Empty,
 				VersionDisplay = release.Sdk.Version,
 				SdkData = release.Sdk,
@@ -74,7 +77,7 @@ public class DotnetService
 					var sub = new Sdk()
 					{
 						Data = release,
-						ColorHex = ColorHelper.GenerateHexColor(release.Sdk.Version.First().ToString()),
+						ColorHex = ColorHelper.GenerateHexColor(GetMajorVersion(subSdk.Version)),
 						Path = _installedSdks.FirstOrDefault(x => x.Version == subSdk.Version)?.Path ?? string.Empty,
 						VersionDisplay = subSdk.Version,
 						SdkData = subSdk,
@@ -98,7 +101,7 @@ public class DotnetService
 						Data = null,
 						VersionDisplay = installed.Version,
 						Path = installed.Path,
-						ColorHex = ColorHelper.GenerateHexColor(installed.Version.First().ToString()),
+						ColorHex = ColorHelper.GenerateHexColor(GetMajorVersion(installed.Version)),
 					}
 				);
 			}

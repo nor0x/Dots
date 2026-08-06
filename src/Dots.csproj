@@ -74,29 +74,29 @@
 
   <ItemGroup>
     <PackageReference Include="AsyncAwaitBestPractices" Version="10.0.0" />
-    <PackageReference Include="Avalonia" Version="11.3.11" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.11" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.11" />
+    <PackageReference Include="Avalonia" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
     <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.3.0.6" />
     <!--Condition
     below is needed to remove Avalonia.Diagnostics package from build output in Release
     configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.11" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.18" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.CommandLine" Version="2.0.2" />
-    <PackageReference Include="System.Reactive" Version="6.1.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.10" />
+    <PackageReference Include="System.Reactive" Version="7.0.0" />
     <PackageReference Include="M.BindableProperty.Generator" Version="0.11.1" />
-    <PackageReference Include="CliWrap" Version="3.10.0" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="Akavache.Sqlite3" Version="11.5.1" />
+    <PackageReference Include="CliWrap" Version="3.10.4" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+		<PackageReference Include="Akavache.Sqlite3" Version="12.1.1" />
 		<!-- pinned to match Akavache.Sqlite3: the floating "*" resolved to 12.x, whose
 		     CacheDatabase.Initialize<T> signature no longer matches App.axaml.cs -->
-		<PackageReference Include="Akavache.SystemTextJson" Version="11.5.1" />
+		<PackageReference Include="Akavache.SystemTextJson" Version="12.1.1" />
 		<PackageReference Include="HyperText.Avalonia" Version="11.0.0-rc1" />
-    <PackageReference Include="AnimatedImage.Avalonia" Version="2.1.2" />
+    <PackageReference Include="AnimatedImage.Avalonia" Version="2.1.4" />
     <PackageReference Include="Dotnet.Bundle" Version="*" />
     <!-- keep in sync with the vpk tool version installed in .github/workflows -->
     <PackageReference Include="Velopack" Version="1.2.0" />

@@ -882,23 +882,6 @@
 											</StackPanel>
 										</Border>
 
-										<!-- Visual Studio Support Card -->
-										<Border Background="{StaticResource Background}"
-												CornerRadius="8"
-												Padding="12">
-											<StackPanel Spacing="4">
-												<TextBlock Text="Visual Studio Support"
-														   FontWeight="Bold" />
-												<TextBlock Text="{Binding SdkData.VsSupport}" />
-												<TextBlock Text="{Binding SdkData.VsVersion}" />
-												<TextBlock Text="Visual Studio Mac Support"
-														   FontWeight="Bold"
-														   Margin="0,8,0,0" />
-												<TextBlock Text="{Binding SdkData.VsMacSupport}" />
-												<TextBlock Text="{Binding SdkData.VsMacVersion}" />
-											</StackPanel>
-										</Border>
-
 										<!-- Downloads Card -->
 										<Border Background="{StaticResource Background}"
 												CornerRadius="8"
@@ -966,6 +949,23 @@
 														</DataTemplate>
 													</ItemsControl.ItemTemplate>
 												</ItemsControl>
+											</StackPanel>
+										</Border>
+
+										<!-- Visual Studio Support Card -->
+										<Border Background="{StaticResource Background}"
+												CornerRadius="8"
+												Padding="12">
+											<StackPanel Spacing="4">
+												<TextBlock Text="Visual Studio Support"
+														   FontWeight="Bold" />
+												<TextBlock Text="{Binding SdkData.VsSupport}" />
+												<TextBlock Text="{Binding SdkData.VsVersion}" />
+												<TextBlock Text="Visual Studio Mac Support"
+														   FontWeight="Bold"
+														   Margin="0,8,0,0" />
+												<TextBlock Text="{Binding SdkData.VsMacSupport}" />
+												<TextBlock Text="{Binding SdkData.VsMacVersion}" />
 											</StackPanel>
 										</Border>
 									</StackPanel>

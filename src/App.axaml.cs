@@ -19,10 +19,10 @@ namespace Dots
 
 		public override void OnFrameworkInitializationCompleted()
 		{
-			CacheDatabase.Initialize<SystemJsonSerializer>(b =>
+			CacheDatabase.Initialize<SystemJsonSerializer>(configure: b =>
 				b.WithApplicationName("Dots")
 				.WithSqliteProvider()
-				.WithSqliteDefaults());
+				.WithSqliteDefaults(), "Dots");
 
 
 			if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
