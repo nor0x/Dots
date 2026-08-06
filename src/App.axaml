@@ -28,6 +28,7 @@
     <Color x:Key="BackgroundSubtle">#605d64</Color>
     <Color x:Key="Foreground">#ffffff</Color>
     <Color x:Key="SubtleForeground">#e1e4e8</Color>
+    <Color x:Key="Neutral">#5A5560</Color>
 
     <FontFamily x:Key="SpaceGrotesk">avares://Dots/Assets/Fonts/SpaceGrotesk.ttf#Space Grotesk</FontFamily>
     <FontFamily x:Key="SpaceGroteskBold">avares://Dots/Assets/Fonts/SpaceGrotesk-Bold.ttf#Space Grotesk</FontFamily>
@@ -50,7 +51,43 @@
     <SolidColorBrush
         x:Key="DangerBrush"
         Color="{StaticResource Danger}" />
-    
+
+    <!-- surface brushes - Setters need a Brush, the raw Color keys only convert
+         when used directly as an attribute value -->
+    <SolidColorBrush x:Key="BackgroundBrush"        Color="{StaticResource Background}" />
+    <SolidColorBrush x:Key="BackgroundLighterBrush" Color="{StaticResource BackgroundLighter}" />
+    <SolidColorBrush x:Key="BackgroundDarkerBrush"  Color="{StaticResource BackgroundDarker}" />
+    <SolidColorBrush x:Key="BackgroundSubtleBrush"  Color="{StaticResource BackgroundSubtle}" />
+    <SolidColorBrush x:Key="NeutralBrush"           Color="{StaticResource Neutral}" />
+    <SolidColorBrush x:Key="SubtleForegroundBrush"  Color="{StaticResource SubtleForeground}" />
+
+    <!-- depth primitives -->
+    <SolidColorBrush x:Key="HairlineTopBrush" Color="#ffffff" Opacity="0.08" />
+    <SolidColorBrush x:Key="RowRestBrush"     Color="#ffffff" Opacity="0.045" />
+    <SolidColorBrush x:Key="RowHoverBrush"    Color="#ffffff" Opacity="0.085" />
+
+    <!-- fake cast shadow for the detail pane edge -->
+    <LinearGradientBrush x:Key="EdgeShadowRight" StartPoint="0%,0%" EndPoint="100%,0%">
+      <GradientStop Offset="0" Color="#00000000" />
+      <GradientStop Offset="1" Color="#2E000000" />
+    </LinearGradientBrush>
+
+    <!-- sheen for the version dots. the two coincident stops at .78/.82 keep the
+         alpha crossover from washing grey across the lower half -->
+    <LinearGradientBrush x:Key="DotSheen" StartPoint="0%,0%" EndPoint="0%,100%">
+      <GradientStop Offset="0.00" Color="#3Affffff" />
+      <GradientStop Offset="0.45" Color="#30ffffff" />
+      <GradientStop Offset="0.78" Color="#00ffffff" />
+      <GradientStop Offset="0.82" Color="#00000000" />
+      <GradientStop Offset="1.00" Color="#24000000" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="TopBarBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+      <GradientStop Offset="0" Color="#3E3A44" />
+      <GradientStop Offset="1" Color="#38343d" />
+    </LinearGradientBrush>
+
+
     <helpers:RidToIconConverter x:Key="RidToIconConverter" />
     <helpers:SupportPhaseToColorConverter x:Key="SupportPhaseToColorConverter" />
     <helpers:ReleaseTypeToColorConverter x:Key="ReleaseTypeToColorConverter" />

@@ -21,13 +21,18 @@
 		x:Name="PageSelf"
 		Title="Dots">
 	<Window.Styles>
+		<!-- Kept opaque with a hairline border rather than a transparent frame with
+			 a real drop shadow: popups are separate native windows, and transparent
+			 popup padding needs a compositing WM on X11 or it renders as a black box. -->
 		<Style Selector="FlyoutPresenter.DotsFlyout">
 			<Setter Property="Background"
 					Value="{StaticResource Background}" />
 			<Setter Property="BorderThickness"
-					Value="2" />
+					Value="1" />
 			<Setter Property="BorderBrush"
-					Value="{StaticResource BackgroundSubtle}" />
+					Value="{StaticResource HairlineTopBrush}" />
+			<Setter Property="CornerRadius"
+					Value="8" />
 			<Setter Property="Margin"
 					Value="0,4,4,0" />
 			<Setter Property="Width"
@@ -37,7 +42,14 @@
 	</Window.Styles>
 	<Grid RowDefinitions="64,*"
 		  Background="{StaticResource Background}">
-		<Grid Grid.Row="0">
+		<!-- ZIndex is load bearing: root Grid children paint in document order, so
+			 the body in row 1 would otherwise paint straight over this shadow.
+			 The zero-blur layer doubles as the 1px divider the header lacked. -->
+		<Border Grid.Row="0"
+				ZIndex="1"
+				Background="{StaticResource TopBarBrush}"
+				BoxShadow="inset 0 1 0 0 #0Fffffff, 0 1 0 0 #26000000, 0 5 12 -3 #38000000">
+		<Grid>
 			<StackPanel Orientation="Horizontal"
 						Margin="12,4,0,0"
 						Spacing="12">
@@ -80,6 +92,7 @@
 							   Margin="0,0,0,0"
 							   FontSize="32" />
 					<TextBlock FontSize="14"
+							   Classes="Secondary"
 							   TextAlignment="Left"
 							   FontFamily="{StaticResource SpaceGrotesk}">
 						<Run Text="Updated at" />
@@ -87,23 +100,42 @@
 					</TextBlock>
 				</StackPanel>
 			</StackPanel>
-			<TextBox x:Name="MainSearchBar"
-					 Background="{StaticResource BackgroundDarker}"
-					 BorderThickness="0"
-					 TextChanged="TextBox_TextChanged"
-					 FontFamily="{StaticResource SpaceGrotesk}"
-					 Width="320"
-					 FontSize="12"
-					 Height="32"
-					 VerticalContentAlignment="Center"
-					 VerticalAlignment="Center"
-					 Watermark="Search..." />
+			<!-- TextBox is a TemplatedControl and has no BoxShadow, so the recess
+				 lives on a wrapping Border. Fluent repaints PART_BorderElement on
+				 hover/focus, hence the Transparent overrides below. -->
+			<Border Classes="Well"
+					Width="320"
+					Height="32"
+					CornerRadius="6"
+					Background="{StaticResource BackgroundDarker}"
+					VerticalAlignment="Center">
+				<Border.Styles>
+					<Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+						<Setter Property="Background"
+								Value="Transparent" />
+					</Style>
+					<Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+						<Setter Property="Background"
+								Value="Transparent" />
+					</Style>
+				</Border.Styles>
+				<TextBox x:Name="MainSearchBar"
+						 Background="Transparent"
+						 BorderThickness="0"
+						 TextChanged="TextBox_TextChanged"
+						 FontFamily="{StaticResource SpaceGrotesk}"
+						 FontSize="12"
+						 VerticalContentAlignment="Center"
+						 VerticalAlignment="Center"
+						 Watermark="Search..." />
+			</Border>
 			<StackPanel Orientation="Horizontal"
 						IsVisible="true"
 						Spacing="8"
 						Margin="0,0,12,0"
 						HorizontalAlignment="Right">
 				<Button IsVisible="true"
+						Classes="Toolbar"
 						Background="Transparent"
 						Foreground="White"
 						Padding="0"
@@ -121,6 +153,7 @@
 					</StackPanel>
 				</Button>
 				<Button IsVisible="true"
+						Classes="Toolbar"
 						Background="Transparent"
 						Foreground="White"
 						Padding="0"
@@ -142,7 +175,8 @@
 					  Height="42" />
 				<Button x:Name="FilterButton"
 						Grid.Column="0"
-						Background="{StaticResource Background}"
+						Classes="Toolbar"
+						Background="Transparent"
 						Foreground="White"
 						HorizontalContentAlignment="Center"
 						VerticalContentAlignment="Center"
@@ -209,7 +243,8 @@
 						</Flyout>
 					</Button.Flyout>
 				</Button>
-				<Button Background="Transparent"
+				<Button Classes="Toolbar"
+						Background="Transparent"
 						Foreground="White"
 						Padding="0"
 						Command="{Binding ListSdksCommand}"
@@ -223,7 +258,8 @@
 						<TextBlock Text="Refresh" FontSize="9" HorizontalAlignment="Center" />
 					</StackPanel>
 				</Button>
-				<Button Background="Transparent"
+				<Button Classes="Toolbar"
+						Background="Transparent"
 						IsVisible="{Binding UpdateAvailable}"
 						ToolTip.Tip="{Binding AvailableVersion}"
 						Foreground="White"
@@ -239,7 +275,8 @@
 						<TextBlock Text="Update Dots" FontSize="9" HorizontalAlignment="Center" />
 					</StackPanel>
 				</Button>
-				<Button Background="Transparent"
+				<Button Classes="Toolbar"
+						Background="Transparent"
 						IsVisible="false"
 						Foreground="White"
 						Padding="0"
@@ -256,13 +293,14 @@
 				</Button>
 			</StackPanel>
 		</Grid>
+		</Border>
 		<Grid Grid.Row="1"
 			  ColumnDefinitions="*,Auto"
 			  Background="{StaticResource BackgroundSubtle}">
 			<SplitView x:Name="MainSplitView"
 					   IsPaneOpen="{Binding ShowDetails}"
 					   PanePlacement="Right"
-					   CompactPaneLength="30"
+					   CompactPaneLength="0"
 					   DisplayMode="CompactInline"
 					   OpenPaneLength="280">
 				<SplitView.Content>
@@ -271,7 +309,7 @@
 						x:Name="SelectionInfoContainer"
 						Height="0"
 						Grid.Row="0">
-							<Button x:Name="CloseSelectionInfoButton" Background="Transparent"
+							<Button x:Name="CloseSelectionInfoButton" Classes="Chrome" Background="Transparent"
 									Tapped="CloseSelectionInfoButton_Tapped"
 									HorizontalAlignment="Right"
 									Foreground="White"
@@ -289,6 +327,7 @@
 										   Text="Lorem Ipsum Sunt magni nostrum quae voluptatum eveniet aliquid. Possimus cumque enim voluptatum perspiciatis optio ratione veritatis inventore. Similique blanditiis rem sint quam eveniet."
 										   Grid.Column="0" />
 								<Button x:Name="SelectionInfoButton"
+										Classes="Action"
 										Content="Cleanup"
 										Background="{StaticResource Success}"
 										Foreground="White"
@@ -303,32 +342,78 @@
 								 ItemsSource="{Binding Sdks.View}"
 								 Background="Transparent">
 							<ListBox.Styles>
-								<Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-									<Setter Property="Background"
-											Value="{StaticResource Background}" />
+								<!--
+									Rows carry a surface at rest but no blur - the inset hairline is a
+									solid draw, so a full screen of rows costs nothing. Only the hovered
+									and selected row get a real shadow, which caps us at two blurred
+									rows and keeps shadows off the scrolling viewport edges.
+									All four states keep three shadows with inset at index 0 so
+									BoxShadowsTransition interpolates instead of snapping.
+								-->
+								<Style Selector="ListBoxItem">
+									<Setter Property="Margin"
+											Value="8,2" />
+									<Setter Property="Padding"
+											Value="12,8" />
 								</Style>
-								<Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter">
+								<Style Selector="ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+									<Setter Property="CornerRadius"
+											Value="8" />
 									<Setter Property="Background"
-											Value="{StaticResource BackgroundLighter}" />
+											Value="{StaticResource RowRestBrush}" />
+									<Setter Property="BoxShadow"
+											Value="inset 0 1 0 0 #0Fffffff, 0 1 1 0 #00000000, 0 2 6 -1 #00000000" />
+									<Setter Property="Transitions">
+										<Transitions>
+											<BoxShadowsTransition Property="BoxShadow"
+																  Duration="0:0:0.13"
+																  Easing="CubicEaseOut" />
+											<BrushTransition Property="Background"
+															 Duration="0:0:0.13" />
+										</Transitions>
+									</Setter>
+								</Style>
+								<Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+									<Setter Property="Background"
+											Value="{StaticResource RowHoverBrush}" />
+									<Setter Property="BoxShadow"
+											Value="inset 0 1 0 0 #14ffffff, 0 1 2 0 #26000000, 0 3 8 -2 #33000000" />
+								</Style>
+								<Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+									<Setter Property="Background"
+											Value="{StaticResource BackgroundBrush}" />
+									<Setter Property="BoxShadow"
+											Value="inset 0 1 0 0 #14ffffff, 0 1 2 0 #26000000, 0 3 8 -2 #33000000" />
+								</Style>
+								<Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+									<Setter Property="Background"
+											Value="{StaticResource BackgroundLighterBrush}" />
+									<Setter Property="BoxShadow"
+											Value="inset 0 1 0 0 #1Fffffff, 0 2 3 -1 #33000000, 0 6 14 -2 #3D000000" />
 								</Style>
 							</ListBox.Styles>
 							<ListBox.ItemTemplate>
 								<DataTemplate x:DataType="models:Sdk">
 									<Grid Tapped="SdkItem_Tapped"
-										  Height="43"
+										  Height="44"
 										  Background="Transparent"
 										  ColumnDefinitions="Auto,*,Auto"
 										  Margin="0,0,4,0">
 										<Border Width="44"
 												Height="44"
+												Classes="Dot"
 												Background="{Binding Color}"
 												BorderThickness="0"
 												CornerRadius="22">
-											<TextBlock Text="{Binding Group}"
-													   FontFamily="{StaticResource DottedFont}"
-													   FontSize="32"
-													   HorizontalAlignment="Center"
-													   VerticalAlignment="Center" />
+											<Panel>
+												<Border CornerRadius="22"
+														Background="{StaticResource DotSheen}" />
+												<TextBlock Text="{Binding Group}"
+														   FontFamily="{StaticResource DottedFont}"
+														   FontSize="32"
+														   HorizontalAlignment="Center"
+														   VerticalAlignment="Center" />
+											</Panel>
 										</Border>
 										<StackPanel Orientation="Vertical"
 													VerticalAlignment="Center"
@@ -336,30 +421,22 @@
 													Margin="8,0,0,0">
 											<TextBlock Text="{Binding VersionDisplay}" />
 											<TextBlock Text="{Binding Path}"
+													   Classes="Secondary"
 													   IsVisible="{Binding Path, Converter={StaticResource StringIsNullOrEmptyConverter}}"
 													   FontSize="11" />
 										</StackPanel>
 										<StackPanel Orientation="Horizontal"
 													Grid.Column="2"
 													VerticalAlignment="Center">
-											<Border Height="20"
-													Padding="6,0"
-													Margin="0,0,6,0"
+											<Border Classes="Pill"
 													Background="{StaticResource Danger}"
-													VerticalAlignment="Center"
-													IsVisible="{Binding Data.Security}"
-													CornerRadius="10">
-
+													IsVisible="{Binding Data.Security}">
 												<TextBlock VerticalAlignment="Center"
 														   Text="Security Patch"
 														   FontSize="10" />
 											</Border>
-											<Border Height="20"
-													IsVisible="{Binding Data.Preview}"
-													Padding="6,0"
-													Margin="0,0,6,0"
-													VerticalAlignment="Center"
-													CornerRadius="10">
+											<Border Classes="Pill"
+													IsVisible="{Binding Data.Preview}">
 												<Border.Background>
 													<SolidColorBrush Color="{Binding SdkData.Version, Converter={StaticResource PreviewTypeToColorConverter}}" />
 												</Border.Background>
@@ -367,11 +444,8 @@
 														   Text="{Binding SdkData.Version, Converter={StaticResource PreviewTypeToStringConverter}}"
 														   FontSize="10" />
 											</Border>
-											<Border Height="20"
-													Padding="6,0"
-													Margin="0,0,6,0"
-													VerticalAlignment="Center"
-													CornerRadius="10">
+											<Border Classes="Pill"
+													IsVisible="{Binding ShowSupportPhase}">
 												<Border.Background>
 													<SolidColorBrush Color="{Binding Data.SupportPhase, Converter={StaticResource SupportPhaseToColorConverter}}" />
 												</Border.Background>
@@ -379,11 +453,7 @@
 														   Text="{Binding Data.SupportPhase}"
 														   FontSize="10" />
 											</Border>
-											<Border Height="20"
-													Padding="6,0"
-													Margin="0,0,6,0"
-													VerticalAlignment="Center"
-													CornerRadius="10">
+											<Border Classes="Pill">
 												<Border.Background>
 													<SolidColorBrush Color="{Binding Data.ReleaseType, Converter={StaticResource ReleaseTypeToColorConverter}}" />
 												</Border.Background>
@@ -424,12 +494,13 @@
 												<StackPanel Orientation="Horizontal"
 															IsVisible="{Binding !IsBusy}">
 													<Button Padding="0"
+															Classes="Action"
 															HorizontalContentAlignment="Center"
 															VerticalContentAlignment="Center"
 															Height="32"
 															Width="100"
 															FontSize="12"
-															Background="DarkGray"
+															Background="{StaticResource Neutral}"
 															Foreground="White"
 															Margin="12,0,6,0"
 															FontFamily="Default"
@@ -456,6 +527,7 @@
 													</Button>
 													<Button Height="32"
 															Width="100"
+															Classes="Action"
 															FontSize="12"
 															Foreground="White"
 															Margin="0,0,12,0"
@@ -503,21 +575,36 @@
 								</DataTemplate>
 							</ListBox.ItemTemplate>
 						</ListBox>
-						<Grid Grid.Row="2" ColumnDefinitions="20,*" Background="{StaticResource Background}" Height="20" VerticalAlignment="Bottom">
-							<TextBlock FontFamily="{StaticResource LucideIcons}" Grid.Column="0"
-									   VerticalAlignment="Center"
-									   Margin="8,0,8,0"
-									   Text="{Binding CurrentStatusIcon}"
-									   Foreground="White" FontSize="10" />
-							<TextBlock Text="{Binding CurrentStatusText}" Foreground="White" Grid.Column="1" FontSize="9" VerticalAlignment="Center" />
-						</Grid>
-					</Grid>
-				</SplitView.Content>
-				<SplitView.Pane>
-					<Grid ColumnDefinitions="30,1,*"
-						  Background="{StaticResource BackgroundSubtle}">
-
-						<Button Grid.Column="0"
+						<!-- pinned to the bottom, so it casts upward -->
+						<Border Grid.Row="2" Background="{StaticResource Background}" Height="20" VerticalAlignment="Bottom"
+								BoxShadow="inset 0 -1 0 0 #0Fffffff, 0 -1 0 0 #1F000000, 0 -3 8 -2 #2E000000">
+							<Grid ColumnDefinitions="20,*">
+								<TextBlock FontFamily="{StaticResource LucideIcons}" Grid.Column="0"
+										   VerticalAlignment="Center"
+										   Margin="8,0,0,0"
+										   Text="{Binding CurrentStatusIcon}"
+										   Foreground="White" FontSize="10" />
+								<TextBlock Text="{Binding CurrentStatusText}" Margin="8,0,0,0" Foreground="White" Grid.Column="1" FontSize="9" VerticalAlignment="Center" />
+							</Grid>
+						</Border>
+						<!-- A real shadow cast by the pane would be clipped at the pane's own
+							 bounds - SplitView lays the two sides out as separate subtrees - so
+							 the content side draws the falloff itself. -->
+						<Border Grid.Row="1"
+								Width="6"
+								HorizontalAlignment="Right"
+								IsHitTestVisible="False"
+								IsVisible="{Binding ShowDetails}"
+								Background="{StaticResource EdgeShadowRight}" />
+						<!-- Lives on the content side rather than inside the pane so it can
+							 overhang the list instead of being clipped by it - that also lets
+							 CompactPaneLength be 0, so there is no empty gutter when the pane
+							 is open. Right aligned keeps it flush to the pane edge in both
+							 states, since CompactInline insets the content by the pane width.
+							 Drawn last so it sits above the edge falloff. -->
+						<Button Grid.Row="0"
+								Grid.RowSpan="2"
+								Classes="PaneToggle"
 								Background="{StaticResource Background}"
 								Foreground="White"
 								Content="{x:Static helpers:LucideIcons.ChevronLeft}"
@@ -525,29 +612,28 @@
 								FontSize="15"
 								HorizontalContentAlignment="Center"
 								VerticalContentAlignment="Center"
-								VerticalAlignment="Top"
+								VerticalAlignment="Bottom"
 								BorderThickness="0"
-								HorizontalAlignment="Left"
-								Width="36"
+								HorizontalAlignment="Right"
+								Width="30"
 								Height="40"
-								CornerRadius="0,0,0,8"
+								CornerRadius="8,0,0,0"
 								Padding="0"
-								Margin="0,0,0,-1"
 								x:Name="ToggleDetailsButton"
 								Tapped="ToggleDetails_Tapped" />
+					</Grid>
+				</SplitView.Content>
+				<SplitView.Pane>
+					<Grid ColumnDefinitions="1,*"
+						  Background="{StaticResource BackgroundSubtle}">
 
-						<Border Grid.Column="1"
+						<Border Grid.Column="0"
 								Width="1"
-								Background="{StaticResource Background}"
+								Background="{StaticResource HairlineTopBrush}"
 								HorizontalAlignment="Stretch"
 								VerticalAlignment="Stretch" />
-						<Border Grid.Column="0"
-								Height="20"
-								Background="{StaticResource Background}"
-								HorizontalAlignment="Stretch"
-								VerticalAlignment="Bottom" />
 						<Grid x:Name="DetailsPanel"
-							  Grid.Column="2"
+							  Grid.Column="1"
 							  Background="{StaticResource BackgroundSubtle}"
 							  DataContext="{Binding SelectedSdk}">
 							<!-- EMPTY -->
@@ -573,20 +659,23 @@
 												Margin="12"
 												Spacing="12">
 										<!-- Header Card -->
-										<Border Background="{StaticResource Background}"
-												CornerRadius="8"
-												Padding="12">
+										<Border Classes="Card">
 											<StackPanel>
 												<Border Width="70"
 														Height="70"
+														Classes="DotLarge"
 														Background="{Binding Color}"
 														CornerRadius="35"
 														Margin="0,0,0,6">
-													<TextBlock Text="{Binding Group}"
-															   FontFamily="{StaticResource DottedFont}"
-															   FontSize="32"
-															   HorizontalAlignment="Center"
-															   VerticalAlignment="Center" />
+													<Panel>
+														<Border CornerRadius="35"
+																Background="{StaticResource DotSheen}" />
+														<TextBlock Text="{Binding Group}"
+																   FontFamily="{StaticResource DottedFont}"
+																   FontSize="32"
+																   HorizontalAlignment="Center"
+																   VerticalAlignment="Center" />
+													</Panel>
 												</Border>
 												<TextBlock Text="{Binding VersionDisplay}"
 														   FontSize="20" />
@@ -616,9 +705,7 @@
 											</StackPanel>
 										</Border>
 										<!-- Empty Info Card -->
-										<Border Background="{StaticResource Background}"
-												CornerRadius="8"
-												Padding="12">
+										<Border Classes="Card">
 											<StackPanel>
 												<Image Source="/Assets/logo_nothing.png"
 													   Stretch="UniformToFill"
@@ -638,43 +725,38 @@
 												Spacing="12"
 												IsVisible="{ReflectionBinding ElementName=PageSelf, Path=DataContext.SelectedSdk.Data, Converter={x:Static ObjectConverters.IsNotNull}}">
 										<!-- Header Card -->
-										<Border Background="{StaticResource Background}"
-												CornerRadius="8"
-												Padding="12">
+										<Border Classes="Card">
 											<StackPanel>
 												<Border Width="70"
 														Height="70"
+														Classes="DotLarge"
 														Background="{Binding Color}"
 														CornerRadius="35"
 														Margin="0,0,0,6">
-													<TextBlock Text="{Binding Group}"
-															   FontFamily="{StaticResource DottedFont}"
-															   FontSize="52"
-															   HorizontalAlignment="Center"
-															   VerticalAlignment="Center" />
+													<Panel>
+														<Border CornerRadius="35"
+																Background="{StaticResource DotSheen}" />
+														<TextBlock Text="{Binding Group}"
+																   FontFamily="{StaticResource DottedFont}"
+																   FontSize="52"
+																   HorizontalAlignment="Center"
+																   VerticalAlignment="Center" />
+													</Panel>
 												</Border>
 												<TextBlock FontSize="20" TextWrapping="Wrap" HorizontalAlignment="Left">
 													<Run Text=".NET" />
 													<Run Text="{Binding VersionDisplay}" />
 												</TextBlock>
 												<StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-													<Border Height="20"
-															Padding="6,0"
-															Margin="0,0,6,0"
+													<Border Classes="Pill"
 															Background="{StaticResource Danger}"
-															VerticalAlignment="Center"
-															CornerRadius="10"
 															IsVisible="{Binding Data.Security}">
 														<TextBlock VerticalAlignment="Center"
 																   Text="Security Patch"
 																   FontSize="10" />
 													</Border>
-													<Border Height="20"
-															IsVisible="{Binding Data.Preview}"
-															Padding="6,0"
-															Margin="0,0,6,0"
-															CornerRadius="10"
-															VerticalAlignment="Center">
+													<Border Classes="Pill"
+															IsVisible="{Binding Data.Preview}">
 														<Border.Background>
 															<SolidColorBrush Color="{Binding SdkData.Version, Converter={StaticResource PreviewTypeToColorConverter}}" />
 														</Border.Background>
@@ -682,11 +764,8 @@
 																   Text="{Binding SdkData.Version, Converter={StaticResource PreviewTypeToStringConverter}}"
 																   FontSize="10" />
 													</Border>
-													<Border Height="20"
-															Padding="6,0"
-															Margin="0,0,6,0"
-															VerticalAlignment="Center"
-															CornerRadius="10">
+													<Border Classes="Pill"
+															IsVisible="{Binding ShowSupportPhase}">
 														<Border.Background>
 															<SolidColorBrush Color="{Binding Data.SupportPhase, Converter={StaticResource SupportPhaseToColorConverter}}" />
 														</Border.Background>
@@ -694,11 +773,7 @@
 																   Text="{Binding Data.SupportPhase}"
 																   FontSize="10" />
 													</Border>
-													<Border Height="20"
-															Padding="6,0"
-															Margin="0,0,6,0"
-															VerticalAlignment="Center"
-															CornerRadius="10">
+													<Border Classes="Pill">
 														<Border.Background>
 															<SolidColorBrush Color="{Binding Data.ReleaseType, Converter={StaticResource ReleaseTypeToColorConverter}}" />
 														</Border.Background>
@@ -770,7 +845,8 @@
 															IsVisible="{Binding !IsBusy}">
 													<Button Height="32"
 															Width="100"
-															Background="DarkGray"
+															Classes="Action"
+															Background="{StaticResource Neutral}"
 															Padding="0"
 															FontSize="12"
 															HorizontalContentAlignment="Center"
@@ -799,6 +875,7 @@
 													<Button Content="Uninstall"
 															Height="32"
 															Width="100"
+															Classes="Action"
 															Margin="0,0,12,0"
 															FontSize="12"
 															Padding="0"
@@ -841,9 +918,7 @@
 										</Border>
 
 										<!-- Release Info Card -->
-										<Border Background="{StaticResource Background}"
-												CornerRadius="8"
-												Padding="12">
+										<Border Classes="Card">
 											<StackPanel Spacing="4">
 												<TextBlock Text="Release Notes"
 														   FontWeight="Bold" />
@@ -860,9 +935,7 @@
 										</Border>
 
 										<!-- Language Versions Card -->
-										<Border Background="{StaticResource Background}"
-												CornerRadius="8"
-												Padding="12">
+										<Border Classes="Card">
 											<StackPanel Spacing="4">
 												<TextBlock Text="Runtime Version"
 														   FontWeight="Bold" />
@@ -883,9 +956,7 @@
 										</Border>
 
 										<!-- Downloads Card -->
-										<Border Background="{StaticResource Background}"
-												CornerRadius="8"
-												Padding="12">
+										<Border Classes="Card">
 											<StackPanel>
 												<TextBlock Text="Downloads"
 														   FontWeight="Bold"
@@ -953,9 +1024,7 @@
 										</Border>
 
 										<!-- Visual Studio Support Card -->
-										<Border Background="{StaticResource Background}"
-												CornerRadius="8"
-												Padding="12">
+										<Border Classes="Card">
 											<StackPanel Spacing="4">
 												<TextBlock Text="Visual Studio Support"
 														   FontWeight="Bold" />

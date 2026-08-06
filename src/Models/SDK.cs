@@ -9,6 +9,7 @@ namespace Dots.Models;
 public partial class Sdk : ObservableObject
 {
 	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(ShowSupportPhase))]
 	Release _data;
 
 	[ObservableProperty]
@@ -29,6 +30,11 @@ public partial class Sdk : ObservableObject
 	public bool IsSelected { get; set; }
 	[JsonIgnore]
 	public bool Installed => !string.IsNullOrEmpty(Path);
+
+	// the preview pill already says "Preview"/"Release Candidate" for these,
+	// so the support phase pill would just repeat it
+	[JsonIgnore]
+	public bool ShowSupportPhase => Data is not { Preview: true, SupportPhase: SupportPhase.Preview };
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor(nameof(IsBusy))]

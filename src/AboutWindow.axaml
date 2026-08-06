@@ -70,9 +70,10 @@
           HorizontalAlignment="Center" />
       </StackPanel>
     </Grid>
-    <Grid
+    <Border
       Grid.Row="1"
-      Background="{StaticResource BackgroundSubtle}">
+      Background="{StaticResource BackgroundSubtle}"
+      BoxShadow="inset 0 1 0 0 #0Fffffff">
       <StackPanel
         VerticalAlignment="Top"
         HorizontalAlignment="Center"
@@ -97,7 +98,8 @@
             Padding="0"
             Height="32"
             Width="115"
-            Background="{StaticResource Background}"
+            Classes="Action"
+            Background="{StaticResource Neutral}"
             HorizontalContentAlignment="Center"
             VerticalContentAlignment="Center"
             HorizontalAlignment="Center"
@@ -109,7 +111,8 @@
             Padding="0"
             Height="32"
             Width="115"
-            Background="{StaticResource Background}"
+            Classes="Action"
+            Background="{StaticResource Neutral}"
             HorizontalContentAlignment="Center"
             VerticalContentAlignment="Center"
             HorizontalAlignment="Center"
@@ -122,7 +125,8 @@
             Padding="0"
             Height="32"
             Width="115"
-            Background="{StaticResource Background}"
+            Classes="Action"
+            Background="{StaticResource Neutral}"
             HorizontalContentAlignment="Center"
             VerticalContentAlignment="Center"
             HorizontalAlignment="Center"
@@ -138,6 +142,6 @@
       </StackPanel>
 
 
-    </Grid>
+    </Border>
   </Grid>
 </Window>
