@@ -13,6 +13,7 @@ env:
   SIGNING_IDENTITY: ${{ secrets.SIGNING_IDENTITY }}
   # notarytool keychain profile created in the build-macos job and consumed by vpk
   NOTARY_PROFILE: DotsNotary
+  RELEASE_VERSION: 0.0.0-ci.${{ github.run_number }}
 
 jobs:
   build-macos:

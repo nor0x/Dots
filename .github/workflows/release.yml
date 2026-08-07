@@ -1,8 +1,18 @@
 name: build and release
 
 on:
+  push:
+    tags:
+    - 'v*.*.*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: Release version without the v prefix (for example, 2.3.0)
+        required: true
+        type: string
 
+permissions:
+  contents: write
 
 env:
   APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -13,8 +23,42 @@ env:
   NOTARY_PROFILE: DotsNotary
 
 jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4.1.1
+      with:
+        fetch-depth: 0
+    - name: Resolve release version
+      id: release
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+      run: |
+        if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+          tag="$GITHUB_REF_NAME"
+          version="${tag#v}"
+        else
+          version="$INPUT_VERSION"
+          tag="v$version"
+        fi
+
+        if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+          echo "Version must be SemVer, for example 2.3.0 or 2.3.0-preview.1." >&2
+          exit 1
+        fi
+
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+        echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
   build-macos:
+    needs: prepare-release
     runs-on: macos-latest
+    env:
+      RELEASE_VERSION: ${{ needs.prepare-release.outputs.version }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4.1.1
@@ -78,7 +122,10 @@ jobs:
         path: ${{ github.workspace }}/releases
 
   build-windows:
+    needs: prepare-release
     runs-on: windows-latest
+    env:
+      RELEASE_VERSION: ${{ needs.prepare-release.outputs.version }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4.1.1
@@ -110,7 +157,7 @@ jobs:
         path: ${{ github.workspace }}\releases
 
   create-release:
-    needs: [build-macos, build-windows]
+    needs: [prepare-release, build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -118,13 +165,21 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      - name: Get Version via powershell
-        shell: pwsh
-        id: get_version
+      - name: Create release tag for manual dispatch
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TAG: ${{ needs.prepare-release.outputs.tag }}
         run: |
-          $version = (Get-Content -Path $env:GITHUB_WORKSPACE/version.txt).Trim()
-          "CURRENT_VERSION=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG"; then
+            echo "Tag $TAG already exists." >&2
+            exit 1
+          fi
+
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
       - name: run housekeeping scripts
+        env:
+          RELEASE_VERSION: ${{ needs.prepare-release.outputs.version }}
         run: |
           cd $GITHUB_WORKSPACE/scripts
           bash housekeeping.sh
@@ -139,13 +194,6 @@ jobs:
 
       - name: Display structure of downloaded files
         run: ls -la ${{ github.workspace }}/releases
-      - name: Create GitHub Tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          default_bump: false
-          custom_tag: ${{ steps.get_version.outputs.CURRENT_VERSION }}
       - name: Install DiffLog
         run: dotnet tool install -g DiffLog
       - name: Generate Release Notes
@@ -163,8 +211,8 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-            tag: ${{ steps.tag_version.outputs.new_tag }}
-            name: Release ${{ steps.get_version.outputs.CURRENT_VERSION }}
+          tag: ${{ needs.prepare-release.outputs.tag }}
+          name: Release ${{ needs.prepare-release.outputs.version }}
             artifacts: |
               ${{ github.workspace }}/releases/*
             token: ${{ secrets.GITHUB_TOKEN }}

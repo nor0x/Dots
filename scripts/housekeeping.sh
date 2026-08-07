@@ -1,5 +1,5 @@
 cd ..
-version=$(cat version.txt)
+version="${RELEASE_VERSION:?RELEASE_VERSION must be set to a SemVer version}"
 cd src
 
 sed -i '' "s/CFBundleVersion>.*</CFBundleVersion>$version</" Dots.csproj

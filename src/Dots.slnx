@@ -1,6 +1,5 @@
 <Solution>
   <Folder Name="/Solution Items/">
-    <File Path="../version.txt" />
   </Folder>
   <Project Path="Dots.csproj" />
 </Solution>

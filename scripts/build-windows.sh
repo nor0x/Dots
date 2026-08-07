@@ -2,7 +2,7 @@ set -e
 
 cd "$(dirname "$0")/.."
 root=$PWD
-version=$(cat version.txt)
+version="${RELEASE_VERSION:?RELEASE_VERSION must be set to a SemVer version}"
 repo_url="https://github.com/nor0x/Dots"
 releases_dir="$root/releases"
 
