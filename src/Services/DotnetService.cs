@@ -16,6 +16,10 @@ using Dots.Models;
 #if MACOS
 using Security;
 #endif
+#if LINUX
+using System.Formats.Tar;
+using System.IO.Compression;
+#endif
 
 namespace Dots.Services;
 
@@ -187,26 +191,28 @@ public class DotnetService
 			}
 
 			List<InstalledSdk> result = new();
+#if LINUX
+			foreach (var host in GetDotnetHosts())
+			{
+				try
+				{
+					var hostResult = await Cli.Wrap(host)
+						.WithArguments(Constants.ListSdksCommand)
+						.ExecuteBufferedAsync(Encoding.UTF8);
+					AddInstalledSdks(hostResult.StandardOutput, result);
+				}
+				catch (Exception ex)
+				{
+					// a host that isn't there yet (no ~/.dotnet) or no dotnet on PATH at all is expected
+					Debug.WriteLine(ex);
+				}
+			}
+#else
 			var cmdresult = await Cli.Wrap(Constants.DotnetCommand)
 				.WithArguments(Constants.ListSdksCommand)
 				.ExecuteBufferedAsync(Encoding.UTF8);
-
-			if (!string.IsNullOrEmpty(cmdresult.StandardOutput))
-			{
-				if (cmdresult.StandardOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries) is string[] sdks)
-				{
-					foreach (var s in sdks)
-					{
-						if (!string.IsNullOrEmpty(s))
-						{
-							var lineSplit = s.Split("[", StringSplitOptions.RemoveEmptyEntries);
-							var versionString = lineSplit[0].Trim();
-							var path = lineSplit[1].TrimEnd(']');
-							result.Add(new InstalledSdk() { Version = versionString, Path = path });
-						}
-					}
-				}
-			}
+			AddInstalledSdks(cmdresult.StandardOutput, result);
+#endif
 			_installedSdks = result;
 			await CacheDatabase.UserAccount.InsertObject(Constants.InstalledSdksKey, JsonSerializer.Serialize(result));
 			return _installedSdks;
@@ -219,6 +225,73 @@ public class DotnetService
 		}
 
 	}
+
+	/// <summary>
+	/// Parses `dotnet --list-sdks` output ("9.0.100 [/path/to/sdk]" per line) into <paramref name="result"/>,
+	/// skipping versions already collected from another host.
+	/// </summary>
+	static void AddInstalledSdks(string listSdksOutput, List<InstalledSdk> result)
+	{
+		if (string.IsNullOrEmpty(listSdksOutput))
+		{
+			return;
+		}
+
+		foreach (var line in listSdksOutput.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries))
+		{
+			var lineSplit = line.Split("[", StringSplitOptions.RemoveEmptyEntries);
+			if (lineSplit.Length < 2)
+			{
+				continue;
+			}
+
+			var version = lineSplit[0].Trim();
+			if (result.Any(x => x.Version == version))
+			{
+				continue;
+			}
+
+			result.Add(new InstalledSdk() { Version = version, Path = lineSplit[1].TrimEnd(']') });
+		}
+	}
+
+#if LINUX
+	/// <summary>
+	/// Every dotnet host worth asking for installed SDKs. .NET 7 dropped multi-level lookup, so a host
+	/// only reports what lives beside it - a user with a distro-packaged dotnet would lose those SDKs
+	/// from the list the moment Dots creates ~/.dotnet.
+	/// </summary>
+	static IEnumerable<string> GetDotnetHosts()
+	{
+		yield return Constants.DotnetCommand;
+		if (Constants.DotnetCommand != "dotnet")
+		{
+			yield return "dotnet";
+		}
+	}
+
+	/// <summary>
+	/// The dotnet root that owns <paramref name="sdk"/> (the parent of the `sdk` directory reported by
+	/// `--list-sdks`), or null when it lives outside the user's home and would need root to modify.
+	/// </summary>
+	static string? GetWritableDotnetRoot(Sdk sdk)
+	{
+		var root = string.IsNullOrEmpty(sdk.Path)
+			? Constants.DotnetRoot
+			: Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(sdk.Path));
+
+		if (string.IsNullOrEmpty(root))
+		{
+			return null;
+		}
+
+		var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+		var full = Path.GetFullPath(root);
+		return full.StartsWith(Path.GetFullPath(home) + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+			? full
+			: null;
+	}
+#endif
 
 	public async ValueTask<string> Download(Sdk sdk, bool toDesktop = false, IProgress<(float progress, string task)>? status = null)
 	{
@@ -318,6 +391,21 @@ public class DotnetService
 #if MACOS
 
             return RunAsRoot("/usr/sbin/installer", new[] { "-pkg", exe, "-target", "/", null });
+#endif
+#if LINUX
+			// the Linux SDK ships as a tarball that is simply unpacked over a dotnet root - no installer,
+			// no elevation. TarFile applies each entry's unix mode, so the extracted host comes out
+			// executable without a chmod pass.
+			status?.Report((0.1f, "Extracting"));
+			Directory.CreateDirectory(Constants.DotnetRoot);
+			await Task.Run(() =>
+			{
+				using var archive = File.OpenRead(exe);
+				using var gzip = new GZipStream(archive, CompressionMode.Decompress);
+				TarFile.ExtractToDirectory(gzip, Constants.DotnetRoot, overwriteFiles: true);
+			});
+			status?.Report((1f, "Installed"));
+			return true;
 #endif
 		}
 		catch (Exception ex)
@@ -466,6 +554,54 @@ public class DotnetService
 				return true;
 			}
 			return false;
+#endif
+#if LINUX
+			//installed SDKs missing from the release index have no SdkData
+			var version = sdk.SdkData?.Version ?? sdk.VersionDisplay;
+			if (string.IsNullOrEmpty(version))
+			{
+				return false;
+			}
+
+			var root = GetWritableDotnetRoot(sdk);
+			if (root is null)
+			{
+				sdk.ProgressTask.Progress?.Report((1f, "Installed system-wide - remove it with your package manager"));
+				return false;
+			}
+
+			var sdkDirectory = Path.Combine(root, "sdk", version);
+			if (!Directory.Exists(sdkDirectory))
+			{
+				sdk.ProgressTask.Progress?.Report((1f, "Nothing to remove"));
+				return false;
+			}
+
+			sdk.ProgressTask.Progress?.Report((0.5f, "Removing files"));
+			Directory.Delete(sdkDirectory, true);
+
+			// the runtimes and the host resolver are shared by every SDK in this root, so they can only
+			// go once the last one is gone. Leaving them behind costs disk space; removing them early
+			// would break the SDKs that stay.
+			var sdkRoot = Path.Combine(root, "sdk");
+			if (!Directory.EnumerateDirectories(sdkRoot).Any())
+			{
+				var shared = new[]
+				{
+					Path.Combine(root, "shared", "Microsoft.NETCore.App"),
+					Path.Combine(root, "shared", "Microsoft.AspNetCore.App"),
+					Path.Combine(root, "host", "fxr"),
+				};
+
+				foreach (var directory in shared.Where(Directory.Exists))
+				{
+					Directory.Delete(directory, true);
+				}
+			}
+
+			sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
+			GetInstalledSdks(true).SafeFireAndForget();
+			return true;
 #endif
 		}
 		catch (Exception ex)
@@ -620,6 +756,21 @@ public class DotnetService
 						 RuntimeInformation.OSArchitecture == Architecture.Armv6) ? Rid.WinArm : Rid.WinX86;
 				}
 
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				// alpine and friends need the musl builds - the glibc ones will not run there
+				var musl = RuntimeInformation.RuntimeIdentifier.Contains("musl");
+				if (RuntimeInformation.OSArchitecture == Architecture.Arm64)
+				{
+					return musl ? Rid.LinuxMuslArm64 : Rid.LinuxArm64;
+				}
+				if (RuntimeInformation.OSArchitecture == Architecture.Arm ||
+					RuntimeInformation.OSArchitecture == Architecture.Armv6)
+				{
+					return musl ? Rid.LinuxMuslArm : Rid.LinuxArm;
+				}
+				return musl ? Rid.LinuxMuslX64 : Rid.LinuxX64;
 			}
 			return Rid.Empty;
 		}

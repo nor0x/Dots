@@ -110,3 +110,49 @@ jobs:
         with:
           name: windows-releases
           path: ${{ github.workspace }}\releases
+
+  build-linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: linux-x64
+            runner: ubuntu-latest
+          - rid: linux-arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    env:
+      LINUX_RID: ${{ matrix.rid }}
+      # appimagetool ships as an AppImage itself and there is no FUSE on the runners
+      APPIMAGE_EXTRACT_AND_RUN: 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+      - name: Install AppImage tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y desktop-file-utils
+      - name: restore workloads
+        run: |
+          cd $GITHUB_WORKSPACE/src
+          dotnet workload restore
+      - name: Install Velopack CLI
+        run: |
+          dotnet tool install -g vpk --version 1.2.0
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+      - name: run housekeeping scripts
+        run: |
+          cd $GITHUB_WORKSPACE/scripts
+          bash housekeeping.sh
+      - name: run build scripts
+        run: |
+          cd $GITHUB_WORKSPACE/scripts
+          bash build-linux.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-releases-${{ matrix.rid }}
+          path: ${{ github.workspace }}/releases

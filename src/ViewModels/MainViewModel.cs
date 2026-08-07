@@ -140,7 +140,7 @@ public partial class MainViewModel : ObservableRecipient
 			}
 
 
-			var filename = Path.Combine(folder, "dotnet-install.ps1");
+			var filename = Path.Combine(folder, Constants.InstallerScriptFileName);
 			await File.WriteAllTextAsync(filename, content);
 			Debug.WriteLine("done - " + filename);
 

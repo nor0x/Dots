@@ -40,6 +40,12 @@ namespace Dots
                 var v = NSBundle.MainBundle.ObjectForInfoDictionary("CFBundleVersion")?.ToString();
                 VersionRun.Text = v;
 #endif
+
+#if LINUX
+                // no bundle metadata to read from - the assembly version is stamped by housekeeping.sh
+                var assemblyVersion = Assembly.GetEntryAssembly()?.GetName().Version;
+                VersionRun.Text = assemblyVersion?.ToString(3);
+#endif
             }
 
             // nothing to update when this build wasn't installed by Velopack (dotnet run, old portable builds)

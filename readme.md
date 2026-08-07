@@ -5,7 +5,7 @@
 <img src="https://raw.githubusercontent.com/nor0x/Dots/main/Assets/icon.png" width="320px" />
 
 
-Dots is a .NET SDK manager that allows you to install, uninstall, and switch between .NET SDKs with ease. It is a cross-platform tool that works on Windows and macOS with Linux support coming soon. It is written in C# and uses .NET with Avalonia as the UI framework.
+Dots is a .NET SDK manager that allows you to install, uninstall, and switch between .NET SDKs with ease. It is a cross-platform tool that works on Windows, macOS and Linux. It is written in C# and uses .NET with Avalonia as the UI framework.
 
 ## Features
 - Search for SDKs
@@ -24,8 +24,13 @@ Grab the latest build from the [releases page](https://github.com/nor0x/Dots/rel
 | --- | --- | --- |
 | Windows (x64 / x86 / arm64) | `nor0x.Dots-win-<arch>-Setup.exe` | `nor0x.Dots-win-<arch>-Portable.zip` |
 | macOS (Apple Silicon / Intel) | – | `nor0x.Dots-osx-<arch>-Portable.zip` |
+| Linux (x64 / arm64) | `nor0x.Dots-linux-<arch>.AppImage` | `nor0x.Dots-linux-<arch>-Portable.tar.gz` |
 
 The `.nupkg` and `releases.*.json` assets are the update feed - you don't need to download those.
+
+On Linux, `chmod +x` the AppImage and run it. Only the AppImage updates itself - the tarball is a plain
+unpack-and-run build. Dots installs SDKs into `~/.dotnet`, so no root password is ever needed; SDKs that
+came from your distribution's package manager are listed but have to be removed with that package manager.
 
 Dots keeps itself up to date from version 2.3.0 onwards - it checks GitHub once a day and offers a one-click update in the header bar. You can also check manually from the About window.
 

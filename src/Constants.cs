@@ -28,12 +28,26 @@ public class Constants
                                                 rm -rf /usr/local/share/dotnet/shared/Microsoft.AspNetCore.App/$version
                                                 rm -rf /usr/local/share/dotnet/host/fxr/$version
                                             """;
+#elif LINUX
+    // per-user SDK root. Installing here needs no root, works the same on every distro, and keeps
+    // Dots away from distro-packaged SDKs under /usr - DotnetService.Uninstall refuses to touch those.
+    public static readonly string DotnetRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".dotnet");
+    public const string InstallerScript = "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh";
+    // .NET 7 dropped multi-level lookup: `dotnet --list-sdks` only reports what sits next to the host
+    // it was invoked on. Prefer our own root and fall back to whatever the distro put on PATH.
+    public static readonly string DotnetCommand = File.Exists(Path.Combine(DotnetRoot, "dotnet"))
+        ? Path.Combine(DotnetRoot, "dotnet")
+        : "dotnet";
+    public const string ExplorerCommand = "xdg-open";
 #else
     public const string UninstallerPath = "Package Cache";
     public const string InstallerScript = "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1";
     public const string DotnetCommand = "dotnet";
     public const string ExplorerCommand = "explorer";
 #endif
+
+    // derived so it can never drift from the script actually being downloaded
+    public static readonly string InstallerScriptFileName = InstallerScript.Split('/')[^1];
 
     public const string ListSdksCommand = "--list-sdks";
     public static string ReleaseInfoUrl = "https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/";
