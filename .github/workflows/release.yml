@@ -211,13 +211,13 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ needs.prepare-release.outputs.tag }}
-          name: Release ${{ needs.prepare-release.outputs.version }}
-            artifacts: |
-              ${{ github.workspace }}/releases/*
-            token: ${{ secrets.GITHUB_TOKEN }}
-            bodyFile: release-notes.md
-            generateReleaseNotes: false
-            # Velopack's GithubSource ignores drafts, so publishing the draft by hand is what
-            # actually rolls the update out to installed apps.
-            draft: true
+          tag: "${{ needs.prepare-release.outputs.tag }}"
+          name: "Release ${{ needs.prepare-release.outputs.version }}"
+          artifacts: |
+            ${{ github.workspace }}/releases/*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          bodyFile: release-notes.md
+          generateReleaseNotes: false
+          # Velopack's GithubSource ignores drafts, so publishing the draft by hand is what
+          # actually rolls the update out to installed apps.
+          draft: true

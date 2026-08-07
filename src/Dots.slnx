@@ -1,5 +1,4 @@
 <Solution>
-  <Folder Name="/Solution Items/">
-  </Folder>
+  <Folder Name="/Solution Items/" />
   <Project Path="Dots.csproj" />
 </Solution>
