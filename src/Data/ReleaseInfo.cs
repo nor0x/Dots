@@ -118,6 +118,15 @@ public partial class FileInfo
 
 	[JsonIgnore]
 	public string FileName => Url.ToString().Split('/').Last();
+
+	/// <summary>
+	/// The leading bytes of the SHA512, for display. Dots verifies every download against the full
+	/// <see cref="Hash"/>, so showing it lets a user check a manually downloaded file the same way.
+	/// </summary>
+	[JsonIgnore]
+	public string ShortHash => string.IsNullOrEmpty(Hash)
+		? "no checksum published"
+		: $"SHA512 {Hash[..Math.Min(24, Hash.Length)]}...";
 }
 
 public partial class CveList

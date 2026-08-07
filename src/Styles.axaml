@@ -54,6 +54,45 @@
     <Setter Property="BoxShadow" Value="inset 0 1 2 0 #3Dffffff, 0 2 4 -1 #40000000, 0 8 16 -4 #4D000000" />
   </Style>
 
+  <!--
+    The group jump rail. The dot inside is the row badge at two thirds the size, so
+    the button carries no surface of its own - it is a hit target with the press
+    response the toolbar buttons already use.
+  -->
+  <Style Selector="Button.GroupJump">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="RenderTransform" Value="none" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="CubicEaseOut" />
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <!-- Fluent repaints the presenter on hover and press, which would put a grey plate behind the dot -->
+  <Style Selector="Button.GroupJump /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="Button.GroupJump:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="Button.GroupJump:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="Button.GroupJump:pointerover">
+    <Setter Property="RenderTransform" Value="scale(1.12)" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+
+  <Style Selector="Button.GroupJump:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.92)" />
+  </Style>
+
   <!-- pills are small and already saturated, so two layers - a third reads as a sticker -->
   <Style Selector="Border.Pill">
     <Setter Property="Height" Value="20" />

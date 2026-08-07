@@ -16,7 +16,6 @@ public class Constants
     // throttles the app self-update check - separate from LastCheckedKey, which throttles the SDK release index
     public const string LastUpdateCheckKey = "last-update-check";
 #if MACOS
-    public const string UninstallerPath = "Package Cache";
     public const string InstallerScript = "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh";
     public const string DotnetCommand = "/usr/local/share/dotnet/dotnet";
     public const string ExplorerCommand = "open";
@@ -40,7 +39,8 @@ public class Constants
         : "dotnet";
     public const string ExplorerCommand = "xdg-open";
 #else
-    public const string UninstallerPath = "Package Cache";
+    // the Windows uninstaller is resolved from the Add/Remove Programs registry, not by scanning
+    // C:\ProgramData\Package Cache - see WindowsSdkRegistry
     public const string InstallerScript = "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1";
     public const string DotnetCommand = "dotnet";
     public const string ExplorerCommand = "explorer";
@@ -57,6 +57,12 @@ public class Constants
     public static string ReleaseIndexKey = "release-index-key";
     public static string ReleaseBaseKey = "release-key-";
     public static string AppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppName);
+
+    /// <summary>
+    /// Extension for an in-flight download. A file only gets its real name once its checksum
+    /// matches, so a partial transfer can never be mistaken for a complete installer.
+    /// </summary>
+    public const string PartialSuffix = ".partial";
 
     public const string SupportURl = "https://bento.me/nor0x";
     public const string GithubUrl = "https://github.com/nor0x/Dots";

@@ -1,0 +1,114 @@
+<Window
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:vm="using:Dots.ViewModels"
+  mc:Ignorable="d"
+  d:DesignWidth="420"
+  d:DesignHeight="420"
+  x:DataType="vm:MainViewModel"
+  Width="420"
+  Height="420"
+  CanResize="False"
+  WindowStartupLocation="CenterOwner"
+  Background="{StaticResource Background}"
+  x:Class="Dots.SettingsWindow"
+  Icon="/Assets/logo_empty.png"
+  Title="Dots Settings">
+  <Grid RowDefinitions="Auto,*">
+    <TextBlock
+      Grid.Row="0"
+      Text="Settings"
+      FontSize="24"
+      FontFamily="{StaticResource DottedFont}"
+      Margin="16,16,16,8" />
+
+    <ScrollViewer Grid.Row="1" Margin="16,0,16,16">
+      <StackPanel Spacing="12">
+
+        <!-- Cache -->
+        <Border Classes="Card">
+          <StackPanel Spacing="6">
+            <TextBlock Text="Downloaded installers" FontWeight="Bold" />
+            <TextBlock
+              Text="{Binding CacheInstallersDisplay}"
+              FontSize="11"
+              Opacity="0.8" />
+            <TextBlock
+              Text="Dots keeps SDK installers after installing them so a retry doesn't have to download again. Removing them is safe - uninstalling never needs these files."
+              FontSize="10"
+              Opacity="0.6"
+              TextWrapping="Wrap" />
+            <Button
+              Content="Clear installers"
+              Classes="Action"
+              Background="{StaticResource Neutral}"
+              Foreground="White"
+              FontSize="11"
+              Height="30"
+              Width="140"
+              HorizontalAlignment="Left"
+              HorizontalContentAlignment="Center"
+              Command="{Binding ClearInstallerCacheCommand}" />
+          </StackPanel>
+        </Border>
+
+        <Border Classes="Card">
+          <StackPanel Spacing="6">
+            <TextBlock Text="Release metadata" FontWeight="Bold" />
+            <TextBlock
+              Text="{Binding CacheMetadataDisplay}"
+              FontSize="11"
+              Opacity="0.8" />
+            <TextBlock
+              Text="The cached list of .NET releases. Clearing it reloads the list from the internet."
+              FontSize="10"
+              Opacity="0.6"
+              TextWrapping="Wrap" />
+            <Button
+              Content="Clear metadata"
+              Classes="Action"
+              Background="{StaticResource Neutral}"
+              Foreground="White"
+              FontSize="11"
+              Height="30"
+              Width="140"
+              HorizontalAlignment="Left"
+              HorizontalContentAlignment="Center"
+              Command="{Binding ClearMetadataCacheCommand}" />
+          </StackPanel>
+        </Border>
+
+        <Border Classes="Card">
+          <StackPanel Spacing="6">
+            <TextBlock Text="Data folder" FontWeight="Bold" />
+            <TextBlock
+              Text="{Binding CachePath}"
+              FontSize="10"
+              Opacity="0.7"
+              TextWrapping="Wrap" />
+            <TextBlock
+              FontSize="11"
+              Opacity="0.8">
+              <Run Text="Total on disk: " />
+              <Run Text="{Binding CacheSizeDisplay}" />
+            </TextBlock>
+            <Button
+              Content="Open folder"
+              Classes="Action"
+              Background="{StaticResource Neutral}"
+              Foreground="White"
+              FontSize="11"
+              Height="30"
+              Width="140"
+              HorizontalAlignment="Left"
+              HorizontalContentAlignment="Center"
+              Command="{Binding OpenCacheFolderCommand}" />
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</Window>

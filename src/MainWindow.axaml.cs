@@ -1,6 +1,9 @@
 ﻿using Akavache;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Dots.Helpers;
 using Dots.Models;
 using Dots.Services;
@@ -10,9 +13,11 @@ namespace Dots
 {
 	public partial class MainWindow : Window
 	{
-		MainViewModel _vm = new MainViewModel(new DotnetService(), new ErrorPopupHelper(), UpdateService.Shared);
+		MainViewModel _vm = new MainViewModel(new DotnetService(), new ErrorPopupHelper(), UpdateService.Shared, new CacheService());
 		AboutWindow _aboutWindow = new AboutWindow();
 		bool _aboutWindowOpen = false;
+		SettingsWindow? _settingsWindow;
+		bool _settingsWindowOpen = false;
 		int _minPaneWidth = 260;
 		double _paneRatio = 0.3;
 
@@ -83,6 +88,22 @@ namespace Dots
 			}
 		}
 
+		private void SettingsButton_Clicked(object? sender, Avalonia.Input.TappedEventArgs e)
+		{
+			if (_settingsWindowOpen)
+			{
+				_settingsWindow?.Close();
+				return;
+			}
+
+			// numbers are read on open rather than polled, so they are fresh without a timer
+			_vm.RefreshCacheStats();
+			_settingsWindow = new SettingsWindow { DataContext = _vm };
+			_settingsWindow.Closed += (_, _) => _settingsWindowOpen = false;
+			_settingsWindowOpen = true;
+			_settingsWindow.Show(this);
+		}
+
 		private void ToggleDetails_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
 		{
 			SetPaneWidth();
@@ -123,6 +144,41 @@ namespace Dots
 			}
 			ToggleDetailsButton.Content = MainSplitView.IsPaneOpen ? LucideIcons.ChevronRight : LucideIcons.ChevronLeft;
 
+		}
+
+		private void GroupDot_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
+		{
+			if ((sender as Control)?.DataContext is not SdkGroup group)
+			{
+				return;
+			}
+
+			// the rail is rebuilt from Sdks.View, but ObservableView hands out a fresh collection on
+			// every read, so the index has to come from the ListBox's own items
+			var index = SdkList.Items.IndexOf(group.First);
+			if (index < 0)
+			{
+				return;
+			}
+
+			// realizes the container - with virtualization there is nothing to measure until then
+			SdkList.ScrollIntoView(index);
+
+			// ScrollIntoView only guarantees visibility, so a group reached from above lands at the
+			// bottom edge. Runs after the scroll's layout pass and lifts the row to the top instead.
+			Dispatcher.UIThread.Post(() =>
+			{
+				var scroll = SdkList.FindDescendantOfType<ScrollViewer>();
+				var container = SdkList.ContainerFromIndex(index);
+				var offset = container?.TranslatePoint(default, scroll!);
+				if (scroll is null || offset is null)
+				{
+					return;
+				}
+
+				var max = Math.Max(0, scroll.Extent.Height - scroll.Viewport.Height);
+				scroll.Offset = scroll.Offset.WithY(Math.Clamp(scroll.Offset.Y + offset.Value.Y, 0, max));
+			}, DispatcherPriority.Background);
 		}
 
 		private void PathTextBlock_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)

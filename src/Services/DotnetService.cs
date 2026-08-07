@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
 using Akavache;
@@ -28,6 +30,21 @@ public class DotnetService
 	List<InstalledSdk> _installedSdks = new();
 	ReleaseIndex[] _releaseIndex;
 	Dictionary<string, Release[]> _releases = new();
+
+	/// <summary>
+	/// One client for the whole app. The infinite timeout is the important part: HttpClient.Timeout
+	/// covers reading the response body too, even with ResponseHeadersRead, so the 100s default
+	/// aborted every SDK download slower than ~28 Mbit/s. <see cref="Extensions.StallTimeout"/>
+	/// replaces it with a stall watchdog, which is the semantics we actually wanted.
+	/// </summary>
+	static readonly HttpClient Http = new(new SocketsHttpHandler
+	{
+		PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+		AutomaticDecompression = DecompressionMethods.All,
+	})
+	{
+		Timeout = Timeout.InfiniteTimeSpan,
+	};
 
 	public DotnetService()
 	{
@@ -125,7 +142,8 @@ public class DotnetService
 		{
 			return _releaseIndex;
 		}
-		if (_releaseIndex is null && await CacheDatabase.UserAccount.ContainsKey(Constants.ReleaseIndexKey) && !force)
+		if (_releaseIndex is null && await CacheDatabase.UserAccount.ContainsKey(Constants.ReleaseIndexKey) && !force
+			&& File.Exists(Constants.ReleaseIndexPath))
 		{
 			var json = await File.ReadAllTextAsync(Constants.ReleaseIndexPath);
 			var deserialized = JsonSerializer.Deserialize<ReleaseIndexInfo>(json, ReleaseSerializerOptions.Options);
@@ -133,8 +151,7 @@ public class DotnetService
 			return _releaseIndex;
 		}
 
-		using var client = new HttpClient();
-		var response = await client.GetStringAsync(Constants.ReleaseIndexUrl);
+		var response = await Http.GetStringAsync(Constants.ReleaseIndexUrl);
 		var releaseIndex = JsonSerializer.Deserialize<ReleaseIndexInfo>(response, ReleaseSerializerOptions.Options);
 		_releaseIndex = releaseIndex.ReleasesIndex;
 		if (!Directory.Exists(Constants.AppDataPath))
@@ -154,24 +171,30 @@ public class DotnetService
 		{
 			return _releases[channel];
 		}
-		if (await CacheDatabase.UserAccount.ContainsKey(Constants.ReleaseBaseKey + channel) && !force)
+		var cachedFile = Path.Combine(Constants.AppDataPath, $"release-{channel}.json");
+		// the Akavache key can outlive the file it points at - a manual cache purge, or a user
+		// clearing LocalAppData - so the file has to be checked, not just the key
+		if (!force && await CacheDatabase.UserAccount.ContainsKey(Constants.ReleaseBaseKey + channel) && File.Exists(cachedFile))
 		{
-			var cachedFile = Path.Combine(Constants.AppDataPath, $"release-{channel}.json");
 			var json = await File.ReadAllTextAsync(cachedFile);
 			var deserialized = JsonSerializer.Deserialize<ReleaseInfo>(json, ReleaseSerializerOptions.Options);
 
-			_releases.Add(channel, deserialized.Releases);
+			_releases[channel] = deserialized.Releases;
 			return _releases[channel];
 		}
 
-		using var client = new HttpClient();
 		var url = Constants.ReleaseInfoUrl + channel + Constants.ReleaseInfoUrlEnd;
-		var response = await client.GetStringAsync(url);
+		var response = await Http.GetStringAsync(url);
 		var releases = JsonSerializer.Deserialize<ReleaseInfo>(response, ReleaseSerializerOptions.Options);
-		var path = Path.Combine(Constants.AppDataPath, $"release-{channel}.json");
-		await File.WriteAllTextAsync(path, response);
-		await CacheDatabase.UserAccount.InsertObject(Constants.ReleaseBaseKey + channel, path);
-		return releases.Releases;
+		if (!Directory.Exists(Constants.AppDataPath))
+		{
+			Directory.CreateDirectory(Constants.AppDataPath);
+		}
+		await File.WriteAllTextAsync(cachedFile, response);
+		await CacheDatabase.UserAccount.InsertObject(Constants.ReleaseBaseKey + channel, cachedFile);
+		// the old code returned without populating _releases, so every channel re-parsed on each call
+		_releases[channel] = releases.Releases;
+		return _releases[channel];
 	}
 
 
@@ -293,138 +316,259 @@ public class DotnetService
 	}
 #endif
 
-	public async ValueTask<string> Download(Sdk sdk, bool toDesktop = false, IProgress<(float progress, string task)>? status = null)
+	/// <summary>
+	/// Downloads the installer for <paramref name="sdk"/> and returns its full path, or null if the
+	/// download failed. Always a file path - never a directory - so callers can hand it straight to
+	/// <see cref="Install"/>.
+	/// </summary>
+	/// <param name="toDesktop">
+	/// Write to the Desktop instead of the app's data folder. The file goes there directly; there is
+	/// deliberately no second copy in LocalAppData.
+	/// </param>
+	public async ValueTask<string?> Download(Sdk sdk, bool toDesktop = false, IProgress<(float progress, string task)>? status = null)
 	{
+		var version = sdk.SdkData?.Version ?? sdk.VersionDisplay;
 		try
 		{
 			Rid rid = GetRid();
 			var extension = GetExtension();
-			if (sdk.SdkData.Files.Where(f => f.Rid == rid).FirstOrDefault(r => r.Name.Contains(extension)) is Data.FileInfo info)
+			if (sdk.SdkData?.Files?.Where(f => f.Rid == rid).FirstOrDefault(r => r.Name.Contains(extension)) is not Data.FileInfo info)
 			{
-				if (!Directory.Exists(Constants.AppDataPath))
-				{
-					Directory.CreateDirectory(Constants.AppDataPath);
-				}
-				var sdkFile = info.Url.ToString().Split("/").LastOrDefault();
-				var path = Path.Combine(Constants.AppDataPath, sdkFile);
-				if (File.Exists(path))
-				{
-					status?.Report((0.5f, "Already downloaded"));
-					if (toDesktop)
-					{
-						//if file exists on desktop, return desktop path otherwise copy and return desktop path
-						var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-						var filename = Path.Combine(desktop, sdkFile);
-						if (File.Exists(Path.Combine(desktop, filename)))
-						{
-							status?.Report((1f, "Already downloaded"));
-							return desktop;
-						}
-						else
-						{
-							var bytes = await File.ReadAllBytesAsync(path);
-							await bytes.WriteAllBytesAsync(Path.Combine(desktop, sdkFile), status, CancellationToken.None);
-							return desktop;
-						}
-					}
-					return path;
-				}
-
-				var progress = new ProgressTask();
-				progress.Title = $"Downloading {sdk.SdkData.Version}";
-				progress.Url = info.Url.ToString();
-				progress.CancellationTokenSource = new CancellationTokenSource();
-
-				var p = new Progress<(float progress, string task)>();
-				p.ProgressChanged += (s, e) =>
-				{
-					progress.Value = e.progress * 100;
-					progress.Task = e.task;
-					status?.Report(e);
-				};
-				progress.Progress = p;
-
-
-				sdk.ProgressTask = progress;
-
-				// Use the provided extension method
-				using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-				using var client = new HttpClient();
-				await client.DownloadDataAsync(info.Url.ToString(), file, p, sdk.ProgressTask.CancellationTokenSource.Token);
-
-				if (toDesktop)
-				{
-					var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-					var filename = Path.Combine(desktop, sdkFile);
-					await File.WriteAllBytesAsync(Path.Combine(desktop, sdkFile), await File.ReadAllBytesAsync(path), sdk.ProgressTask.CancellationTokenSource.Token);
-					path = desktop;
-				}
-
-				return path;
+				status?.Report((1f, "No download is published for this platform"));
+				return null;
 			}
+
+			var targetDirectory = toDesktop
+				? Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
+				: Constants.AppDataPath;
+			if (!Directory.Exists(targetDirectory))
+			{
+				Directory.CreateDirectory(targetDirectory);
+			}
+
+			var finalPath = Path.Combine(targetDirectory, info.FileName);
+			var partialPath = finalPath + Constants.PartialSuffix;
+
+			var progress = new ProgressTask
+			{
+				Title = $"Downloading {version}",
+				Url = info.Url.ToString(),
+				CancellationTokenSource = new CancellationTokenSource(),
+				CanCancel = true,
+			};
+
+			var p = new Progress<(float progress, string task)>();
+			p.ProgressChanged += (s, e) =>
+			{
+				// a negative fraction means "we don't know the total" - keep the bar animating
+				progress.IsIndeterminate = e.progress < 0;
+				progress.Value = e.progress < 0 ? null : e.progress * 100;
+				progress.Task = e.task;
+				status?.Report(e);
+			};
+			progress.Progress = p;
+			sdk.ProgressTask = progress;
+
+			// Progress<T>.Report is protected; the interface is what exposes it
+			IProgress<(float progress, string task)> report = p;
+			var token = progress.CancellationTokenSource.Token;
+
+			// An already-present file is only usable if it hashes correctly. Existence alone was the
+			// old check, which happily handed a truncated installer to the installer.
+			if (File.Exists(finalPath))
+			{
+				report.Report((0.95f, "Verifying"));
+				if (await VerifyHashAsync(finalPath, info.Hash, token))
+				{
+					report.Report((1f, "Already downloaded"));
+					return finalPath;
+				}
+
+				Debug.WriteLine($"cached {finalPath} failed verification - re-downloading");
+				File.Delete(finalPath);
+			}
+
+			// A copy kept from an earlier install is worth reusing rather than pulling a few hundred
+			// megabytes down again just to put the same bytes on the Desktop.
+			if (toDesktop)
+			{
+				var cached = Path.Combine(Constants.AppDataPath, info.FileName);
+				if (File.Exists(cached))
+				{
+					report.Report((0.95f, "Verifying"));
+					if (await VerifyHashAsync(cached, info.Hash, token))
+					{
+						report.Report((0.97f, "Copying to Desktop"));
+						File.Copy(cached, finalPath, overwrite: true);
+						report.Report((1f, "Copied to Desktop"));
+						return finalPath;
+					}
+				}
+			}
+
+			// One retry: a resumed download that fails the hash has a bad prefix, so the second
+			// attempt starts from scratch rather than resuming onto the same corruption.
+			for (var attempt = 0; attempt < 2; attempt++)
+			{
+				await Http.DownloadToFileAsync(info.Url, partialPath, p, token);
+
+				report.Report((0.99f, "Verifying"));
+				if (await VerifyHashAsync(partialPath, info.Hash, token))
+				{
+					File.Move(partialPath, finalPath, overwrite: true);
+					report.Report((1f, "Downloaded"));
+					return finalPath;
+				}
+
+				Debug.WriteLine($"{partialPath} failed verification (attempt {attempt + 1})");
+				SafeDelete(partialPath);
+			}
+
+			report.Report((1f, "Download failed - the file did not match its checksum"));
+			return null;
+		}
+		catch (OperationCanceledException)
+		{
+			// the .partial is left in place on purpose - the next attempt resumes from it
+			sdk.ProgressTask?.Progress?.Report((1f, "Cancelled"));
 			return null;
 		}
 		catch (Exception ex)
 		{
 			Debug.WriteLine(ex);
-			//Analytics.TrackEvent("Download SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.SdkData.Version } });
+			sdk.ProgressTask?.Progress?.Report((1f, InstallerExitCodes.Summarize(ex)));
 			return null;
 		}
 	}
 
-	public async ValueTask<bool> Install(string exe, IProgress<(float progress, string task)>? status = null)
+	/// <summary>
+	/// Compares a file against the SHA512 published in the release metadata. Returns true when no
+	/// hash is published - some older release entries have none, and refusing those would be worse
+	/// than the status quo.
+	/// </summary>
+	public static async Task<bool> VerifyHashAsync(string path, string? expectedHex, CancellationToken token = default)
+	{
+		if (string.IsNullOrWhiteSpace(expectedHex))
+		{
+			return true;
+		}
+
+		await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
+			1 << 20, FileOptions.Asynchronous | FileOptions.SequentialScan);
+		var hash = await SHA512.HashDataAsync(stream, token);
+		// releases.json ships lowercase hex; Convert.ToHexString is uppercase
+		return Convert.ToHexString(hash).Equals(expectedHex, StringComparison.OrdinalIgnoreCase);
+	}
+
+	static void SafeDelete(string path)
 	{
 		try
 		{
-#if WINDOWS
-			var result = await Cli.Wrap(exe).WithArguments(" /install /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
-			if (result.ExitCode == 1638)
+			if (File.Exists(path))
 			{
-				status?.Report((1f, "Another version is already installed"));
+				File.Delete(path);
 			}
-			else if (result.ExitCode == 0)
-			{
-				status?.Report((1f, "Installed"));
-			}
-			return result.ExitCode == 0;
-#endif
-#if MACOS
-
-            return RunAsRoot("/usr/sbin/installer", new[] { "-pkg", exe, "-target", "/", null });
-#endif
-#if LINUX
-			// the Linux SDK ships as a tarball that is simply unpacked over a dotnet root - no installer,
-			// no elevation. TarFile applies each entry's unix mode, so the extracted host comes out
-			// executable without a chmod pass.
-			status?.Report((0.1f, "Extracting"));
-			Directory.CreateDirectory(Constants.DotnetRoot);
-			await Task.Run(() =>
-			{
-				using var archive = File.OpenRead(exe);
-				using var gzip = new GZipStream(archive, CompressionMode.Decompress);
-				TarFile.ExtractToDirectory(gzip, Constants.DotnetRoot, overwriteFiles: true);
-			});
-			status?.Report((1f, "Installed"));
-			return true;
-#endif
 		}
 		catch (Exception ex)
 		{
 			Debug.WriteLine(ex);
-			//Analytics.TrackEvent("Install SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "Exe", exe } });
-			return false;
+		}
+	}
+
+	/// <summary>
+	/// Runs the installer at <paramref name="exe"/>. Always reports a terminal (1f, message) before
+	/// returning - including on failure - so the caller's status display can always settle.
+	/// </summary>
+	public async ValueTask<InstallerResult> Install(string exe, Sdk? sdk = null, IProgress<(float progress, string task)>? status = null)
+	{
+		var result = new InstallerResult(InstallerOutcome.Failed, -1, "Install failed");
+		try
+		{
+			result = await InstallCore(exe, sdk, status);
+		}
+		catch (OperationCanceledException)
+		{
+			result = new InstallerResult(InstallerOutcome.Cancelled, -1, "Cancelled");
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine(ex);
+			result = new InstallerResult(InstallerOutcome.Failed, -1, InstallerExitCodes.Summarize(ex));
 		}
 		finally
 		{
-			GetInstalledSdks(true).SafeFireAndForget();
+			status?.Report((1f, result.Message));
 		}
-		return false;
+		return result;
 	}
+
+	async ValueTask<InstallerResult> InstallCore(string exe, Sdk? sdk, IProgress<(float progress, string task)>? status)
+	{
+#if WINDOWS
+		var logPath = CreateLogPath("install", Path.GetFileNameWithoutExtension(exe));
+		status?.Report((0.5f, "Installing"));
+		// no cancelling past this point - see ProgressTask.CanCancel
+		if (sdk?.ProgressTask is not null)
+		{
+			sdk.ProgressTask.CanCancel = false;
+		}
+		var result = await Cli.Wrap(exe)
+			.WithArguments(new[] { "/install", "/quiet", "/norestart", "/log", logPath })
+			.WithValidation(CommandResultValidation.None)
+			.ExecuteAsync();
+		WindowsSdkRegistry.Invalidate();
+		return InstallerExitCodes.Interpret(result.ExitCode, uninstalling: false, logPath);
+#endif
+#if MACOS
+		status?.Report((0.5f, "Installing"));
+		if (sdk?.ProgressTask is not null)
+		{
+			sdk.ProgressTask.CanCancel = false;
+		}
+		var ok = RunAsRoot("/usr/sbin/installer", new[] { "-pkg", exe, "-target", "/", null });
+		return ok
+			? new InstallerResult(InstallerOutcome.Success, 0, "Installed")
+			: new InstallerResult(InstallerOutcome.Failed, -1, "The installer failed");
+#endif
+#if LINUX
+		// the Linux SDK ships as a tarball that is simply unpacked over a dotnet root - no installer,
+		// no elevation. TarFile applies each entry's unix mode, so the extracted host comes out
+		// executable without a chmod pass.
+		status?.Report((0.1f, "Extracting"));
+		if (sdk?.ProgressTask is not null)
+		{
+			sdk.ProgressTask.CanCancel = false;
+		}
+		Directory.CreateDirectory(Constants.DotnetRoot);
+		await Task.Run(() =>
+		{
+			using var archive = File.OpenRead(exe);
+			using var gzip = new GZipStream(archive, CompressionMode.Decompress);
+			TarFile.ExtractToDirectory(gzip, Constants.DotnetRoot, overwriteFiles: true);
+		});
+		return new InstallerResult(InstallerOutcome.Success, 0, "Installed");
+#endif
+	}
+
+#if WINDOWS
+	/// <summary>
+	/// A per-operation burn log under the app data folder, so a failure has something concrete to
+	/// point the user at instead of just an exit code.
+	/// </summary>
+	static string CreateLogPath(string verb, string name)
+	{
+		var directory = Path.Combine(Constants.AppDataPath, "logs");
+		Directory.CreateDirectory(directory);
+		return Path.Combine(directory, $"{verb}-{name}-{DateTime.Now:yyyyMMdd-HHmmss}.log");
+	}
+#endif
 
 	public async Task<string> GetInstallationPath(Sdk sdk)
 	{
-		var installed = await GetInstalledSdks(true);
-		return installed.FirstOrDefault(x => x.Version == sdk.SdkData.Version)?.Path ?? string.Empty;
+		var version = sdk.SdkData?.Version ?? sdk.VersionDisplay;
+		// GetInstalledSdks returns null when `dotnet --list-sdks` fails
+		var installed = await GetInstalledSdks(true) ?? new List<InstalledSdk>();
+		return installed.FirstOrDefault(x => x.Version == version)?.Path ?? string.Empty;
 	}
 
 	public async Task OpenFolder(Sdk sdk)
@@ -456,189 +600,165 @@ public class DotnetService
 	}
 
 
-	public async Task<bool> Uninstall(Sdk sdk, string setupPath = "", IProgress<(float progress, string task)>? status = null)
+	/// <summary>
+	/// Removes an installed SDK. Always reports a terminal (1f, message) before returning, including
+	/// on failure, so the caller's status display can always settle.
+	/// </summary>
+	/// <remarks>
+	/// On Windows this never downloads anything. The installer is resolved from the Add/Remove
+	/// Programs registry via <see cref="WindowsSdkRegistry"/>; an SDK Dots cannot drive (a Visual
+	/// Studio MSI, say) is reported as such rather than being guessed at.
+	/// </remarks>
+	public async Task<InstallerResult> Uninstall(Sdk sdk, IProgress<(float progress, string task)>? status = null)
 	{
+		//installed SDKs missing from the release index have no SdkData
+		var version = sdk.SdkData?.Version ?? sdk.VersionDisplay;
+
+		var progress = new ProgressTask
+		{
+			Title = $"Uninstalling {version}",
+			CancellationTokenSource = new CancellationTokenSource(),
+			CanCancel = true,
+		};
+
+		var p = new Progress<(float progress, string task)>();
+		p.ProgressChanged += (s, e) =>
+		{
+			progress.IsIndeterminate = e.progress < 0;
+			progress.Value = e.progress < 0 ? null : e.progress * 100;
+			progress.Task = e.task;
+			status?.Report(e);
+		};
+		progress.Progress = p;
+		sdk.ProgressTask = progress;
+
+		// Progress<T>.Report is protected; the interface is what exposes it
+		IProgress<(float progress, string task)> report = p;
+
+		var result = new InstallerResult(InstallerOutcome.Failed, -1, "Uninstall failed");
 		try
 		{
-			var progress = new ProgressTask();
-			progress.Title = $"Uninstalling {sdk.SdkData.Version}";
-			progress.CancellationTokenSource = new CancellationTokenSource();
-
-			var p = new Progress<(float progress, string task)>();
-			p.ProgressChanged += (s, e) =>
-			{
-				progress.Value = e.progress * 100;
-				progress.Task = e.task;
-				status?.Report(e);
-			};
-			progress.Progress = p;
-
-
-			sdk.ProgressTask = progress;
-
-#if WINDOWS
-			var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), Constants.UninstallerPath);
-			var filename = GetSetupName(sdk);
-
-			string[] files = Directory.GetFiles(path, filename, SearchOption.AllDirectories);
-
-			if (!files.IsNullOrEmpty())
-			{
-				sdk.ProgressTask.Progress?.Report((0.5f, "Found uninstaller"));
-				var result = await Cli.Wrap(files.First()).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
-				if (result.ExitCode == 0)
-				{
-					sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
-					GetInstalledSdks(true).SafeFireAndForget();
-				}
-				return result.ExitCode == 0;
-			}
-			else
-			{
-
-				var setupInLocalDirectory = Path.Combine(Constants.AppDataPath, filename);
-				if (!string.IsNullOrEmpty(setupPath))
-				{
-					sdk.ProgressTask.Progress?.Report((0.5f, "Found Uninstaller"));
-					var result = await Cli.Wrap(setupPath).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
-					if (result.ExitCode == 0)
-					{
-						sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
-						GetInstalledSdks(true).SafeFireAndForget();
-					}
-					return result.ExitCode == 0;
-				}
-				else if (File.Exists(setupInLocalDirectory))
-				{
-					sdk.ProgressTask.Progress?.Report((0.5f, "Found Uninstaller"));
-					var result = await Cli.Wrap(setupInLocalDirectory).WithArguments(" /uninstall /quiet /qn /norestart").WithValidation(CommandResultValidation.None).ExecuteAsync();
-					if (result.ExitCode == 0)
-					{
-						sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
-						GetInstalledSdks(true).SafeFireAndForget();
-					}
-					return result.ExitCode == 0;
-				}
-				else
-				{
-					sdk.ProgressTask.Progress?.Report((0.3f, "Fetching Uninstaller"));
-					var exe = await Download(sdk, status: status);
-
-					if (!string.IsNullOrEmpty(exe))
-					{
-						sdk.ProgressTask.Progress?.Report((0.4f, "Found Uninstaller"));
-						return await Uninstall(sdk, exe);
-					}
-				}
-			}
-			return false;
-#endif
-#if MACOS
-
-            if (!Directory.Exists(Constants.AppDataPath))
-            {
-                Directory.CreateDirectory(Constants.AppDataPath);
-            }
-            //write Constants.UninstallScriptFile to file
-            var script = Constants.UninstallScriptFile.Replace("XXXXX", sdk.SdkData.Version);
-            script = script.Replace("XXXXX", sdk.SdkData.Version);
-            var filename = "uninstall-" + sdk.SdkData.Version.Replace(".", "-") + ".sh";
-            var path = Path.Combine(Constants.AppDataPath, filename);
-			sdk.ProgressTask.Progress?.Report((0.5f, "Writing Uninstaller"));
-            await File.WriteAllTextAsync(path, script);
-			sdk.ProgressTask.Progress?.Report((0.6f, "Uninstalling"));
-			var result = RunAsRoot("/bin/sh", new[] { path, null });
-			if (result)
-			{
-				sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
-				return true;
-			}
-			return false;
-#endif
-#if LINUX
-			//installed SDKs missing from the release index have no SdkData
-			var version = sdk.SdkData?.Version ?? sdk.VersionDisplay;
-			if (string.IsNullOrEmpty(version))
-			{
-				return false;
-			}
-
-			var root = GetWritableDotnetRoot(sdk);
-			if (root is null)
-			{
-				sdk.ProgressTask.Progress?.Report((1f, "Installed system-wide - remove it with your package manager"));
-				return false;
-			}
-
-			var sdkDirectory = Path.Combine(root, "sdk", version);
-			if (!Directory.Exists(sdkDirectory))
-			{
-				sdk.ProgressTask.Progress?.Report((1f, "Nothing to remove"));
-				return false;
-			}
-
-			sdk.ProgressTask.Progress?.Report((0.5f, "Removing files"));
-			Directory.Delete(sdkDirectory, true);
-
-			// the runtimes and the host resolver are shared by every SDK in this root, so they can only
-			// go once the last one is gone. Leaving them behind costs disk space; removing them early
-			// would break the SDKs that stay.
-			var sdkRoot = Path.Combine(root, "sdk");
-			if (!Directory.EnumerateDirectories(sdkRoot).Any())
-			{
-				var shared = new[]
-				{
-					Path.Combine(root, "shared", "Microsoft.NETCore.App"),
-					Path.Combine(root, "shared", "Microsoft.AspNetCore.App"),
-					Path.Combine(root, "host", "fxr"),
-				};
-
-				foreach (var directory in shared.Where(Directory.Exists))
-				{
-					Directory.Delete(directory, true);
-				}
-			}
-
-			sdk.ProgressTask.Progress?.Report((1f, "Uninstalled"));
-			GetInstalledSdks(true).SafeFireAndForget();
-			return true;
-#endif
+			result = await UninstallCore(sdk, version, report);
+		}
+		catch (OperationCanceledException)
+		{
+			result = new InstallerResult(InstallerOutcome.Cancelled, -1, "Cancelled");
 		}
 		catch (Exception ex)
 		{
 			Debug.WriteLine(ex);
-			//Analytics.TrackEvent("Uninstall SDK", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.SdkData.Version } });
+			result = new InstallerResult(InstallerOutcome.Failed, -1, InstallerExitCodes.Summarize(ex));
 		}
-		return false;
+		finally
+		{
+			// the one report that guarantees the caller can settle its status, whatever happened
+			report.Report((1f, result.Message));
+			// order matters: CanCancel gates CancelTask, so it has to be false before the source
+			// it would have cancelled is disposed
+			progress.CanCancel = false;
+			progress.CancellationTokenSource?.Dispose();
+		}
+
+		if (result.IsSuccess)
+		{
+			GetInstalledSdks(true).SafeFireAndForget();
+		}
+		return result;
 	}
 
-	string GetSetupName(Sdk sdk)
+	async Task<InstallerResult> UninstallCore(Sdk sdk, string? version, IProgress<(float progress, string task)> progress)
 	{
-		try
+		if (string.IsNullOrEmpty(version))
 		{
-			var env = Environment.Is64BitOperatingSystem ? "64" : "32";
-			var arch = "x";
-			if (RuntimeInformation.OSArchitecture == Architecture.Arm ||
-			   RuntimeInformation.OSArchitecture == Architecture.Arm64 ||
-			   RuntimeInformation.OSArchitecture == Architecture.Armv6)
-			{
-				arch = "arm";
-			}
-			var os = "win";
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-			{
-				os = "macos";
-			}
-
-			return $"dotnet-sdk-{sdk.SdkData.Version}-{os}-{arch}{env}.exe";
-
+			return new InstallerResult(InstallerOutcome.NotUninstallable, -1, "This SDK has no version to uninstall");
 		}
-		catch (Exception ex)
+
+#if WINDOWS
+		progress.Report((0.2f, "Looking up installer"));
+		var logPath = CreateLogPath("uninstall", version);
+		var plan = WindowsSdkRegistry.Resolve(version, logPath);
+
+		if (plan.Ownership != SdkOwnership.StandaloneBundle)
 		{
-			Debug.WriteLine(ex);
-			//Analytics.TrackEvent("GetSetupName", new Dictionary<string, string>() { { "Error", ex.Message }, { "SDK Version", sdk.SdkData.Version } });
-			return null;
+			// Downloading the standalone installer here is what the old code did. It cannot work:
+			// a bundle that never installed this SDK reports 1605 when asked to uninstall it.
+			return new InstallerResult(InstallerOutcome.NotUninstallable, -1, plan.Message);
 		}
+
+		progress.Report((0.5f, "Uninstalling"));
+		if (sdk.ProgressTask is not null)
+		{
+			sdk.ProgressTask.CanCancel = false;
+		}
+		var result = await Cli.Wrap(plan.Executable!)
+			.WithArguments(plan.Arguments!)
+			.WithValidation(CommandResultValidation.None)
+			.ExecuteAsync();
+		WindowsSdkRegistry.Invalidate();
+		return InstallerExitCodes.Interpret(result.ExitCode, uninstalling: true, logPath);
+#endif
+#if MACOS
+		if (!Directory.Exists(Constants.AppDataPath))
+		{
+			Directory.CreateDirectory(Constants.AppDataPath);
+		}
+		//write Constants.UninstallScriptFile to file
+		var script = Constants.UninstallScriptFile.Replace("XXXXX", version);
+		var filename = "uninstall-" + version.Replace(".", "-") + ".sh";
+		var path = Path.Combine(Constants.AppDataPath, filename);
+		progress.Report((0.5f, "Writing Uninstaller"));
+		await File.WriteAllTextAsync(path, script);
+		progress.Report((0.6f, "Uninstalling"));
+		if (sdk.ProgressTask is not null)
+		{
+			sdk.ProgressTask.CanCancel = false;
+		}
+		return RunAsRoot("/bin/sh", new[] { path, null })
+			? new InstallerResult(InstallerOutcome.Success, 0, "Uninstalled")
+			: new InstallerResult(InstallerOutcome.Failed, -1, "The uninstaller failed");
+#endif
+#if LINUX
+		var root = GetWritableDotnetRoot(sdk);
+		if (root is null)
+		{
+			return new InstallerResult(InstallerOutcome.NotUninstallable, -1,
+				"Installed system-wide - remove it with your package manager");
+		}
+
+		var sdkDirectory = Path.Combine(root, "sdk", version);
+		if (!Directory.Exists(sdkDirectory))
+		{
+			return new InstallerResult(InstallerOutcome.NotInstalled, -1, "Nothing to remove");
+		}
+
+		progress.Report((0.5f, "Removing files"));
+		if (sdk.ProgressTask is not null)
+		{
+			sdk.ProgressTask.CanCancel = false;
+		}
+		Directory.Delete(sdkDirectory, true);
+
+		// the runtimes and the host resolver are shared by every SDK in this root, so they can only
+		// go once the last one is gone. Leaving them behind costs disk space; removing them early
+		// would break the SDKs that stay.
+		var sdkRoot = Path.Combine(root, "sdk");
+		if (!Directory.EnumerateDirectories(sdkRoot).Any())
+		{
+			var shared = new[]
+			{
+				Path.Combine(root, "shared", "Microsoft.NETCore.App"),
+				Path.Combine(root, "shared", "Microsoft.AspNetCore.App"),
+				Path.Combine(root, "host", "fxr"),
+			};
+
+			foreach (var directory in shared.Where(Directory.Exists))
+			{
+				Directory.Delete(directory, true);
+			}
+		}
+
+		return new InstallerResult(InstallerOutcome.Success, 0, "Uninstalled");
+#endif
 	}
 
 #if MACOS
@@ -691,26 +811,6 @@ public class DotnetService
     }
 
 #endif
-
-	Sdk GetMostRecentSdk(List<Sdk> sdks, bool withPreview = false)
-	{
-		try
-		{
-			sdks = sdks.OrderByDescending(x => x.VersionDisplay).ToList();
-			if (withPreview)
-			{
-				return sdks.FirstOrDefault(x => x.Data.Preview);
-			}
-			return sdks.FirstOrDefault(x => !x.Data.Preview);
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine(ex);
-			//Analytics.TrackEvent("GetMostRecentSdk", new Dictionary<string, string>() { { "Error", ex.Message } });
-			return null;
-		}
-	}
-
 
 	string GetExtension()
 	{

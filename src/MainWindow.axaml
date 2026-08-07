@@ -276,11 +276,12 @@
 					</StackPanel>
 				</Button>
 				<Button Classes="Toolbar"
+						x:Name="SettingsButton"
 						Background="Transparent"
-						IsVisible="false"
 						Foreground="White"
 						Padding="0"
-						Command="{Binding OpenSettingsCommand}"
+						Tapped="SettingsButton_Clicked"
+						ToolTip.Tip="Settings and cached downloads"
 						HorizontalContentAlignment="Center"
 						VerticalContentAlignment="Center"
 						VerticalAlignment="Center"
@@ -337,8 +338,86 @@
 								<Border Height="1" HorizontalAlignment="Stretch" Background="{StaticResource Background}" />
 							</StackPanel>
 						</Grid>
-						<ListBox x:Name="SdkList"
-								 Grid.Row="1"
+						<!-- A sibling of SelectionInfoContainer rather than a reuse of it: that banner's
+						     identity is tracked by comparing its text to a constant in code-behind, and
+						     errors can fire while it is open (during a Cleanup run, for one). -->
+						<Border x:Name="ErrorBanner"
+								Grid.Row="0"
+								IsVisible="{Binding HasError}"
+								Background="{StaticResource DangerBrush}"
+								Padding="8">
+							<Grid ColumnDefinitions="*,Auto,Auto">
+								<StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+									<TextBlock Text="{Binding ErrorMessage}"
+											   Foreground="White"
+											   MaxLines="3"
+											   TextWrapping="Wrap" />
+									<TextBlock Text="{Binding ErrorDetail}"
+											   Foreground="White"
+											   Opacity="0.75"
+											   FontSize="10"
+											   MaxLines="2"
+											   IsVisible="{Binding ErrorDetail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+											   TextWrapping="Wrap" />
+								</StackPanel>
+								<Button Grid.Column="2"
+										Classes="Chrome"
+										Background="Transparent"
+										Foreground="White"
+										VerticalAlignment="Top"
+										ToolTip.Tip="Dismiss"
+										Command="{Binding DismissErrorCommand}"
+										Content="{x:Static helpers:LucideIcons.x}"
+										FontFamily="{StaticResource LucideIcons}" />
+							</Grid>
+						</Border>
+						<!-- The rail shares the list's row so it starts below the banners and stops at
+						     the status bar, and it casts to the right the same way the status bar casts
+						     up - the list scrolls under it rather than beside it. -->
+						<Grid Grid.Row="1"
+							  ColumnDefinitions="Auto,*">
+							<Border Grid.Column="0"
+									Width="44"
+									ZIndex="1"
+									Background="{StaticResource Background}"
+									BoxShadow="inset -1 0 0 0 #0Fffffff, 1 0 0 0 #1F000000, 3 0 8 -2 #2E000000">
+								<!-- Hidden rather than Auto: a scrollbar in a 44px rail would take a third of
+								     it, and the wheel still scrolls. -->
+								<ScrollViewer VerticalScrollBarVisibility="Hidden"
+											  HorizontalScrollBarVisibility="Disabled">
+									<ItemsControl ItemsSource="{Binding SdkGroups}"
+												  Margin="0,8">
+										<ItemsControl.ItemTemplate>
+											<DataTemplate x:DataType="models:SdkGroup">
+												<Button Classes="GroupJump"
+														Tapped="GroupDot_Tapped"
+														ToolTip.Tip="{Binding Label}"
+														Margin="0,4"
+														HorizontalAlignment="Center">
+													<Border Width="28"
+															Height="28"
+															Classes="Dot"
+															Background="{Binding Color}"
+															BorderThickness="0"
+															CornerRadius="14">
+														<Panel>
+															<Border CornerRadius="14"
+																	Background="{StaticResource DotSheen}" />
+															<TextBlock Text="{Binding Group}"
+																	   FontFamily="{StaticResource DottedFont}"
+																	   FontSize="20"
+																	   HorizontalAlignment="Center"
+																	   VerticalAlignment="Center" />
+														</Panel>
+													</Border>
+												</Button>
+											</DataTemplate>
+										</ItemsControl.ItemTemplate>
+									</ItemsControl>
+								</ScrollViewer>
+							</Border>
+							<ListBox x:Name="SdkList"
+								 Grid.Column="1"
 								 ItemsSource="{Binding Sdks.View}"
 								 Background="Transparent">
 							<ListBox.Styles>
@@ -467,7 +546,7 @@
 													<TextBlock Text="{Binding StatusMessage}"
 															   HorizontalAlignment="Center" />
 													<StackPanel Orientation="Horizontal">
-														<ProgressBar IsIndeterminate="false"
+														<ProgressBar IsIndeterminate="{Binding ProgressTask.IsIndeterminate}"
 																	 Minimum="0"
 																	 Maximum="100"
 																	 ShowProgressText="true"
@@ -477,10 +556,14 @@
 																	 Foreground="White"
 																	 IsVisible="True"
 																	 HorizontalAlignment="Center" />
+														<!-- disabled, not hidden, once an installer is running: killing a burn
+														     bundle mid-transaction can leave a half-installed SDK -->
 														<Button Background="Transparent"
 																Foreground="White"
 																Padding="0"
 																Content="{x:Static helpers:LucideIcons.CircleX}"
+																IsEnabled="{Binding ProgressTask.CanCancel}"
+																ToolTip.Tip="Cancel the download"
 																Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.CancelTaskCommand}"
 																CommandParameter="{Binding .}"
 																FontFamily="{StaticResource LucideIcons}"
@@ -574,7 +657,8 @@
 									</Grid>
 								</DataTemplate>
 							</ListBox.ItemTemplate>
-						</ListBox>
+							</ListBox>
+						</Grid>
 						<!-- pinned to the bottom, so it casts upward -->
 						<Border Grid.Row="2" Background="{StaticResource Background}" Height="20" VerticalAlignment="Bottom"
 								BoxShadow="inset 0 -1 0 0 #0Fffffff, 0 -1 0 0 #1F000000, 0 -3 8 -2 #2E000000">
@@ -584,7 +668,11 @@
 										   Margin="8,0,0,0"
 										   Text="{Binding CurrentStatusIcon}"
 										   Foreground="White" FontSize="10" />
-								<TextBlock Text="{Binding CurrentStatusText}" Margin="8,0,0,0" Foreground="White" Grid.Column="1" FontSize="9" VerticalAlignment="Center" />
+								<!-- 20px tall at 9pt: a message like "Cancelled - administrator approval is
+								     required" needs the tooltip and the ellipsis to stay readable -->
+								<TextBlock Text="{Binding CurrentStatusText}" Margin="8,0,0,0" Foreground="White" Grid.Column="1" FontSize="9" VerticalAlignment="Center"
+										   TextTrimming="CharacterEllipsis"
+										   ToolTip.Tip="{Binding CurrentStatusText}" />
 							</Grid>
 						</Border>
 						<!-- A real shadow cast by the pane would be clipped at the pane's own
@@ -814,7 +902,7 @@
 													<TextBlock Text="{Binding StatusMessage}"
 															   HorizontalAlignment="Center" />
 													<StackPanel Orientation="Horizontal">
-														<ProgressBar IsIndeterminate="false"
+														<ProgressBar IsIndeterminate="{Binding ProgressTask.IsIndeterminate}"
 																	 Value="{Binding ProgressTask.Value}"
 																	 Minimum="0"
 																	 Maximum="100"
@@ -828,6 +916,8 @@
 																Foreground="White"
 																Padding="0"
 																Content="{x:Static helpers:LucideIcons.CircleX}"
+																IsEnabled="{Binding ProgressTask.CanCancel}"
+																ToolTip.Tip="Cancel the download"
 																Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.CancelTaskCommand}"
 																CommandParameter="{Binding .}"
 																FontFamily="{StaticResource LucideIcons}"
@@ -966,55 +1056,65 @@
 															  Background="Transparent">
 													<ItemsControl.ItemTemplate>
 														<DataTemplate x:DataType="data:FileInfo">
-															<Grid Height="50"
-																  ColumnDefinitions="60,*"
-																  Margin="0,8,8,8">
-																<Border Background="#5effffff"
-																		Grid.Column="0"
-																		Height="50"
-																		Width="50"
-																		HorizontalAlignment="Left"
-																		CornerRadius="25"
-																		Padding="2">
-																	<TextBlock VerticalAlignment="Center"
-																			   HorizontalAlignment="Center"
-																			   TextAlignment="Center"
-																			   Width="50"
-																			   FontSize="30"
-																			   Text="{Binding Rid, Converter={StaticResource RidToIconConverter}}" />
-																</Border>
-																<Border Grid.Column="0"
-																		BorderThickness="2"
-																		Height="22"
-																		Width="22"
-																		Margin="0,3,3,0"
-																		HorizontalAlignment="Right"
-																		VerticalAlignment="Bottom"
-																		CornerRadius="10">
-																	<Border.BorderBrush>
-																		<SolidColorBrush Color="{StaticResource Background}" />
-																	</Border.BorderBrush>
-																	<Border.Background>
-																		<SolidColorBrush Color="{Binding FileName, Converter={StaticResource FileNameToColorConverter}}" />
-																	</Border.Background>
-																	<TextBlock VerticalAlignment="Center"
-																			   HorizontalAlignment="Center"
-																			   TextAlignment="Center"
-																			   Width="20"
-																			   FontSize="12"
-																			   FontFamily="{StaticResource LucideIcons}"
-																			   Text="{Binding FileName, Converter={StaticResource FileNameToIconConverter}}" />
-																</Border>
-																<StackPanel Spacing="2"
-																			Margin="4,0,0,0"
-																			Grid.Column="1"
-																			VerticalAlignment="Center">
-																	<TextBlock VerticalAlignment="Center"
-																			   Text="{Binding Rid}" />
+															<!-- auto-height rather than a fixed 50: in a narrow pane the filename wraps to
+															     two or three lines and the checksum sits under it, so a fixed row height
+															     let neighbouring entries overlap -->
+															<Grid ColumnDefinitions="58,*"
+															      Margin="0,0,4,16">
+																<!-- the avatar and its badge share one fixed 50x50 box so the badge stays
+																     pinned to the icon instead of drifting to the bottom of a taller row -->
+																<Grid Grid.Column="0"
+																      Width="50"
+																      Height="50"
+																      HorizontalAlignment="Left"
+																      VerticalAlignment="Top">
+																	<Border Background="#5effffff"
+																	        CornerRadius="25"
+																	        Padding="2">
+																		<TextBlock VerticalAlignment="Center"
+																		           HorizontalAlignment="Center"
+																		           TextAlignment="Center"
+																		           FontSize="30"
+																		           Text="{Binding Rid, Converter={StaticResource RidToIconConverter}}" />
+																	</Border>
+																	<Border BorderThickness="2"
+																	        Height="22"
+																	        Width="22"
+																	        HorizontalAlignment="Right"
+																	        VerticalAlignment="Bottom"
+																	        CornerRadius="11">
+																		<Border.BorderBrush>
+																			<SolidColorBrush Color="{StaticResource Background}" />
+																		</Border.BorderBrush>
+																		<Border.Background>
+																			<SolidColorBrush Color="{Binding FileName, Converter={StaticResource FileNameToColorConverter}}" />
+																		</Border.Background>
+																		<TextBlock VerticalAlignment="Center"
+																		           HorizontalAlignment="Center"
+																		           TextAlignment="Center"
+																		           FontSize="12"
+																		           FontFamily="{StaticResource LucideIcons}"
+																		           Text="{Binding FileName, Converter={StaticResource FileNameToIconConverter}}" />
+																	</Border>
+																</Grid>
+																<StackPanel Spacing="1"
+																            Margin="8,0,0,0"
+																            Grid.Column="1"
+																            VerticalAlignment="Top">
+																	<TextBlock Text="{Binding Rid}"
+																	           FontWeight="SemiBold" />
 																	<hyper:Hyperlink Alias="{Binding FileName}"
-																					 MaxLines="3"
-																					 TextWrapping="Wrap"
-																					 Url="{Binding Url}" />
+																	                 MaxLines="3"
+																	                 TextWrapping="Wrap"
+																	                 Url="{Binding Url}" />
+																	<!-- the value Dots checks every download against - selectable so it can be
+																	     compared against a file downloaded by hand -->
+																	<SelectableTextBlock Text="{Binding ShortHash}"
+																	                     ToolTip.Tip="{Binding Hash}"
+																	                     Margin="0,2,0,0"
+																	                     FontSize="9"
+																	                     Opacity="0.55"
+																	                     TextTrimming="CharacterEllipsis" />
 																</StackPanel>
 															</Grid>
 														</DataTemplate>

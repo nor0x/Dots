@@ -150,87 +150,103 @@ public static class Extensions
     }
 
 
-    //credits https://gist.github.com/dalexsoto/9fd3c5bdbe9f61a717d47c5843384d11
-    public static async Task DownloadDataAsync(this HttpClient client, string requestUrl, Stream destination, IProgress<(float progress, string task)>? progress = null, CancellationToken cancellationToken = default(CancellationToken))
+    /// <summary>
+    /// How long the transfer may go without receiving a single byte before it is treated as dead.
+    /// This replaces HttpClient.Timeout, which is a deadline on the whole download and so punished
+    /// slow connections rather than broken ones.
+    /// </summary>
+    public static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(60);
+
+    const int DownloadBufferSize = 1 << 20;
+
+    /// <summary>
+    /// Streams <paramref name="url"/> into <paramref name="destinationPath"/>, resuming from whatever
+    /// is already there. The destination stream is owned here, so cancellation just unwinds - the
+    /// partial file is deliberately left on disk for the next attempt to continue from.
+    /// </summary>
+    /// <param name="progress">
+    /// Reports a 0..1 fraction, or a negative value when the server sends no Content-Length, meaning
+    /// "length unknown - show an indeterminate bar".
+    /// </param>
+    public static async Task DownloadToFileAsync(this HttpClient client, Uri url, string destinationPath,
+        IProgress<(float progress, string task)>? progress = null, CancellationToken cancellationToken = default)
     {
-		//if cancellation is requested, delete the file
-		cancellationToken.Register(() =>
-		{
-			if (destination is FileStream fs)
-			{
-				fs.Close();
-				File.Delete(fs.Name);
-			}
-		});
-		using (var response = await client.GetAsync(requestUrl, HttpCompletionOption.ResponseHeadersRead))
+        var resumeFrom = File.Exists(destinationPath) ? new System.IO.FileInfo(destinationPath).Length : 0;
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        if (resumeFrom > 0)
         {
-            var contentLength = response.Content.Headers.ContentLength;
-            using (var download = await response.Content.ReadAsStreamAsync())
+            request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(resumeFrom, null);
+        }
+
+        // The stall watchdog re-arms on every chunk, so a slow-but-alive transfer runs as long as it
+        // needs while a dead socket still fails in StallTimeout.
+        using var stallSource = new CancellationTokenSource();
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, stallSource.Token);
+        stallSource.CancelAfter(StallTimeout);
+
+        using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token);
+
+        // The transfer finished but the process died before the file was verified and renamed:
+        // resuming from EOF asks for a range past the end. Nothing left to fetch - let the caller's
+        // checksum decide whether what's on disk is good.
+        if (response.StatusCode == System.Net.HttpStatusCode.RequestedRangeNotSatisfiable && resumeFrom > 0)
+        {
+            return;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        // A server that ignores the Range header replies 200 with the whole file - start over.
+        var appending = response.StatusCode == System.Net.HttpStatusCode.PartialContent && resumeFrom > 0;
+        if (!appending)
+        {
+            resumeFrom = 0;
+        }
+
+        var contentLength = response.Content.Headers.ContentLength;
+        var totalLength = contentLength.HasValue ? contentLength.Value + resumeFrom : (long?)null;
+
+        await using var destination = new FileStream(destinationPath,
+            appending ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None,
+            DownloadBufferSize, FileOptions.Asynchronous | FileOptions.SequentialScan);
+        await using var download = await response.Content.ReadAsStreamAsync(linked.Token);
+
+        var buffer = new byte[DownloadBufferSize];
+        var totalRead = resumeFrom;
+        var lastReportedPercent = -1;
+        var lastReport = Stopwatch.StartNew();
+
+        int read;
+        while ((read = await download.ReadAsync(buffer, linked.Token).ConfigureAwait(false)) != 0)
+        {
+            stallSource.CancelAfter(StallTimeout);
+            await destination.WriteAsync(buffer.AsMemory(0, read), linked.Token).ConfigureAwait(false);
+            totalRead += read;
+
+            if (progress is null)
             {
-                // no progress... no contentLength... very sad
-                if (progress is null || !contentLength.HasValue)
+                continue;
+            }
+
+            // ~350 reports instead of ~4400: each one re-formats the status bar on the UI thread
+            if (totalLength is > 0)
+            {
+                var percent = (int)(totalRead * 100 / totalLength.Value);
+                if (percent != lastReportedPercent)
                 {
-                    await download.CopyToAsync(destination);
-                    return;
+                    lastReportedPercent = percent;
+                    progress.Report(((float)totalRead / totalLength.Value, "Downloading"));
                 }
-                // Such progress and contentLength much reporting Wow!
-                var progressWrapper = new Progress<(float progress, string task)>(p => progress.Report((GetProgress(p.progress, contentLength.Value), "Downloading")));
-				await download.CopyToAsync(destination, 81920, progressWrapper, cancellationToken);
+            }
+            else if (lastReport.ElapsedMilliseconds >= 250)
+            {
+                lastReport.Restart();
+                progress.Report((-1f, $"Downloading {totalRead / 1_048_576:N0} MB"));
             }
         }
 
-        float GetProgress(float totalBytes, float currentBytes) => (totalBytes / currentBytes);
+        // surface a caller-requested cancel as cancellation, not as a stall
+        cancellationToken.ThrowIfCancellationRequested();
     }
-
-    static async Task CopyToAsync(this Stream source, Stream destination, int bufferSize, IProgress<(float progress, string task)>? progress = null, CancellationToken cancellationToken = default(CancellationToken))
-    {
-        if (bufferSize < 0)
-            throw new ArgumentOutOfRangeException(nameof(bufferSize));
-        if (source is null)
-            throw new ArgumentNullException(nameof(source));
-        if (!source.CanRead)
-            throw new InvalidOperationException($"'{nameof(source)}' is not readable.");
-        if (destination == null)
-            throw new ArgumentNullException(nameof(destination));
-        if (!destination.CanWrite)
-            throw new InvalidOperationException($"'{nameof(destination)}' is not writable.");
-
-        var buffer = new byte[bufferSize];
-        long totalBytesRead = 0;
-        int bytesRead;
-        while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) != 0)
-        {
-            await destination.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
-            totalBytesRead += bytesRead;
-            progress?.Report((totalBytesRead, "Downloading"));
-		}
-    }
-
-	public static async Task WriteAllBytesAsync(this byte[] bytes, string path, IProgress<(float progress, string task)> progress, CancellationToken cancellationToken)
-	{
-		const int bufferSize = 81920;
-		var totalBytes = bytes.Length;
-		var bytesWritten = 0;
-
-		using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, useAsync: true))
-		{
-			int index = 0;
-
-			while (index < totalBytes)
-			{
-				cancellationToken.ThrowIfCancellationRequested();
-
-				int bytesToWrite = Math.Min(bufferSize, totalBytes - index);
-
-				await stream.WriteAsync(bytes, index, bytesToWrite, cancellationToken);
-
-				index += bytesToWrite;
-				bytesWritten += bytesToWrite;
-
-				var p = bytesWritten / totalBytes;
-
-				progress?.Report((p, "Writing to Disk"));
-			}
-		}
-	}
 }

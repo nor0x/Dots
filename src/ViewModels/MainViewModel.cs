@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -16,11 +17,18 @@ namespace Dots.ViewModels;
 
 public partial class MainViewModel : ObservableRecipient
 {
-	public MainViewModel(DotnetService dotnet, ErrorPopupHelper errorHelper, UpdateService updateService)
+	public MainViewModel(DotnetService dotnet, ErrorPopupHelper errorHelper, UpdateService updateService, CacheService cacheService)
 	{
 		_dotnet = dotnet;
 		_errorHelper = errorHelper;
 		_updateService = updateService;
+		_cacheService = cacheService;
+		_errorHelper.ErrorRaised += (message, detail) =>
+		{
+			ErrorMessage = message;
+			ErrorDetail = detail;
+			HasError = true;
+		};
 		_progressTasks = new ObservableCollection<ProgressTask>();
 		SelectedFilterIcon = LucideIcons.ListFilter;
 		CurrentStatusIcon = LucideIcons.Info;
@@ -37,8 +45,29 @@ public partial class MainViewModel : ObservableRecipient
 	DotnetService _dotnet;
 	ErrorPopupHelper _errorHelper;
 	UpdateService _updateService;
+	CacheService _cacheService;
 	List<Sdk> _baseSdks;
 	List<Sdk> _filteredSelection;
+
+	[ObservableProperty]
+	bool _hasError;
+
+	[ObservableProperty]
+	string _errorMessage = "";
+
+	[ObservableProperty]
+	string? _errorDetail;
+
+	[ObservableProperty]
+	string _cacheSizeDisplay = "";
+
+	[ObservableProperty]
+	string _cacheInstallersDisplay = "";
+
+	[ObservableProperty]
+	string _cacheMetadataDisplay = "";
+
+	public string CachePath => Constants.AppDataPath;
 
 
 	[ObservableProperty]
@@ -52,6 +81,9 @@ public partial class MainViewModel : ObservableRecipient
 
 	[ObservableProperty]
 	ObservableView<Sdk>? _sdks;
+
+	[ObservableProperty]
+	ObservableCollection<SdkGroup> _sdkGroups = new();
 
 	[ObservableProperty]
 	string _lastUpdated;
@@ -92,6 +124,59 @@ public partial class MainViewModel : ObservableRecipient
 	}
 
 	static DateTimeOffset ReleaseDate(Sdk sdk) => sdk?.Data?.ReleaseDate ?? DateTimeOffset.MinValue;
+
+	// same major version Sdk.Group exposes, but tolerant: an installed SDK whose version does not
+	// start with a number has no group and simply stays out of the rail
+	static int? MajorVersion(Sdk sdk) =>
+		int.TryParse(sdk?.VersionDisplay?.Split('.').FirstOrDefault(), out var major) ? major : null;
+
+	partial void OnSdksChanged(ObservableView<Sdk>? oldValue, ObservableView<Sdk>? newValue)
+	{
+		if (oldValue is not null)
+		{
+			oldValue.PropertyChanged -= SdksPropertyChanged;
+		}
+
+		if (newValue is not null)
+		{
+			newValue.PropertyChanged += SdksPropertyChanged;
+		}
+
+		RefreshSdkGroups();
+	}
+
+	// ObservableView raises this for View on every search, filter and refresh - the same signal the
+	// list binding rides on, so the rail can never show a group the list no longer has
+	void SdksPropertyChanged(object? sender, PropertyChangedEventArgs e)
+	{
+		if (e.PropertyName == nameof(ObservableView<Sdk>.View))
+		{
+			RefreshSdkGroups();
+		}
+	}
+
+	/// <summary>
+	/// Rebuilds the jump rail from what is currently in view, keeping the list's own order. The
+	/// first row of each group is kept as the scroll target.
+	/// </summary>
+	void RefreshSdkGroups()
+	{
+		var view = Sdks?.View;
+		if (view is null)
+		{
+			SdkGroups = new ObservableCollection<SdkGroup>();
+			return;
+		}
+
+		var groups = view
+			.Where(s => s is not null)
+			.Select(s => (Sdk: s, Major: MajorVersion(s)))
+			.Where(x => x.Major is not null)
+			.GroupBy(x => x.Major!.Value)
+			.Select(g => new SdkGroup(g.Key, g.First().Sdk));
+
+		SdkGroups = new ObservableCollection<SdkGroup>(groups);
+	}
 
 	public bool SetSelectedSdk(Sdk sdk)
 	{
@@ -151,7 +236,7 @@ public partial class MainViewModel : ObservableRecipient
 		}
 	}
 
-	[RelayCommand(AllowConcurrentExecutions = true)]
+	[RelayCommand]
 	async Task DoCleanup()
 	{
 		int current = 0;
@@ -162,25 +247,30 @@ public partial class MainViewModel : ObservableRecipient
 			CurrentStatusText = $"Uninstalling {sdk.VersionDisplay} - Cleanup {current + 1} | {toCleanup.Count}";
 			CurrentStatusIcon = LucideIcons.Trash2;
 			sdk.IsInstalling = true;
-			var result = await _dotnet.Uninstall(sdk, status: new Progress<(float progress, string task)>(p =>
-			{
-				sdk.Progress = p.progress;
-				CurrentStatusText = $"Cleanup {sdk.VersionDisplay} - {p.task} {p.progress:P0}";
-				CurrentStatusIcon = LucideIcons.Trash2;
-				if (p.progress == 1)
-				{
-					ResetStatusInfo().SafeFireAndForget();
-				}
-			}));
-			if (result)
+			var result = await _dotnet.Uninstall(sdk, status: Track(sdk, LucideIcons.Trash2));
+			if (result.IsSuccess)
 			{
 				sdk.Path = string.Empty;
 			}
 			sdk.IsInstalling = false;
 			current++;
+
+			// each uninstall raises its own UAC prompt; once the user declines one, firing the
+			// rest of the batch at them is just noise
+			if (result.Outcome is InstallerOutcome.ElevationDeclined or InstallerOutcome.Cancelled)
+			{
+				ShowResult(sdk, result);
+				break;
+			}
+
+			if (!result.IsSuccess)
+			{
+				ShowResult(sdk, result);
+			}
 		}
 
 		await CheckSdks(false);
+		RefreshCacheStats();
 	}
 
 	public async Task<bool> FilterCleanupSdks()
@@ -240,7 +330,7 @@ public partial class MainViewModel : ObservableRecipient
 		return true;
 	}
 
-	[RelayCommand(AllowConcurrentExecutions = true)]
+	[RelayCommand]
 	async Task DoUpdate()
 	{
 		int current = 0;
@@ -297,7 +387,15 @@ public partial class MainViewModel : ObservableRecipient
 	void CancelTask(Sdk sdk)
 	{
 		//no ProgressTask until a download or uninstall has actually started
-		sdk?.ProgressTask?.CancellationTokenSource?.Cancel();
+		if (sdk?.ProgressTask?.CanCancel != true)
+		{
+			return;
+		}
+
+		// immediate feedback - the click otherwise looks ignored until the exception unwinds
+		CurrentStatusIcon = LucideIcons.CircleX;
+		CurrentStatusText = $"{sdk.VersionDisplay} - Cancelling...";
+		sdk.ProgressTask.CancellationTokenSource?.Cancel();
 	}
 
 
@@ -385,24 +483,22 @@ public partial class MainViewModel : ObservableRecipient
 			else
 			{
 				sdk.StatusMessage = Constants.DownloadingText;
-				var path = await _dotnet.Download(sdk, true, status: new Progress<(float progress, string task)>(p =>
-				{
-					sdk.Progress = p.progress;
-					CurrentStatusText = $"{sdk.VersionDisplay} - {p.task} {p.progress:P0}";
-					CurrentStatusIcon = LucideIcons.Download;
-					if (p.progress == 1)
-					{
-						CurrentStatusText = "Downloaded to Desktop - opening...";
-						CurrentStatusIcon = LucideIcons.Folder;
-						ResetStatusInfo().SafeFireAndForget();
-					}
-				}));
+				// Download returns the file path; the folder is what we want to reveal
+				var path = await _dotnet.Download(sdk, true, status: Track(sdk, LucideIcons.Download));
 				if (!string.IsNullOrEmpty(path))
 				{
-					await _dotnet.OpenFolder(path);
+					CurrentStatusText = "Downloaded to Desktop - opening...";
+					CurrentStatusIcon = LucideIcons.Folder;
+					var folder = Path.GetDirectoryName(path);
+					if (!string.IsNullOrEmpty(folder))
+					{
+						await _dotnet.OpenFolder(folder);
+					}
 				}
+				ResetStatusInfo().SafeFireAndForget();
 			}
 			sdk.IsDownloading = false;
+			RefreshCacheStats();
 
 		}
 		catch (Exception ex)
@@ -427,17 +523,9 @@ public partial class MainViewModel : ObservableRecipient
 			{
 				sdk.StatusMessage = Constants.UninstallingText;
 				CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage}";
-				var result = await _dotnet.Uninstall(sdk, status: new Progress<(float progress, string task)>(p =>
-				{
-					sdk.Progress = p.progress;
-					CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage} - {p.task} {p.progress:P0}";
-					CurrentStatusIcon = LucideIcons.Trash2;
-					if (p.progress == 1)
-					{
-						ResetStatusInfo().SafeFireAndForget();
-					}
-				}));
-				if (result)
+				var result = await _dotnet.Uninstall(sdk, status: Track(sdk, LucideIcons.Trash2));
+				ShowResult(sdk, result);
+				if (result.IsSuccess)
 				{
 					sdk.Path = string.Empty;
 				}
@@ -446,40 +534,25 @@ public partial class MainViewModel : ObservableRecipient
 			{
 				sdk.StatusMessage = Constants.DownloadingText;
 				CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage}";
-				var path = await _dotnet.Download(sdk, status: new Progress<(float progress, string task)>(p =>
+				var path = await _dotnet.Download(sdk, status: Track(sdk, LucideIcons.Download));
+				if (string.IsNullOrEmpty(path))
 				{
-					sdk.Progress = p.progress;
-					CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage} - {p.task} {p.progress:P0}";
-					CurrentStatusIcon = LucideIcons.Download;
-					if (p.progress == 1)
-					{
-						ResetStatusInfo().SafeFireAndForget();
-					}
-				}));
-				if (!string.IsNullOrEmpty(path))
+					// Download already reported why through the status callback; leave it on screen.
+					ResetStatusInfo().SafeFireAndForget();
+				}
+				else
 				{
 					sdk.StatusMessage = Constants.InstallingText;
-					var result = await _dotnet.Install(path, status: new Progress<(float progress, string task)>(p =>
-					{
-						sdk.Progress = p.progress;
-						CurrentStatusText = $"{sdk.VersionDisplay} - {sdk.StatusMessage} - {p.task} {p.progress:P0}";
-						CurrentStatusIcon = LucideIcons.HardDriveDownload;
-						if (p.progress == 1)
-						{
-							ResetStatusInfo().SafeFireAndForget();
-						}
-					}));
-					if (result)
+					var result = await _dotnet.Install(path, sdk, status: Track(sdk, LucideIcons.HardDriveDownload));
+					ShowResult(sdk, result);
+					if (result.IsSuccess)
 					{
 						sdk.Path = await _dotnet.GetInstallationPath(sdk);
-					}
-					else
-					{
-						//show popup and prompt to manually install
 					}
 				}
 			}
 			sdk.IsInstalling = false;
+			RefreshCacheStats();
 		}
 
 		catch (Exception ex)
@@ -487,6 +560,50 @@ public partial class MainViewModel : ObservableRecipient
 			sdk.IsInstalling = false;
 			await _errorHelper.ShowPopup(ex);
 		}
+	}
+
+	/// <summary>
+	/// Mirrors an operation's progress into the status bar. Deliberately does not reset the status
+	/// on progress == 1 - the reset is driven by <see cref="ShowResult"/> off the awaited result, so
+	/// it also happens on the paths that fail before ever reaching 1.
+	/// </summary>
+	IProgress<(float progress, string task)> Track(Sdk sdk, string icon) =>
+		new Progress<(float progress, string task)>(p =>
+		{
+			sdk.Progress = p.progress;
+			CurrentStatusIcon = icon;
+			CurrentStatusText = p.progress < 0
+				? $"{sdk.VersionDisplay} - {p.task}"
+				: $"{sdk.VersionDisplay} - {p.task} {p.progress:P0}";
+		});
+
+	/// <summary>
+	/// Puts the outcome on screen and makes sure the status bar always settles - a failure used to
+	/// leave it frozen mid-progress because only a progress value of exactly 1 triggered the reset.
+	/// </summary>
+	void ShowResult(Sdk sdk, InstallerResult result)
+	{
+		CurrentStatusIcon = result.Outcome switch
+		{
+			InstallerOutcome.Success => LucideIcons.CircleCheck,
+			InstallerOutcome.SuccessRebootRequired => LucideIcons.RotateCcw,
+			InstallerOutcome.AlreadyInstalled => LucideIcons.Info,
+			InstallerOutcome.ElevationDeclined or InstallerOutcome.AccessDenied => LucideIcons.ShieldAlert,
+			InstallerOutcome.Cancelled => LucideIcons.Info,
+			_ => LucideIcons.TriangleAlert,
+		};
+		CurrentStatusText = $"{sdk.VersionDisplay} - {result.Message}";
+
+		if (result.IsSuccess || result.IsUserAbort)
+		{
+			ResetStatusInfo().SafeFireAndForget();
+			return;
+		}
+
+		// anything else is a real failure and gets the banner, which stays until dismissed
+		_errorHelper.ShowError($"{sdk.VersionDisplay} - {result.Message}",
+			result.LogPath is null ? null : $"Installer log: {result.LogPath}");
+		ResetStatusInfo().SafeFireAndForget();
 	}
 
 	async ValueTask ResetStatusInfo(bool delay = true)
@@ -555,8 +672,61 @@ public partial class MainViewModel : ObservableRecipient
 	}
 
 	[RelayCommand]
-	void OpenSettings()
-	{ }
+	void DismissError()
+	{
+		HasError = false;
+		ErrorMessage = "";
+		ErrorDetail = null;
+	}
+
+	/// <summary>Recomputes the numbers shown in the Settings window. Cheap enough to call eagerly.</summary>
+	public void RefreshCacheStats()
+	{
+		try
+		{
+			var stats = _cacheService.GetStats();
+			CacheInstallersDisplay = stats.Installers.Display;
+			CacheMetadataDisplay = stats.Metadata.Display;
+			CacheSizeDisplay = CacheService.FormatSize(stats.TotalBytes);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine(ex);
+		}
+	}
+
+	[RelayCommand]
+	async Task ClearInstallerCache()
+	{
+		var freed = await Task.Run(_cacheService.ClearInstallers);
+		RefreshCacheStats();
+		CurrentStatusIcon = LucideIcons.Trash2;
+		CurrentStatusText = freed > 0
+			? $"Freed {CacheService.FormatSize(freed)} of downloaded installers"
+			: "No downloaded installers to remove";
+		ResetStatusInfo().SafeFireAndForget();
+	}
+
+	[RelayCommand]
+	async Task ClearMetadataCache()
+	{
+		var freed = await _cacheService.ClearMetadata();
+		RefreshCacheStats();
+		CurrentStatusIcon = LucideIcons.Trash2;
+		CurrentStatusText = $"Cleared {CacheService.FormatSize(freed)} of release metadata";
+		// the metadata is gone, so the list has to come from the network again
+		await CheckSdks(true);
+	}
+
+	[RelayCommand]
+	async Task OpenCacheFolder()
+	{
+		if (!Directory.Exists(Constants.AppDataPath))
+		{
+			Directory.CreateDirectory(Constants.AppDataPath);
+		}
+		await _dotnet.OpenFolder(Constants.AppDataPath);
+	}
 
 	void Sdks_FilterHandler(object sender, ObservableView.Filtering.FilterEventArgs<Sdk> e)
 	{
