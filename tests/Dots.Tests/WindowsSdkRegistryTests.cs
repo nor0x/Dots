@@ -89,6 +89,44 @@ public class WindowsSdkRegistryTests
 		}
 	}
 
+	/// <summary>
+	/// The UI marking is driven entirely by AnnotateOwnership, so it has to agree with Resolve:
+	/// anything Dots can't uninstall must come back flagged, and nothing else may be.
+	/// </summary>
+	[Fact]
+	public void AnnotationMatchesWhatUninstallWouldDo()
+	{
+		var service = new DotnetService();
+
+		foreach (var version in ListInstalledSdkVersions())
+		{
+			var sdk = new Dots.Models.Sdk { VersionDisplay = version, Path = @"C:\Program Files\dotnet\sdk" };
+			service.AnnotateOwnership(sdk);
+
+			var expectedBlocked = WindowsSdkRegistry.Resolve(version).Ownership != SdkOwnership.StandaloneBundle;
+			_output.WriteLine($"{version,-40} blocked={sdk.IsExternallyManaged,-6} label={sdk.ExternalOwnerLabel}");
+
+			Assert.Equal(expectedBlocked, sdk.IsExternallyManaged);
+			Assert.Equal(!expectedBlocked, sdk.CanInstallOrUninstall);
+			if (expectedBlocked)
+			{
+				Assert.False(string.IsNullOrWhiteSpace(sdk.UninstallBlockedReason));
+				Assert.False(string.IsNullOrWhiteSpace(sdk.ExternalOwnerLabel));
+			}
+		}
+	}
+
+	[Fact]
+	public void AnAvailableButNotInstalledSdkIsNeverFlagged()
+	{
+		// nothing blocks installing, so the button must stay live for a version we don't have
+		var sdk = new Dots.Models.Sdk { VersionDisplay = "10.0.302", Path = "" };
+		new DotnetService().AnnotateOwnership(sdk);
+
+		Assert.False(sdk.IsExternallyManaged);
+		Assert.True(sdk.CanInstallOrUninstall);
+	}
+
 	static List<string> ListInstalledSdkVersions()
 	{
 		var psi = new ProcessStartInfo("dotnet", "--list-sdks")

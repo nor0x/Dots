@@ -133,7 +133,71 @@ public class DotnetService
 			.OrderByDescending(x => x.Group)
 			.ToList();
 
+		AnnotateOwnership(result);
+
 		return result;
+	}
+
+	/// <summary>
+	/// Marks installed SDKs that Dots cannot remove, so the UI can say so up front instead of the
+	/// user finding out only after clicking Uninstall.
+	/// </summary>
+	public void AnnotateOwnership(IEnumerable<Sdk> sdks)
+	{
+		foreach (var sdk in sdks.Where(s => s is not null && s.Installed))
+		{
+			try
+			{
+				AnnotateOwnership(sdk);
+			}
+			catch (Exception ex)
+			{
+				// a version we can't classify just stays unmarked - the uninstall path reports it
+				Debug.WriteLine(ex);
+			}
+		}
+	}
+
+	public void AnnotateOwnership(Sdk sdk)
+	{
+		sdk.ExternalOwner = null;
+		sdk.UninstallBlockedReason = null;
+
+		if (!sdk.Installed)
+		{
+			return;
+		}
+
+		var version = sdk.SdkData?.Version ?? sdk.VersionDisplay;
+		if (string.IsNullOrEmpty(version))
+		{
+			return;
+		}
+
+#if WINDOWS
+		var plan = WindowsSdkRegistry.Resolve(version);
+		if (plan.Ownership == SdkOwnership.StandaloneBundle)
+		{
+			return;
+		}
+
+		sdk.ExternalOwner = plan.Ownership switch
+		{
+			SdkOwnership.VisualStudio => "Visual Studio",
+			SdkOwnership.UnmanagedMsi => "Windows Installer",
+			SdkOwnership.BundleCacheMissing => "Installer missing",
+			_ => null,
+		};
+		sdk.UninstallBlockedReason = plan.Message;
+#endif
+#if LINUX
+		// an SDK outside $HOME belongs to the distro's package manager
+		if (GetWritableDotnetRoot(sdk) is null)
+		{
+			sdk.ExternalOwner = "System";
+			sdk.UninstallBlockedReason = "Installed system-wide - remove it with your package manager";
+		}
+#endif
 	}
 
 	async Task<ReleaseIndex[]> GetReleaseIndex(bool force = false)

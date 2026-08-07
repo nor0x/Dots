@@ -507,6 +507,16 @@
 										<StackPanel Orientation="Horizontal"
 													Grid.Column="2"
 													VerticalAlignment="Center">
+											<!-- an SDK another installer owns (Visual Studio, a distro package): shown like
+											     any other, but marked so the constraint is visible before the click -->
+											<Border Classes="Pill"
+											        Background="{StaticResource Purple}"
+											        ToolTip.Tip="{Binding UninstallBlockedReason}"
+											        IsVisible="{Binding IsExternallyManaged}">
+												<TextBlock VerticalAlignment="Center"
+												           Text="{Binding ExternalOwnerLabel}"
+												           FontSize="10" />
+											</Border>
 											<Border Classes="Pill"
 													Background="{StaticResource Danger}"
 													IsVisible="{Binding Data.Security}">
@@ -619,6 +629,8 @@
 															VerticalContentAlignment="Center"
 															FontFamily="Default"
 															VerticalAlignment="Center"
+															IsEnabled="{Binding CanInstallOrUninstall}"
+															ToolTip.Tip="{Binding UninstallBlockedReason}"
 															Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.InstallOrUninstallCommand}"
 															CommandParameter="{Binding .}"
 															Classes.Installed="{Binding Installed}"
@@ -836,6 +848,16 @@
 													<Run Text="{Binding VersionDisplay}" />
 												</TextBlock>
 												<StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+													<!-- an SDK another installer owns (Visual Studio, a distro package): shown like
+													     any other, but marked so the constraint is visible before the click -->
+													<Border Classes="Pill"
+													        Background="{StaticResource Purple}"
+													        ToolTip.Tip="{Binding UninstallBlockedReason}"
+													        IsVisible="{Binding IsExternallyManaged}">
+														<TextBlock VerticalAlignment="Center"
+														           Text="{Binding ExternalOwnerLabel}"
+														           FontSize="10" />
+													</Border>
 													<Border Classes="Pill"
 															Background="{StaticResource Danger}"
 															IsVisible="{Binding Data.Security}">
@@ -972,6 +994,8 @@
 															HorizontalContentAlignment="Center"
 															VerticalContentAlignment="Center"
 															VerticalAlignment="Center"
+															IsEnabled="{Binding CanInstallOrUninstall}"
+															ToolTip.Tip="{Binding UninstallBlockedReason}"
 															Command="{ReflectionBinding ElementName=PageSelf, Path=DataContext.InstallOrUninstallCommand}"
 															CommandParameter="{Binding .}"
 															Classes.Installed="{Binding Installed}"

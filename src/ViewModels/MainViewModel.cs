@@ -244,6 +244,12 @@ public partial class MainViewModel : ObservableRecipient
 
 		foreach (var sdk in toCleanup)
 		{
+			// FilterCleanupSdks already excludes these; this guards a hand-built selection
+			if (!sdk.CanInstallOrUninstall)
+			{
+				continue;
+			}
+
 			CurrentStatusText = $"Uninstalling {sdk.VersionDisplay} - Cleanup {current + 1} | {toCleanup.Count}";
 			CurrentStatusIcon = LucideIcons.Trash2;
 			sdk.IsInstalling = true;
@@ -314,7 +320,8 @@ public partial class MainViewModel : ObservableRecipient
 		}
 		toCleanup.AddRange(addToCleanup);
 		toCleanup.AddRange(installed.Where(s => s.Data?.SupportPhase is SupportPhase.Eol).ToList());
-		toCleanup = toCleanup.Distinct().ToList();
+		// no point offering to remove SDKs another installer owns - every one would just fail
+		toCleanup = toCleanup.Distinct().Where(s => s.CanInstallOrUninstall).ToList();
 
 		if (toCleanup.Count() == 0)
 		{
@@ -548,6 +555,8 @@ public partial class MainViewModel : ObservableRecipient
 					if (result.IsSuccess)
 					{
 						sdk.Path = await _dotnet.GetInstallationPath(sdk);
+						// the registry changed under us; re-read who owns it now
+						_dotnet.AnnotateOwnership(sdk);
 					}
 				}
 			}
