@@ -83,6 +83,16 @@ public partial class MainViewModel : ObservableRecipient
 	bool _showOnline = true;
 	bool _showInstalled = true;
 
+	// SDKs that are installed but not part of the release index have no Data,
+	// and VersionDisplay is not guaranteed to be long enough to slice
+	static string VersionGroup(Sdk sdk)
+	{
+		var version = sdk?.VersionDisplay ?? string.Empty;
+		return version.Length >= 3 ? version.Substring(0, 3) : version;
+	}
+
+	static DateTimeOffset ReleaseDate(Sdk sdk) => sdk?.Data?.ReleaseDate ?? DateTimeOffset.MinValue;
+
 	public bool SetSelectedSdk(Sdk sdk)
 	{
 		var showDetails = true;
@@ -145,7 +155,7 @@ public partial class MainViewModel : ObservableRecipient
 	async Task DoCleanup()
 	{
 		int current = 0;
-		var toCleanup = Sdks.View.ToList();
+		var toCleanup = Sdks?.View?.ToList() ?? new List<Sdk>();
 
 		foreach (var sdk in toCleanup)
 		{
@@ -176,11 +186,20 @@ public partial class MainViewModel : ObservableRecipient
 	public async Task<bool> FilterCleanupSdks()
 	{
 		await CheckSdks(true);
-		var toCleanup = Sdks.Source.Where(s => s.Installed && s.Data.SupportPhase is SupportPhase.Eol).ToList();
-		var installed = Sdks.Source.Where(s => s.Installed).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Where(g => g.Count() >= 1).SelectMany(g => g).ToList();
-		var latests = Sdks.Source.Where(s => !s.Data.Preview).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.Data.ReleaseDate).First()).ToList();
+		if (Sdks is null)
+		{
+			CurrentStatusText = $"no SDKs to cleanup";
+			CurrentStatusIcon = LucideIcons.TriangleAlert;
+			ResetStatusInfo().SafeFireAndForget();
+			return false;
+		}
 
-		var installedGrouped = installed.GroupBy(s => s.VersionDisplay.Substring(0, 3)).ToList();
+		var source = Sdks.Source.Where(s => s is not null).ToList();
+		var toCleanup = source.Where(s => s.Installed && s.Data?.SupportPhase is SupportPhase.Eol).ToList();
+		var installed = source.Where(s => s.Installed).GroupBy(VersionGroup).Where(g => g.Count() >= 1).SelectMany(g => g).ToList();
+		var latests = source.Where(s => s.Data is not null && !s.Data.Preview).GroupBy(VersionGroup).Select(g => g.OrderByDescending(ReleaseDate).First()).ToList();
+
+		var installedGrouped = installed.GroupBy(VersionGroup).ToList();
 
 		var addToCleanup = new List<Sdk>();
 		foreach (var sdk in installed)
@@ -192,10 +211,10 @@ public partial class MainViewModel : ObservableRecipient
 			else
 			{
 				//add from the same major version but skip the latest
-				var group = installedGrouped.FirstOrDefault(g => g.Key == sdk.VersionDisplay.Substring(0, 3));
+				var group = installedGrouped.FirstOrDefault(g => g.Key == VersionGroup(sdk));
 				if (group is not null)
 				{
-					var ordered = group.OrderByDescending(s => s.Data.ReleaseDate).ToList();
+					var ordered = group.OrderByDescending(ReleaseDate).ToList();
 					for (int i = 1; i < ordered.Count; i++)
 					{
 						addToCleanup.Add(ordered[i]);
@@ -204,7 +223,7 @@ public partial class MainViewModel : ObservableRecipient
 			}
 		}
 		toCleanup.AddRange(addToCleanup);
-		toCleanup.AddRange(installed.Where(s => s.Data.SupportPhase is SupportPhase.Eol).ToList());
+		toCleanup.AddRange(installed.Where(s => s.Data?.SupportPhase is SupportPhase.Eol).ToList());
 		toCleanup = toCleanup.Distinct().ToList();
 
 		if (toCleanup.Count() == 0)
@@ -225,7 +244,7 @@ public partial class MainViewModel : ObservableRecipient
 	async Task DoUpdate()
 	{
 		int current = 0;
-		var toInstall = Sdks.View.ToList();
+		var toInstall = Sdks?.View?.ToList() ?? new List<Sdk>();
 		foreach (var sdk in toInstall)
 		{
 			CurrentStatusText = $"Installing {sdk.VersionDisplay} - Update {current + 1} | {toInstall.Count()}";
@@ -239,9 +258,18 @@ public partial class MainViewModel : ObservableRecipient
 	public async Task<bool> FilterUpdateSdks()
 	{
 		await CheckSdks(true);
-		var latests = Sdks.Source.GroupBy(s => s.VersionDisplay.Substring(0, 3)).Select(g => g.OrderByDescending(s => s.Data.ReleaseDate).First()).ToList();
-		var installed = Sdks.Source.Where(s => s.Installed).GroupBy(s => s.VersionDisplay.Substring(0, 3)).Where(g => g.Count() >= 1).SelectMany(g => g).ToList();
-		var toInstall = latests.Except(installed).ToList().Where(s => s.Data.SupportPhase is SupportPhase.Active || s.Data.SupportPhase is SupportPhase.Preview || s.Data.SupportPhase is SupportPhase.Maintenance);
+		if (Sdks is null)
+		{
+			CurrentStatusText = $"everything is up to date - no SDKs to update";
+			CurrentStatusIcon = LucideIcons.TriangleAlert;
+			ResetStatusInfo().SafeFireAndForget();
+			return false;
+		}
+
+		var source = Sdks.Source.Where(s => s is not null).ToList();
+		var latests = source.GroupBy(VersionGroup).Select(g => g.OrderByDescending(ReleaseDate).First()).ToList();
+		var installed = source.Where(s => s.Installed).GroupBy(VersionGroup).Where(g => g.Count() >= 1).SelectMany(g => g).ToList();
+		var toInstall = latests.Except(installed).ToList().Where(s => s.Data?.SupportPhase is SupportPhase.Active || s.Data?.SupportPhase is SupportPhase.Preview || s.Data?.SupportPhase is SupportPhase.Maintenance);
 		toInstall = toInstall.Distinct().ToList();
 
 		if (toInstall.Count() == 0)
@@ -268,7 +296,8 @@ public partial class MainViewModel : ObservableRecipient
 	[RelayCommand]
 	void CancelTask(Sdk sdk)
 	{
-		sdk.ProgressTask.CancellationTokenSource.Cancel();
+		//no ProgressTask until a download or uninstall has actually started
+		sdk?.ProgressTask?.CancellationTokenSource?.Cancel();
 	}
 
 
@@ -282,8 +311,9 @@ public partial class MainViewModel : ObservableRecipient
 	[RelayCommand]
 	void FilterSdks(string query)
 	{
-		_query = query;
-		Sdks.Search(_query);
+		_query = query ?? "";
+		//the search bar is live while the initial load is still running
+		Sdks?.Search(_query);
 	}
 
 	[RelayCommand]
@@ -293,7 +323,10 @@ public partial class MainViewModel : ObservableRecipient
 	[RelayCommand]
 	void ApplyFilter(string f)
 	{
-		int filter = int.Parse(f);
+		if (!int.TryParse(f, out var filter))
+		{
+			return;
+		}
 		//0 all
 		//1 online
 		//2 installed
@@ -315,6 +348,11 @@ public partial class MainViewModel : ObservableRecipient
 			_showInstalled = true;
 			SelectedFilterIcon = LucideIcons.HardDrive;
 		}
+		if (Sdks is null)
+		{
+			return;
+		}
+
 		Sdks.Search(" ");
 		Sdks.Search(_query);
 
@@ -327,13 +365,19 @@ public partial class MainViewModel : ObservableRecipient
 	[RelayCommand(AllowConcurrentExecutions = true)]
 	async Task OpenOrDownload(Sdk sdk)
 	{
+		if (sdk is null)
+		{
+			return;
+		}
+
 		try
 		{
 			sdk.IsDownloading = true;
 			if (sdk.Installed)
 			{
 				sdk.StatusMessage = Constants.OpeningText;
-				CurrentStatusText = $"Opening {Path.Combine(sdk.Path, sdk.Data.Sdk.Version)}";
+				//locally installed SDKs that are not in the release index have no Data
+				CurrentStatusText = $"Opening {Path.Combine(sdk.Path, sdk.VersionDisplay ?? "")}";
 				CurrentStatusIcon = LucideIcons.Folder;
 				ResetStatusInfo().SafeFireAndForget();
 				await _dotnet.OpenFolder(sdk);
@@ -353,7 +397,10 @@ public partial class MainViewModel : ObservableRecipient
 						ResetStatusInfo().SafeFireAndForget();
 					}
 				}));
-				await _dotnet.OpenFolder(path);
+				if (!string.IsNullOrEmpty(path))
+				{
+					await _dotnet.OpenFolder(path);
+				}
 			}
 			sdk.IsDownloading = false;
 
@@ -368,6 +415,11 @@ public partial class MainViewModel : ObservableRecipient
 	[RelayCommand(AllowConcurrentExecutions = true)]
 	async Task InstallOrUninstall(Sdk sdk)
 	{
+		if (sdk is null)
+		{
+			return;
+		}
+
 		try
 		{
 			sdk.IsInstalling = true;
@@ -443,7 +495,17 @@ public partial class MainViewModel : ObservableRecipient
 		{
 			await Task.Delay(1800);
 		}
-		CurrentStatusText = $"{Sdks.Source.Count()} SDKs found - {Sdks.Source.Count(s => s.Installed)} installed";
+
+		//Sdks is replaced by CheckSdks and can be gone by the time the delay elapsed
+		var source = Sdks?.Source;
+		if (source is null)
+		{
+			CurrentStatusText = "Loading SDKs...";
+			CurrentStatusIcon = LucideIcons.Info;
+			return;
+		}
+
+		CurrentStatusText = $"{source.Count()} SDKs found - {source.Count(s => s.Installed)} installed";
 		CurrentStatusIcon = LucideIcons.Info;
 	}
 
@@ -498,6 +560,11 @@ public partial class MainViewModel : ObservableRecipient
 
 	void Sdks_FilterHandler(object sender, ObservableView.Filtering.FilterEventArgs<Sdk> e)
 	{
+		if (e?.Item is null)
+		{
+			return;
+		}
+
 		if (_showOnline && _showInstalled)
 		{
 			e.IsAllowed = true;
@@ -529,8 +596,8 @@ public partial class MainViewModel : ObservableRecipient
 			_isLoading = true;
 			if (Sdks is not null) Sdks.FilterHandler -= Sdks_FilterHandler;
 			IsBusy = true;
-			var sdkList = await _dotnet.GetSdks(force);
-			sdkList = sdkList.DistinctBy(s => s.VersionDisplay).ToList();
+			var sdkList = await _dotnet.GetSdks(force) ?? new List<Sdk>();
+			sdkList = sdkList.Where(s => s is not null).DistinctBy(s => s.VersionDisplay).ToList();
 			Sdks = new ObservableView<Sdk>(sdkList);
 			Sdks.SearchSpecification.Add(x => x.VersionDisplay, BinaryOperator.Contains);
 			Sdks.SearchSpecification.Add(x => x.Path, BinaryOperator.Contains);
@@ -539,12 +606,16 @@ public partial class MainViewModel : ObservableRecipient
 			_baseSdks = sdkList;
 			LastUpdated = " " + DateTime.Now.ToString("MMMM dd, yyyy HH:mm");
 			ResetStatusInfo(false).SafeFireAndForget();
-			IsBusy = false;
-			_isLoading = false;
 		}
 		catch (Exception ex)
 		{
 			await _errorHelper.ShowPopup(ex);
+		}
+		finally
+		{
+			//without this a failed load leaves _isLoading stuck and Sdks null forever
+			IsBusy = false;
+			_isLoading = false;
 		}
 	}
 }

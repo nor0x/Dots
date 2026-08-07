@@ -202,8 +202,8 @@ namespace Dots
 		{
 			await _vm.ResetSelectionFilter();
 			await SelectionInfoContainer.HeightTo(0);
-			_vm.Sdks.Search(" ");
-			_vm.Sdks.Search(".");
+			_vm.Sdks?.Search(" ");
+			_vm.Sdks?.Search(".");
 		}
 	}
 }

@@ -71,7 +71,7 @@ public partial class Release
 	public Windowsdesktop Windowsdesktop { get; set; }
 
 	[JsonIgnore]
-	public bool Preview => Sdk.Version.Contains("-");
+	public bool Preview => Sdk?.Version?.Contains("-") ?? false;
 
 
 	[JsonIgnore]

@@ -52,7 +52,7 @@ public class DotnetService
 
 		foreach (var release in releaseInfos)
 		{
-			if (release is null)
+			if (release?.Sdk is null)
 			{
 				continue;
 			}
@@ -343,7 +343,8 @@ public class DotnetService
 	{
 		try
 		{
-			string path = Path.Combine(sdk.Path, sdk.SdkData.Version);
+			//installed SDKs missing from the release index have no SdkData
+			string path = Path.Combine(sdk.Path, sdk.SdkData?.Version ?? sdk.VersionDisplay ?? "");
 			path.OpenFilePath();
 		}
 		catch (Exception ex)
