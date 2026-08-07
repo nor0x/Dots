@@ -74,8 +74,8 @@
 
     <!-- sheen for the version dots. the two coincident stops at .78/.82 keep the
          alpha crossover from washing grey across the lower half -->
-    <LinearGradientBrush x:Key="DotSheen" StartPoint="0%,0%" EndPoint="0%,100%">
-      <GradientStop Offset="0.00" Color="#3Affffff" />
+    <LinearGradientBrush x:Key="DotSheen" StartPoint="0%,0%" EndPoint="20%,100%">
+      <GradientStop Offset="0.00" Color="#8cffffff" />
       <GradientStop Offset="0.45" Color="#30ffffff" />
       <GradientStop Offset="0.78" Color="#00ffffff" />
       <GradientStop Offset="0.82" Color="#00000000" />
