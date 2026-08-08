@@ -840,7 +840,7 @@ public class DotnetService
                 AuthorizationFlags.InteractionAllowed |
                 AuthorizationFlags.PreAuthorize;
 
-            using var auth = Authorization.Create(parameters, null, flags);
+            using var auth = Security.Authorization.Create(parameters, null, flags);
             int result = auth.ExecuteWithPrivileges(
                 exe,
                 AuthorizationFlags.Defaults,
